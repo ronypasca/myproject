@@ -1,0 +1,75 @@
+﻿@using com.SML.BIGTRONS.Controllers
+@{
+    ViewBag.Title = "Menu";
+    var X = Html.X();
+} 
+
+<script>
+    $(document).ready(function () {
+        
+        Ext.Ajax.request({
+            url: '../Menu/GenerateHTMLMenu',
+            cache:true,
+            success: getMenuSuccess,
+            failure: getMenuFailed
+        });
+    });
+        
+    getMenuSuccess = function (response) {
+        var jsonData = Ext.util.JSON.decode(response.responseText);
+        console.log(jsonData);
+        if (jsonData!=null) {
+            $('#sidebar-nav').html(jsonData.result.m_StringValue).append("<li><a href='/Home/LogOut'>Log Out</a></li>");
+        }
+    };
+
+    getMenuFailed = function (response) {
+        showError(sTitle, response.responseText);
+    }
+
+        
+</script>
+       <!-- Sidebar -->
+<nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+    <ul class="nav sidebar-nav" id="sidebar-nav">
+        <li class="sidebar-brand">
+            <a href="#">
+                Brand
+            </a>
+        </li>
+        <li>
+            <a href="#">Home</a>
+        </li>
+        <li>
+            <a href="#">About</a>
+        </li>
+        <li>
+            <a href="#">Events</a>
+        </li>
+        <li>
+            <a href="#">Team</a>
+        </li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Master <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+                <li class="dropdown-header">Dropdown heading</li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index", "Parameter")">Parameter</a></li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index","Division")">Division</a></li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index","PriceType")">Price Type</a></li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index","VendorCategory")">Vendor Category</a></li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index","VendorSubcategory")">Vendor Subcategory</a></li>
+                <li><a style="color: #ddd;" href="@Url.Action("Index","Vendor")">Vendor</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="@Url.Action("Index","UnitPriceAnalysis")">Unit Price Analysis</a>
+        </li>
+        <li>
+            <a href="#">Contact</a>
+        </li>
+        <li>
+            <a href="https://twitter.com/maridlcrmn">Follow me</a>
+        </li>
+    </ul>
+</nav>
+<!-- /#sidebar-wrapper -->

@@ -1,0 +1,251 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model TCMembersVM
+@{
+
+    var X = Html.X();
+    string sPageName = "TCMembers";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectTCMembersBrowse('" + ViewData["Control" + TCMembersVM.Prop.TCMemberID.Name]
+        + "', '" + ViewData["Control" + TCMembersVM.Prop.EmployeeName.Name]
+        + "', '" + ViewData["ControlGrdTCMember"]
+        + "', App.grdTCMembersBrowse.getRowsValues({selectedOnly:true})[0]['" + TCMembersVM.Prop.TCMemberID.Name + "']"
+        + ", App.grdTCMembersBrowse.getRowsValues({selectedOnly:true})[0]['" + TCMembersVM.Prop.EmployeeID.Name + "']"
+        + ", App.grdTCMembersBrowse.getRowsValues({selectedOnly:true})[0]['" + TCMembersVM.Prop.EmployeeName.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdTCMembersBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdTCMembersBrowse();
+        });
+
+        resizeGrdTCMembersBrowse = function () {
+            if (App.grdTCMembersBrowse != null)
+                App.grdTCMembersBrowse.setHeight($(window).height() - App.grdTCMembersBrowse.getY() - (App.grdTCMembersBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionTCMembersChange = function (length) {
+            App.ButtonSelectTCMembers.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, TCMemberID, EmployeeName) {
+            filter.fields[0].items.items[0].setValue(TCMemberID);
+            filter.fields[1].items.items[0].setValue(EmployeeName);
+        };
+
+        selectTCMembersBrowse = function (ControlTCMemberID, ControlEmployeeName, ControlGrdTCMember, TCMemberID, EmployeeID, EmployeeName) {
+            debugger;
+            if (Ext.getCmp(ControlTCMemberID) != undefined) {
+                Ext.getCmp(ControlTCMemberID).setValue(TCMemberID);
+                Ext.getCmp(ControlTCMemberID).originalValue = TCMemberID;
+            }
+            if (Ext.getCmp(ControlEmployeeName) != undefined) {
+                Ext.getCmp(ControlEmployeeName).setValue(EmployeeName);
+                Ext.getCmp(ControlEmployeeName).originalValue = EmployeeName;
+            }
+            if (ControlGrdTCMember.length>1)
+            {
+                var SelectedData = App.grdTCMembersBrowse.getRowsValues({ selectedOnly: true });
+                var ExistingData = Ext.getCmp(ControlGrdTCMember).store.data.items;
+                debugger;
+                for (var n = 0; n < SelectedData.length; n++) {
+                    var Unique = true;
+                    for (var x = 0; x < ExistingData.length; x++) {
+                        if (ExistingData[x].data.TCMemberID == SelectedData[n].TCMemberID) {
+                            Unique = false;
+                            break;
+                        }
+                    }
+                    if (Unique) {
+                        TCMemberID = SelectedData[n].TCMemberID;
+                        EmployeeID = SelectedData[n].EmployeeID;
+                        EmployeeName = SelectedData[n].EmployeeName;
+                        Ext.getCmp(ControlGrdTCMember).store.add(new ModelTCMembers({
+                            TCMemberID: TCMemberID,
+                            EmployeeID: EmployeeID,
+                            EmployeeName: EmployeeName
+                        }));
+                    }
+                }
+
+            }
+            App.WinBrowseTCMembers.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseTCMembers")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdTCMembersBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionTCMembersChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[TCMembersVM.Prop.TCMemberID.Name].ToString() + "', '" + ViewData[TCMembersVM.Prop.EmployeeName.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "TCMember"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(ep =>
+                        ep.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = TCMembersVM.Prop.SuperiorID.Name,
+                                Value = ViewData[TCMembersVM.Prop.SuperiorID.Name] == null ? string.Empty : ViewData[TCMembersVM.Prop.SuperiorID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = TCMembersVM.Prop.SuperiorTCMemberID.Name,
+                                Value = ViewData[TCMembersVM.Prop.SuperiorTCMemberID.Name] == null ? string.Empty : ViewData[TCMembersVM.Prop.SuperiorTCMemberID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                    )
+            )
+            .AutoLoad(ViewData[TCMembersVM.Prop.TCMemberID.Name].ToString() == "" && ViewData[TCMembersVM.Prop.EmployeeName.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.TCMemberID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(TCMembersVM.Prop.TCMemberID.Desc)
+            .DataIndex(Model, model => model.TCMemberID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                    )
+            ),
+            X.Column()
+            .Text(TCMembersVM.Prop.EmployeeID.Desc)
+            .DataIndex(Model, model => model.EmployeeID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(TCMembersVM.Prop.EmployeeName.Desc)
+            .DataIndex(Model, model => model.EmployeeName)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.DateColumn()
+            .Text(TCMembersVM.Prop.PeriodStart.Desc)
+            .DataIndex(Model, model => model.PeriodStart)
+            .Format(global_asax.DefaultDateFormat)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.DateColumn()
+            .Text(TCMembersVM.Prop.PeriodEnd.Desc)
+            .DataIndex(Model, model => model.PeriodEnd)
+            .Format(global_asax.DefaultDateFormat)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

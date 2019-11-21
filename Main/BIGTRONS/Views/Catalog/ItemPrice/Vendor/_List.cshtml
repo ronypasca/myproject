@@ -1,0 +1,367 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemPriceVendorVM>
+@{
+    ViewBag.Title = "Item Price Vendor";
+    var X = Html.X();
+    string sPageName = "HomeItemPriceVendor";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemPriceVendorVM.Prop.VendorID.Name, ItemPriceVendorVM.Prop.VendorID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemPriceVendorVM.Prop.VendorDesc.Name, ItemPriceVendorVM.Prop.VendorDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseVendor = global_asax.Button(Buttons.ButtonBrowse, "Vendor", "", "../Vendor/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseVendor = global_asax.Button(Buttons.ButtonErase, "Vendor", "", "", true);
+
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, string.Empty, true);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    var hdnTextFieldVendorID = X.Hidden().ID(ItemPriceVendorVM.Prop.VendorID.Name);
+    var hdnTextFieldVendorDesc = X.Hidden().ID(ItemPriceVendorVM.Prop.VendorDesc.Name);
+    var hdnTextFieldListVendor = X.Hidden().ID(ItemPriceVM.Prop.ListItemPriceVendorVM.Name);
+
+    <script>
+        var sTitleItemPriceVendor = @Html.Raw(Json.Encode(ViewBag.Title));
+
+
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemPriceVendor()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemPriceVendor();
+        });
+
+        resizeGrdItemPriceVendor = function () {
+            if (App.grdItemPriceVendor != null)
+               App.grdItemPriceVendor.setHeight($(window).height() - App.grdItemPriceVendor.getY() - (App.grdItemPriceVendor.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeItemPriceVendor = function (length) {
+            App.ButtonAddHomeItemPriceVendorPeriod.setDisabled(length != 1);
+            App.ButtonDeleteHomeItemPriceVendor.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdItemPriceVendor.getStore().reload();
+        };
+
+        deleteRowItemPriceVendor = function()
+        {
+            showMsgDeleteConfirm();
+        };
+
+        showMsgDeleteConfirm= function(){
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "deleteConfirm"
+            });
+            return;
+        };
+
+        deleteConfirm= function(btn){
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("DeleteItemPriceVendor", "Item"))',
+                    params: {
+                        Selected: App.grdItemPriceVendor.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        /*App.grdItemPriceVendor.getStore().reload();*/
+                        
+                        App.grdItemPriceVendorPeriod.store.clearFilter();
+                        var records = App.grdItemPriceVendor.getSelectionModel().getSelection()[0];
+                        var recordPeriods =App.grdItemPriceVendorPeriod.store.data.items;
+                        for (var i = 0; i < recordPeriods.length; i++) {
+                            if(records.data.VendorID==recordPeriods[0].data.VendorID)
+                                App.grdItemPriceVendorPeriod.getStore().remove(recordPeriods[i]);
+                        }
+                        App.grdItemPriceVendor.getStore().remove(records);
+                        viewReady(App.grdItemPriceVendorPeriod);
+                    }
+                });
+            }
+        };
+
+        isDefaultVendorExist = function (vendorID){
+            allRecordVendors = App.grdItemPriceVendor.store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecordVendors) {
+                if (allRecordVendors.hasOwnProperty(rowKey)) {
+                    var row = allRecordVendors[rowKey];
+                    if (row.get('VendorID') == vendorID) {
+                        return true;
+                    }
+                }
+                rowIdx++;
+            }
+            return false;
+        };
+
+        addItemPriceVendor = function(){
+            vendorID = (isDefaultVendorExist("@(ViewData[ItemPriceVendorVM.Prop.VendorID.Name])")? "" : "@(ViewData[ItemPriceVendorVM.Prop.VendorID.Name])");
+            vendorDesc = (vendorID==""?"":"@(ViewData[ItemPriceVendorVM.Prop.VendorDesc.Name])");
+            App.grdItemPriceVendor.store.add(new ModelItemPriceVendor({
+                VendorID: vendorID,
+                VendorDesc: vendorDesc,
+                IsDefault: true,
+                ListItemPriceVendorPeriodVM:[]
+            }));
+            App.grdItemPriceVendor.editingPlugin.startEditByPosition({ row: App.grdItemPriceVendor.getStore().data.length-1, column: 0 });
+            setCheckAllRecord(App.grdItemPriceVendor.store.data.items[App.grdItemPriceVendor.getStore().data.length-1],App.grdItemPriceVendor.getStore().data.length-1);
+        };
+
+        editItemPriceVendor = function (editor, e) {
+
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        beforeEditItemPriceVendor = function (editor, e) {
+
+            if("@isDetailButton" == "True")
+                return false;
+
+            App.grdItemPriceVendor.getSelectionModel().select(e.record);
+
+            loadGridItemPriceVendorPeriod(e.record.get('VendorID'));
+        };
+
+
+        setVendorID = function (rowIndex) {
+            var value = App.VendorID.getValue();
+            if (value != null && value != "") {
+
+                var record = App.grdItemPriceVendor.store.getAt(rowIndex);
+                record.set('VendorID', value);
+
+                record.commit();
+                App.VendorID.clear();
+            }
+        };
+
+        setVendorDesc = function (rowIndex) {
+            var value = App.VendorDesc.getValue();
+            if (value != null && value != "") {
+                if (isDuplicatedVendor(App.grdItemPriceVendor.getStore(), 'VendorDesc', value, rowIndex)) {
+                    showWarningAlert(sTitleItemPriceVendor, Ext.String.format("{0} has been exist on the list, cannot duplicate vendor!",value) );
+                    var record = App.grdItemPriceVendor.store.getAt(rowIndex);
+                    record.set("VendorID", "");
+                    record.set("VendorDesc", "");
+                } else {
+                    var record = App.grdItemPriceVendor.store.getAt(rowIndex);
+                    record.set('VendorDesc', value);
+                }
+                record.commit();
+                App.VendorDesc.clear();
+            }
+        };
+
+        isDuplicatedVendor = function (store, colName, value, rowIndex) {
+            var found = false;
+            store.each(function (record, idx) {
+                if ((idx != rowIndex) && record.data.hasOwnProperty(colName))
+                    if (found = (record.data[colName].trim().toLowerCase() == value.trim().toLowerCase()) ? true : false) { return false };
+            });
+            return found;
+        };
+
+        var eraseVendor = function (rowIndex) {
+            var record = App.grdItemPriceVendor.store.getAt(rowIndex);
+            record.set("VendorID", "");
+            record.set("VendorDesc", "");
+            record.commit();
+        };
+
+        beforeCheckChange =function(checkcolumn, rowIndex, record, checked, eOpts){
+            if(!checked)
+                return false;
+        };
+
+        checkChangeDefault=function(checkcolumn, rowIndex, record, checked, eOpts){
+
+            if(checked)
+            {
+                setCheckAllRecord(record,rowIndex);
+            }
+        };
+        setCheckAllRecord=function(record,rowIndex){
+            allRecordVendors = App.grdItemPriceVendor.store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecordVendors) {
+                if (allRecordVendors.hasOwnProperty(rowKey)) {
+                    var row = allRecordVendors[rowKey];
+                    if (rowIdx!= rowIndex) {
+                        row.set("IsDefault", false);
+                        row.commit();
+                    }
+                }
+                rowIdx++;
+            }
+            record.set("IsDefault", true);
+            record.commit();
+        };
+
+
+
+        loadGridItemPriceVendorPeriod = function (vendorID) {
+            var store = App.grdItemPriceVendorPeriod.store;
+            store.clearFilter();
+            if(vendorID!=null){
+                store.filterBy(function(row, id){
+                    return row.get('VendorID') === vendorID;
+                });
+            }else
+            {
+                store.filterBy(function(row, id){
+                    return row.get('VendorID') === "";
+                });
+            }
+
+        };
+
+        setDataToHiddenField = function(grid){
+            App.ListItemPriceVendorVM.setValue(JSON.stringify(grid.getRowsValues()));
+        }
+    </script>
+
+    var grdItemPriceVendor = X.GridPanel()
+            .ID("grdItemPriceVendor")
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Single)
+                .AllowDeselect(true)
+            )
+            .Listeners(oListener =>
+            {
+                oListener.ViewReady.Fn = "setDataToHiddenField";
+                oListener.SelectionChange.Handler = (!isDetailButton ? "selectionChangeItemPriceVendor(selected.length);" : "");
+                oListener.Select.Handler = "loadGridItemPriceVendorPeriod(App.grdItemPriceVendor.getSelection()[0].data.VendorID)";
+            })
+            .Store(
+                    X.Store()
+                    .AutoLoad(true)
+                    .RemoteSort(false)
+                    .RemotePaging(true)
+                    .RemoteFilter(true)
+                    .PageSize(iPageSize)
+                    .DataSource(Model)
+                    .Model(
+                        X.Model()
+                        .Name("ModelItemPriceVendor")
+                        .Fields(
+                            X.ModelField().Name(Model, model => model.ItemPriceID),
+                            X.ModelField().Name(Model, model => model.VendorID),
+                            X.ModelField().Name(Model, model => model.VendorDesc),
+                            X.ModelField().Name(Model, model => model.IsDefault).Type(ModelFieldType.Boolean)
+                        )
+                    )
+                )
+            .ColumnModel(
+                X.Column().DataIndex(Model, model => model.VendorID).Hidden(true),
+                X.Column()
+                .Text(ItemPriceVendorVM.Prop.VendorDesc.Desc)
+                .DataIndex(Model, model => model.VendorDesc)
+                .Flex(3)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    ))
+                .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("ColVendor")
+                    .ReadOnly(true)
+                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                    .RightButtons(
+                        btnBrowseVendor,
+                        btnEraseVendor.Handler("eraseVendor(App.grdItemPriceVendor.store.indexOf(App.grdItemPriceVendor.getSelectionModel().getSelection()[0]));")
+                    )
+                ),
+                X.CheckColumn()
+                .Text(ItemPriceVendorVM.Prop.IsDefault.Desc)
+                .DataIndex(Model, model => model.IsDefault)
+                .Flex(3)
+
+                .Items(
+                        X.ComboBox()
+                        .DisplayField(ConfigBoolVM.Prop.Description.Name)
+                        .ValueField(ConfigBoolVM.Prop.ID.Name)
+                        .Store(
+                                X.StoreForModel()
+                                .Proxy(X.AjaxProxy()
+                                    .Url(Url.Action("../Config/GetBoolList"))
+                                    .Reader(X.JsonReader().RootProperty("data"))
+                                )
+                                .AutoLoad(true)
+                             )
+
+                )
+                .Editable(true)
+                .Listeners(ls => { ls.CheckChange.Fn = "checkChangeDefault"; ls.BeforeCheckChange.Fn = "beforeCheckChange"; })
+
+            )
+            .Plugins(
+                X.FilterHeader()
+                .Remote(false),
+                 X.CellEditing()
+                     .ClicksToEdit(1)
+                        .Listeners(ls => ls.Edit.Fn = "editItemPriceVendor")
+                        .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditItemPriceVendor")
+                        .ID("rowEditorItemPriceVendor")
+            )
+            .TopBar(
+                X.Toolbar()
+                .PaddingSpec(sToolbarPaddingSpec)
+                .Items(
+                    btnAdd.Handler("addItemPriceVendor()").Disabled(isDetailButton),
+                    btnDelete.Disabled(true)
+                    .Handler("deleteRowItemPriceVendor()")
+
+
+                )
+            )
+            .BottomBar(
+                X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+            );
+}
+@(
+    X.Panel()
+    .ID("pnlGridItemPriceVendor")
+    .Items(
+        hdnTextFieldVendorID.Listeners(ls => ls.Change.Handler = "setVendorID(App.grdItemPriceVendor.store.indexOf(App.grdItemPriceVendor.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldVendorDesc.Listeners(ls => ls.Change.Handler = "setVendorDesc(App.grdItemPriceVendor.store.indexOf(App.grdItemPriceVendor.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldListVendor,
+        grdItemPriceVendor
+    )
+)

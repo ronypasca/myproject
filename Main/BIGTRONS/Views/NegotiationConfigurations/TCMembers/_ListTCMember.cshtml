@@ -1,0 +1,242 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<TCMembersVM>
+@{
+    var X = Html.X();
+    string sPageName = "TCMember";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdTCMember", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + FPTVM.Prop.Schedule.Name, "App.ScheduleDate.getValue()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    //oParam = new Parameter("ListBusinessUnit", "GetSelectedBusinessUnit()", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    oParam = new Parameter("FilterTCTypeID", "GetTCType()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseTCMembers", "Add", "../TCMember/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "Delete", null, string.Empty, true);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdNegotiationConfigurations()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdNegotiationConfigurations();
+        });
+
+        resizeGrdNegotiationConfigurations = function () {
+            if (App.grdTCMember != null)
+                App.grdTCMember.setHeight($(window).height() - App.grdTCMember.getY() - (App.grdTCMember.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeb = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()'; 
+            if(FromDetail !== 'Detail'){       
+                
+                App.ButtonAddBrowseTCMembers.setDisabled(false);
+                App.ButtonDeleteDelete.setDisabled(length <1);
+            }
+        };
+
+        deleteSuccess = function () {
+            App.grdTCMember.getStore().reload();
+        };
+
+        deleteList = function(){
+            App.grdTCMember.getStore().remove(App.grdTCMember.getSelectionModel().getSelection());
+        };
+        GetSelectedBusinessUn = function(){
+            var data = [];
+            data.push(App.BusinessUnitID.value);
+            return data;
+        };
+        GetSelectedBusinessUnit = function (){     
+            var node = App.treePanelNegoConfig.getRootNode().childNodes;             
+
+            if(App.isFromUpload.getValue()){
+                node =[];
+                node.push(App.treePanelNegoConfigUpload.getRootNode());            
+            }
+            var data = [];
+            for(var x in node)
+            {
+                debugger;
+                prjNode = node[x];
+                /*GetProjectList*/
+                /*if(prjNode.data.include){ */                  
+                    for(var bpNode in prjNode.childNodes)
+                    {debugger;
+                        if(prjNode.childNodes[bpNode].data.include && prjNode.childNodes[bpNode].data.itemtype=="BudgetPlanID"){                        
+                            data.push(prjNode.childNodes[bpNode].data.tctype);
+                        }
+                    }
+                    /*data = GetChildListBU(data,node[x].childNodes); */
+                /*}*/
+            };
+            return data;
+        };
+        var GetChildListBU = function(data,node){        
+            if(node!=undefined){
+                for(var x in node)
+                {
+                    if(node[x].data.include && node[x].data.itemtype=="BudgetPlan"){                        
+                        data.push(node[x].data);
+                    }
+                };
+            }
+            return data;
+        };
+        GetListTCMembers = function(){
+            var data = [];
+            for(var x in App.grdTCMember.store.data.items)
+            {
+                data.push(App.grdTCMember.store.data.items[x].data);
+            }
+            return data;
+        };
+
+        GetTCType = function(){
+            var ret = App.TCType.getValue();
+            if(ret == null)
+            {
+                ret="";
+            }
+            return ret;
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdTCMember")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeb(selected.length)";
+    })
+
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelTCMembers")
+                .Fields(
+                X.ModelField().Name(Model, model => model.TCMemberID),
+                X.ModelField().Name(Model, model => model.EmployeeID),
+                X.ModelField().Name(Model, model => model.EmployeeName),
+                X.ModelField().Name(Model, model => model.BusinessUnitDesc),
+                X.ModelField().Name(Model, model => model.PeriodStart),
+                X.ModelField().Name(Model, model => model.PeriodEnd),
+                X.ModelField().Name(Model, model => model.Email)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(TCMembersVM.Prop.Email.Desc).Hidden(true)
+        .DataIndex(Model, model => model.Email),
+        
+        X.Column()
+        .Text(TCMembersVM.Prop.PeriodStart.Desc).Hidden(true)
+        .DataIndex(Model, model => model.PeriodStart),
+        X.Column()
+        .Text(TCMembersVM.Prop.PeriodEnd.Desc).Hidden(true)
+        .DataIndex(Model, model => model.PeriodEnd),
+        X.Column()
+        .Text(TCMembersVM.Prop.TCMemberID.Desc)
+        .DataIndex(Model, model => model.TCMemberID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+        .Hidden(false)
+        ,
+        X.Column()
+        .Text(TCMembersVM.Prop.EmployeeID.Desc)
+        .DataIndex(Model, model => model.EmployeeID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        ),
+        X.Column()
+        .Text(TCMembersVM.Prop.EmployeeName.Desc)
+        .DataIndex(Model, model => model.EmployeeName)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        ),
+        X.Column()
+        .Text(TCMembersVM.Prop.BusinessUnitDesc.Desc)
+        .DataIndex(Model, model => model.BusinessUnitDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+            btnDelete.Disabled(true).Handler("deleteList(this);")
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

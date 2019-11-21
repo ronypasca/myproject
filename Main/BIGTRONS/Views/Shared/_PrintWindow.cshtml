@@ -1,0 +1,30 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@{
+    var X = Html.X();
+    string sPageName = "Print";
+    var iWindowWidth = 800;
+    var iWindowHeight = 600;
+    string sToolbarPaddingSpec = "0 10 10 0";
+
+    string sHandler = "#{WinPrint}.getBody().print();";
+
+    Button.Builder btnPrint = global_asax.Button(Buttons.ButtonPrint, sPageName, null, "", true, false, false, Buttons.ButtonList);
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinPrint")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Height(iWindowHeight)
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnPrint.Disabled(true).Handler(sHandler)
+        )
+    )
+)

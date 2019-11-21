@@ -1,0 +1,545 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ApprovalPathVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    //Button Role
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleID.Name, ApprovalPathVM.Prop.RoleID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleDesc.Name, ApprovalPathVM.Prop.RoleDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseRole = global_asax.Button(Buttons.ButtonBrowse, "Role", "", "../Role/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseRole = global_asax.Button(Buttons.ButtonErase, "Role", "", "", true);
+    //Button RoleParent
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleID.Name, ApprovalPathVM.Prop.RoleParentID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleDesc.Name, ApprovalPathVM.Prop.RoleParentDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseRoleParent = global_asax.Button(Buttons.ButtonBrowse, "RoleParent", "", "../Role/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseRoleParent = global_asax.Button(Buttons.ButtonErase, "RoleParent", "", "", true);
+    //Button RoleChild
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleID.Name, ApprovalPathVM.Prop.RoleChildID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ApprovalPathVM.Prop.RoleDesc.Name, ApprovalPathVM.Prop.RoleChildDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseRoleChild = global_asax.Button(Buttons.ButtonBrowse, "RoleChild", "", "../Role/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseRoleChild = global_asax.Button(Buttons.ButtonErase, "RoleChild", "", "", true);
+    //Button TaskTypes
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + TaskTypesVM.Prop.TaskTypeID.Name, ApprovalPathVM.Prop.TaskTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + TaskTypesVM.Prop.Descriptions.Name, ApprovalPathVM.Prop.TaskTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseTaskType = global_asax.Button(Buttons.ButtonBrowse, "TaskType", "", "../TaskTypes/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseTaskType = global_asax.Button(Buttons.ButtonErase, "TaskType", "", "", true);
+
+
+    //Role
+    <script>
+        var bPreventGetRole = false;
+
+        getRole = function (RoleID, RoleDesc, exact) {
+            if (App.RoleID.isDirty() || App.RoleDesc.isDirty()) {
+                App.RoleID.originalValue = App.RoleID.getValue();
+                App.RoleDesc.originalValue = App.RoleDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetRole", "Role"))',
+                    params: {
+                        ControlRoleID: App.RoleID.id,
+                        ControlRoleDesc: App.RoleDesc.id,
+                        FilterRoleID: RoleID,
+                        FilterRoleDesc: RoleDesc,
+                        Exact: exact
+                    },
+                    success: getRoleSuccess,
+                    failure: getRoleFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getRoleSuccess = function () {
+            if (!App.RoleID.isDirty() && !App.RoleDesc.isDirty()) {
+                App.RoleID.originalValue = "";
+                App.RoleDesc.originalValue = "";
+            }
+            bPreventGetRole = false;
+        };
+
+        getRoleFailed = function () {
+            eraseRole();
+        };
+
+        RoleIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRole = true;
+                getRole(field.getValue(), "", false);
+            }
+        };
+
+        RoleDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRole = true;
+                getRole("", field.getValue(), false);
+            }
+        };
+
+        RoleIDBlur = function (RoleID) {
+            console.log(bPreventGetRole);
+            if (!bPreventGetRole) {
+                bPreventGetRole = true;
+                if (RoleID.trim() == "")
+                    getRoleFailed();
+                else
+                    getRole(RoleID, "", true);
+            }
+            bPreventGetRole = false;
+        };
+
+        RoleDescBlur = function (RoleDesc) {
+            if (!bPreventGetRole) {
+                bPreventGetRole = true;
+                if (RoleDesc.trim() == "")
+                    getRoleFailed();
+                else
+                    getRole("", RoleDesc, true);
+            }
+            bPreventGetRole = false;
+        };
+
+        eraseRole = function () {
+            App.RoleID.clear();
+            App.RoleDesc.clear();
+            App.RoleID.originalValue = "";
+            App.RoleDesc.originalValue = "";
+        };
+    </script>
+    //Role Parent
+    <script>
+        var bPreventGetRoleParent = false;
+
+        getRoleParent = function (RoleParentID, RoleParentDesc, exact) {
+            if (App.RoleParentID.isDirty() || App.RoleParentID.isDirty()) {
+                App.RoleParentID.originalValue = App.RoleParentID.getValue();
+                App.RoleParentDesc.originalValue = App.RoleParentDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetRole", "Role"))',
+                    params: {
+                        ControlRoleID: App.RoleParentID.id,
+                        ControlRoleDesc: App.RoleParentDesc.id,
+                        FilterRoleID: RoleParentID,
+                        FilterRoleDesc: RoleParentDesc,
+                        Exact: exact
+                    },
+                    success: getRoleParentSuccess,
+                    failure: getRoleParentFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getRoleParentSuccess = function () {
+            if (!App.RoleParentID.isDirty() && !App.RoleParentDesc.isDirty()) {
+                App.RoleParentID.originalValue = "";
+                App.RoleParentDesc.originalValue = "";
+            }
+            bPreventGetRoleParent = false;
+        };
+
+        getRoleParentFailed = function () {
+            eraseRoleParent();
+        };
+
+        RoleParentIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRoleParent = true;
+                getRoleParent(field.getValue(), "", false);
+            }
+        };
+
+        RoleParentDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRoleParent = true;
+                getRoleParent("", field.getValue(), false);
+            }
+        };
+
+        RoleParentIDBlur = function (RoleParentID) {
+            console.log(bPreventGetRoleParent);
+            if (!bPreventGetRoleParent) {
+                bPreventGetRoleParent = true;
+                if (RoleParentID.trim() == "")
+                    getRoleParentFailed();
+                else
+                    getRoleParent(RoleParentID, "", true);
+            }
+            bPreventGetRoleParent = false;
+        };
+
+        RoleParentDescBlur = function (RoleParentDesc) {
+            if (!bPreventGetRoleParent) {
+                bPreventGetRoleParent = true;
+                if (RoleParentDesc.trim() == "")
+                    getRoleParentFailed();
+                else
+                    getRoleParent("", RoleParentDesc, true);
+            }
+            bPreventGetRoleParent = false;
+        };
+
+        eraseRoleParent = function () {
+            App.RoleParentID.clear();
+            App.RoleParentDesc.clear();
+            App.RoleParentID.originalValue = "";
+            App.RoleParentDesc.originalValue = "";
+        };
+    </script>
+    //Role Child
+    <script>
+        var bPreventGetRoleChild = false;
+
+        getRoleChild = function (RoleChildID, RoleChildDesc, exact) {
+            if (App.RoleChildID.isDirty() || App.RoleChildDesc.isDirty()) {
+                App.RoleChildID.originalValue = App.RoleChildID.getValue();
+                App.RoleChildDesc.originalValue = App.RoleChildDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetRole", "Role"))',
+                    params: {
+                        ControlRoleID: App.RoleChildID.id,
+                        ControlRoleDesc: App.RoleChildDesc.id,
+                        FilterRoleID: RoleChildID,
+                        FilterRoleDesc: RoleChildDesc,
+                        Exact: exact
+                    },
+                    success: getRoleChildSuccess,
+                    failure: getRoleChildFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getRoleChildSuccess = function () {
+            if (!App.RoleChildID.isDirty() && !App.RoleChildDesc.isDirty()) {
+                App.RoleChildID.originalValue = "";
+                App.RoleChildDesc.originalValue = "";
+            }
+            bPreventGetRoleChild = false;
+        };
+
+        getRoleChildFailed = function () {
+            eraseRoleChild();
+        };
+
+        RoleChildIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRoleChild = true;
+                getRoleChild(field.getValue(), "", false);
+            }
+        };
+
+        RoleChildDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRoleChild = true;
+                getRoleChild("", field.getValue(), false);
+            }
+        };
+
+        RoleChildIDBlur = function (RoleChildID) {
+            console.log(bPreventGetRoleChild);
+            if (!bPreventGetRoleChild) {
+                bPreventGetRoleChild = true;
+                if (RoleChildID.trim() == "")
+                    getRoleChildFailed();
+                else
+                    getRoleChild(RoleChildID, "", true);
+            }
+            bPreventGetRoleChild = false;
+        };
+
+        RoleChildDescBlur = function (RoleChildDesc) {
+            if (!bPreventGetRoleChild) {
+                bPreventGetRoleChild = true;
+                if (RoleChildDesc.trim() == "")
+                    getRoleChildFailed();
+                else
+                    getRoleChild("", RoleChildDesc, true);
+            }
+            bPreventGetRoleChild = false;
+        };
+
+        eraseRoleChild = function () {
+            App.RoleChildID.clear();
+            App.RoleChildDesc.clear();
+            App.RoleChildID.originalValue = "";
+            App.RoleChildDesc.originalValue = "";
+        };
+    </script>
+    //TaskType Child
+    <script>
+        var bPreventGetTaskType = false;
+        getTaskType = function (TaskTypeID, TaskTypeDesc, exact) {
+            if (App.TaskTypeID.isDirty() || App.TaskTypeID.isDirty()) {
+                App.TaskTypeID.originalValue = App.TaskTypeID.getValue();
+                App.TaskTypeDesc.originalValue = App.TaskTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetTaskTypes", "TaskTypes"))',
+                    params: {
+                        ControlRoleID: App.TaskTypeID.id,
+                        ControlRoleDesc: App.TaskTypeDesc.id,
+                        FilterRoleID: TaskTypeID,
+                        FilterRoleDesc: TaskTypeDesc,
+                        Exact: exact
+                    },
+                    success: getTaskTypeSuccess,
+                    failure: getTaskTypeFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getTaskTypeSuccess = function () {
+            if (!App.TaskTypeID.isDirty() && !App.TaskTypeDesc.isDirty()) {
+                App.TaskTypeID.originalValue = "";
+                App.TaskTypeDesc.originalValue = "";
+            }
+            bPreventGetTaskType = false;
+        };
+
+        getTaskTypeFailed = function () {
+            eraseTaskType();
+        };
+
+        TaskTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetTaskType = true;
+                getTaskType(field.getValue(), "", false);
+            }
+        };
+
+        TaskTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetTaskType = true;
+                getTaskType("", field.getValue(), false);
+            }
+        };
+
+        TaskTypeIDBlur = function (TaskTypeID) {
+            console.log(bPreventGetTaskType);
+            if (!bPreventGetTaskType) {
+                bPreventGetTaskType = true;
+                if (TaskTypeID.trim() == "")
+                    getTaskTypeFailed();
+                else
+                    getTaskType(TaskTypeID, "", true);
+            }
+            bPreventGetTaskType = false;
+        };
+
+        TaskTypeDescBlur = function (TaskTypeDesc) {
+            if (!bPreventGetTaskType) {
+                bPreventGetTaskType = true;
+                if (TaskTypeDesc.trim() == "")
+                    getTaskTypeFailed();
+                else
+                    getTaskType("", TaskTypeDesc, true);
+            }
+            bPreventGetTaskType = false;
+        };
+
+        eraseTaskType = function () {
+            App.TaskTypeID.clear();
+            App.TaskTypeDesc.clear();
+            App.TaskTypeID.originalValue = "";
+            App.TaskTypeDesc.originalValue = "";
+        };
+    </script>
+
+}
+@(
+    X.Panel()
+    .ID("PApprovalPathForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FApprovalPath")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ApprovalPathID)
+                .FieldLabel(ApprovalPathVM.Prop.ApprovalPathID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.RoleID)
+                        .FieldLabel(ApprovalPathVM.Prop.RoleID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.RoleDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseRole
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseRole.Handler("eraseRole")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.RoleParentID)
+                        .FieldLabel(ApprovalPathVM.Prop.RoleParentID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleParentIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleParentIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.RoleParentDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleParentDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleParentDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseRoleParent
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseRoleParent.Handler("eraseRoleParent")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.RoleChildID)
+                        .FieldLabel(ApprovalPathVM.Prop.RoleChildID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleChildIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleChildIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.RoleChildDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "RoleChildDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "RoleChildDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseRoleChild
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseRoleChild.Handler("eraseRoleChild")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.TaskTypeID)
+                        .FieldLabel(ApprovalPathVM.Prop.TaskTypeID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "TaskTypeIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "TaskTypeIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.TaskTypeDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "TaskTypeDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "TaskTypeDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseTaskType
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseTaskType.Handler("eraseTaskType")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.DateFieldFor(model => model.StartDate)
+                .FieldLabel(ApprovalPathVM.Prop.StartDate.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.DateFieldFor(model => model.EndDate)
+                .FieldLabel(ApprovalPathVM.Prop.EndDate.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+           )
+           .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

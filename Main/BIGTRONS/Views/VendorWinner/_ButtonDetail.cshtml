@@ -1,0 +1,25 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Detail";
+    var FPTID = ViewData["FPTIDData"].ToString();
+    var RoundID = ViewData["RoundIDData"].ToString();
+    var Status = ViewData["StatusData"].ToString();
+    bool isenable = Status == "Draft" || Status == "New";
+    List<Parameter> oParamList;
+    Parameter oParam;
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdFPTNegotiationRound.store.reload()");
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("FPTID", FPTID, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("RoundID", RoundID, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GridList", "getAllGridData()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonDetail, oParamList);
+
+}
+@(btnUpdate.Disabled(!isenable))
+@(btnList)
+

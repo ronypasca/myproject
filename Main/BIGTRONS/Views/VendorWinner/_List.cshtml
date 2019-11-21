@@ -1,0 +1,254 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTNegotiationRoundVM
+@{
+
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdFPTNegotiationRound.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdFPTNegotiationRound.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    Button.Builder btnVerify = global_asax.Button(Buttons.ButtonVerify, sPageName, null, string.Empty, true);
+
+
+<script>
+
+    selectionChange = function (length) {
+        App.ButtonUpdateHome.setDisabled(length !== 1);
+        App.ButtonDetailHome.setDisabled(length !== 1);
+        App.ButtonVerifyHome.setDisabled(length !== 1);
+        
+        var selectedRows = App.grdFPTNegotiationRound.getRowsValues({ selectedOnly: true });
+        if (selectedRows.length > 0) {
+            if (selectedRows[0].FPTWinnerStatus == "Approved") {
+                App.ButtonVerifyHome.setDisabled(true);
+                App.ButtonUpdateHome.setDisabled(true);
+            }
+            if (selectedRows[0].FPTWinnerStatus == "In Progress") {
+                App.ButtonVerifyHome.setDisabled(true);
+                App.ButtonUpdateHome.setDisabled(true);
+            }
+            if (selectedRows[0].FPTWinnerStatus == "Revise") {
+                App.ButtonVerifyHome.setDisabled(true);
+               
+            }
+            
+        }
+    };
+        
+        $(document).ready(function () {
+        setTimeout("resizegrdFPTNegotiationRound()", 1);
+    });
+
+        $(window).resize(function () {
+        resizeContainer();
+        resizegrdFPTNegotiationRound();
+    });
+
+    resizegrdFPTNegotiationRound = function () {
+        if (App.grdFPTNegotiationRound != null)
+            App.grdFPTNegotiationRound.setHeight($(window).height() - App.grdFPTNegotiationRound.getY() - (App.grdFPTNegotiationRound.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        App.grdFPTNegotiationRound.updateLayout();
+    };
+
+    verifyConfirm = function (btn) {
+        if (btn == "yes") {
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("Verify", "VendorWinner"))',
+                    params: {
+                    Selected: App.grdFPTNegotiationRound.getRowsValues({ selectedOnly: true })
+                    },
+                    callback: function () {
+                    App.grdFPTNegotiationRound.getStore().reload();
+                }
+            });
+        }
+    };
+
+    showMsgConfirmVerify = function () {
+        Ext.Msg.show({
+            message: "You're going to verify current Vendor Winner.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+        return;
+    };
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdFPTNegotiationRound")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+    .RemoteSort(false)
+    .RemotePaging(true)
+    .RemoteFilter(false)
+    .PageSize(iPageSize)
+    .SorterFor(Model, model => model.EndDateTimeStamp, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.FPTID.Desc)
+        .DataIndex(Model, model => model.FPTID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+        ,
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.Descriptions.Desc)
+        .DataIndex(Model, model => model.FPTDesc)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+        ,
+         X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.TotalVendors.Desc)
+        .DataIndex(Model, model => model.TotalVendors)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+        ,
+        X.DateColumn()
+        .Text(FPTNegotiationRoundVM.Prop.StartDateTimeStamp.Desc)
+        .DataIndex(Model, model => model.StartDateTimeStamp)
+        .Format(global_asax.DefaultDateTimeFormat)
+        .Flex(2)
+        .Hidden(true)
+        ,
+        X.DateColumn()
+        .Text(FPTNegotiationRoundVM.Prop.EndDateTimeStamp.Desc)
+        .DataIndex(Model, model => model.EndDateTimeStamp)
+        .Format(global_asax.DefaultDateTimeFormat)
+        .Flex(2)
+        .Hidden(true)
+        ,
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.Duration.Desc)
+        .DataIndex(Model, model => model.Duration)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+        ,
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.RoundRemaining.Desc)
+        .DataIndex(Model, model => model.RoundRemaining)
+        .Flex(2)
+        .Hidden(true)
+        ,
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.Status.Desc)
+        .DataIndex(Model, model => model.FPTWinnerStatus)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnVerify.Disabled(true).Handler("showMsgConfirmVerify()")
+
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

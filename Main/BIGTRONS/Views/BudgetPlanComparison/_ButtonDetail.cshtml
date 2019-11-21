@@ -1,0 +1,8 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Detail";
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true);
+}
+@(btnList)

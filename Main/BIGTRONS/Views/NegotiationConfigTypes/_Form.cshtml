@@ -1,0 +1,38 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model NegotiationConfigTypesVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+}
+@(
+    X.Panel()
+    .ID("PNegotiationConfigTypesForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FNegotiationConfigTypes")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.NegotiationConfigTypeID)
+                .FieldLabel(NegotiationConfigTypesVM.Prop.NegotiationConfigTypeID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Descriptions)
+                .FieldLabel(NegotiationConfigTypesVM.Prop.Descriptions.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

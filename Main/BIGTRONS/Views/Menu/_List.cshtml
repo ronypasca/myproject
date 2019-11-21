@@ -1,0 +1,282 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Controllers
+@model MenuVM
+@{
+    
+    var X = Html.X();
+    string sPageName = "Home";
+    int iTreeMinHeight = 300;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 0 10 0";
+    int iPageSize = 30;
+    /*bool IsDetailPage = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    */
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeMenu.getSelection()[0].data", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeMenu.getSelection()[0].data", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "getSelectedNode()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null , "deleteFinish(true)", "deleteFinish(false, result.errorMessage)");
+
+
+    Button.Builder btnCollapseExpandAll = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdMenu()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdMenu();
+        });
+
+        resizeGrdMenu = function () {
+            if (App.treeMenu != null)
+                App.treeMenu.setHeight($(window).height() - App.treeMenu.getY() - (App.treeMenu.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            refreshTree();
+        };
+        deleteFinish = function (success, msg) {
+            if (success)
+                refreshTree();
+            else
+                showError(sTitle, msg);
+        };
+
+        refreshTree=function(){
+           App.treeMenu.store.load();
+        };
+
+        getSelectedNode = function(){
+            data=[];
+            records = App.treeMenu.getSelectedNodes({selectedOnly:true});
+            for (var i = 0; i < records.length; i++) {
+                data.push(records[i].attributes);
+            }
+            return data;
+        };
+
+        var handleCollapseExpandAll = function(btn){
+            var btnCollapseID = '@General.EnumName(Buttons.ButtonCollapse)@sPageName';
+            var btnExpandID = '@General.EnumDesc(Buttons.ButtonExpand)@sPageName';
+
+            if(btn.id== btnCollapseID ){
+                btn.setId(btnExpandID);
+                btn.setText('@General.EnumDesc(Buttons.ButtonExpand)');
+                App.treeMenu.collapseAll();
+            }else{
+                btn.setId(btnCollapseID);
+                btn.setText('@General.EnumDesc(Buttons.ButtonCollapse)');
+                App.treeMenu.expandAll();
+            }
+            return;
+        };
+
+        var filterTree = function (tf, e) {
+            var tree = tf.up("treepanel"),
+                store = tree.store,
+                logic = tree,
+                text = tf.getRawValue();
+
+            logic.clearFilter();
+
+            if (Ext.isEmpty(text, false)) {
+                return;
+            }
+            
+            if (e.getKey() === e.ESC) {
+                clearFilter();
+            } else {
+                var re = new RegExp(".*" + text + ".*", "i");
+
+                logic.filterBy(function (node) {
+                    return re.test(node.data.text);
+                });
+            }
+            
+        };
+
+        var clearFilter = function () {
+            var field = this,
+                tree = this.up("treepanel"),
+                store = tree.store,
+                logic = tree;
+
+            field.setValue("");
+            logic.clearFilter(true);
+            tree.getView().focus();
+        };
+    </script>
+}
+@(
+    X.TreePanel()
+    .ID("treeMenu")
+    .Padding(iBodyPadding)
+    .MinHeight(iTreeMinHeight)
+    .UseArrows(true)
+    .RootVisible(false)
+    .MultiSelect(false)
+    .Expand(true)
+    .FolderSort(false)
+    .RowLines(true)
+    .Store(
+       X.TreeStore()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("GenerateTreeMenu")))
+        .AutoLoad(true)
+        .RemoteFilter(true)
+     )
+
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .ColumnModel(
+        X.TreeColumn()
+        .Text(MenuVM.Prop.MenuID.Desc)
+        .DataIndex(MenuVM.Prop.MenuID.Name.ToLower())
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(3)
+                .EnableKeyEvents(true)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('treepanel').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MenuVM.Prop.MenuDesc.Desc)
+        .DataIndex(MenuVM.Prop.MenuDesc.Name.ToLower())
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .EnableKeyEvents(true)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('treepanel').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MenuVM.Prop.MenuIcon.Desc)
+        .DataIndex(MenuVM.Prop.MenuIcon.Name.ToLower())
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+               X.TextField()
+                .Flex(1)
+                .EnableKeyEvents(true)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('treepanel').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MenuVM.Prop.MenuUrl.Desc)
+        .DataIndex(MenuVM.Prop.MenuUrl.Name.ToLower())
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .EnableKeyEvents(true)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('treepanel').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.CheckColumn()
+        .Text(MenuVM.Prop.MenuVisible.Desc)
+        .DataIndex(MenuVM.Prop.MenuVisible.Name.ToLower())
+        .Flex(3)
+
+        .Items(
+                X.ComboBox()
+                .DisplayField(ConfigBoolVM.Prop.Description.Name)
+                .ValueField(ConfigBoolVM.Prop.ID.Name)
+                .Store(
+                        X.StoreForModel()
+                        .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("../Config/GetBoolList"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                        .AutoLoad(true)
+                     )
+
+        )
+    )
+    .Root(
+          X.Node().NodeID("0").Text("Root")
+         )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(false),
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnDelete.Disabled(true),
+            btnCollapseExpandAll.Handler("handleCollapseExpandAll")
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

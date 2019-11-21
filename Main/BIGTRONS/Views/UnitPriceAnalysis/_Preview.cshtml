@@ -1,0 +1,720 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPageName = "Preview";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemPriceVM.Prop.RegionID.Name, ItemPriceVM.Prop.RegionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemPriceVM.Prop.RegionDesc.Name, ItemPriceVM.Prop.RegionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseRegion = global_asax.Button(Buttons.ButtonBrowse, "Region", "", "../Region/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseRegion = global_asax.Button(Buttons.ButtonErase, "Region", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemID.Name, ItemVersionVM.Prop.ItemID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.Version.Name, ItemVersionVM.Prop.Version.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.RegionID.Name, BudgetPlanVM.Prop.RegionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.ProjectID.Name, BudgetPlanVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.ClusterID.Name, BudgetPlanVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.UnitTypeID.Name, BudgetPlanVM.Prop.UnitTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnSearch = global_asax.Button(Buttons.ButtonSearch, sPageName, null,null, true, false, false, null, oParamList,null,"loadGrid");
+    
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "Detail", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdItemVersion.getStore().reload()", null);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemID.Name, ItemVersionVM.Prop.ItemID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemDesc.Name, ItemVersionVM.Prop.ItemDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemTypeDesc.Name, ItemVersionVM.Prop.ItemTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemGroupDesc.Name, ItemVersionVM.Prop.ItemGroupDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.VersionDesc.Name, ItemVersionVM.Prop.VersionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterUPA", true.ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItem = global_asax.Button(Buttons.ButtonBrowse, "Item", "", "../Item/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItem = global_asax.Button(Buttons.ButtonErase, "Item", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCluster = global_asax.Button(Buttons.ButtonBrowse, "Cluster", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeID.Name, UnitTypeVM.Prop.UnitTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeDesc.Name, UnitTypeVM.Prop.UnitTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseUnitType = global_asax.Button(Buttons.ButtonBrowse, "UnitType", "", "../UnitType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseUnitType = global_asax.Button(Buttons.ButtonErase, "UnitType", "", "", true);
+
+
+    <script>
+        var bPreventGetItem = false;
+
+        getItem = function (ItemID, ItemDesc, exact) {
+            if (App.ItemID.isDirty() || App.ItemDesc.isDirty()) {
+                App.ItemID.originalValue = App.ItemID.getValue();
+                App.ItemDesc.originalValue = App.ItemDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItem", "Item"))',
+                    params: {
+                        ControlItemID: App.ItemID.id,
+                        ControlItemDesc: App.ItemDesc.id,
+                        ControlItemGroupDesc: App.ItemGroupDesc.id,
+                        ControlItemTypeDesc: App.ItemTypeDesc.id,
+                        ControlVersionDesc: App.VersionDesc.id,
+                        FilterItemID: ItemID,
+                        FilterItemDesc: ItemDesc,
+                        FilterUPA: true,
+                        Exact: exact
+                    },
+                    success: getItemSuccess,
+                    failure: getItemFailed
+                });
+            }
+        };
+
+        getItemSuccess = function () {
+            if (!App.ItemID.isDirty() && !App.ItemDesc.isDirty()) {
+                App.ItemID.originalValue = "";
+                App.ItemDesc.originalValue = "";
+            }
+            bPreventGetItem = false;
+        };
+
+        getItemFailed = function () {
+            eraseItem();
+        };
+
+        ItemIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItem = true;
+                getItem(field.getValue(), "", false);
+            }
+        };
+
+        ItemDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItem = true;
+                getItem("", field.getValue(), false);
+            }
+        };
+
+        ItemIDBlur = function (ItemID) {
+            console.log(bPreventGetItem);
+            if (!bPreventGetItem) {
+                bPreventGetItem = true;
+                if (ItemID.trim() == "")
+                    getItemFailed();
+                else
+                    getItem(ItemID, "", true);
+            }
+            bPreventGetItem = false;
+        };
+
+        ItemDescBlur = function (ItemDesc) {
+            if (!bPreventGetItem) {
+                bPreventGetItem = true;
+                if (ItemDesc.trim() == "")
+                    getItemFailed();
+                else
+                    getItem("", ItemDesc, true);
+            }
+            bPreventGetItem = false;
+        };
+
+        eraseItem = function () {
+            App.ItemID.clear();
+            App.ItemDesc.clear();
+            App.ItemGroupDesc.clear();
+            App.ItemTypeDesc.clear();
+            App.VersionDesc.clear();
+            App.ItemID.originalValue = "";
+            App.ItemDesc.originalValue = "";
+        };
+    </script>
+
+    <script>
+
+        var formatHours = function (v) {
+            if (v < 1) {
+                return Math.round(v * 60) + " mins";
+            } else if (Math.floor(v) !== v) {
+                var min = v - Math.floor(v);
+                return Math.floor(v) + "h " + Math.round(min * 60) + "m";
+            } else {
+                return v + " hour" + (v === 1 ? "" : "s");
+            }
+        };
+
+        var handler = function (grid, rowIndex, colIndex, actionItem, event, record, row) {
+            showErrorAlert('Editing' + (record.get('done') ? ' completed task' : ''), record.get('task'));
+        };
+
+    </script>
+
+    /**
+     *
+     * Project Browse
+     *
+     * **/
+    <script>
+        /*Region*/
+        var bPreventGetRegion = false;
+
+        getRegion = function (regionID, regionDesc, exact) {
+            if (App.RegionID.isDirty() || App.RegionDesc.isDirty()) {
+                App.RegionID.originalValue = App.RegionID.getValue();
+                App.RegionDesc.originalValue = App.RegionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetRegion", "Region"))',
+                    params: {
+                        ControlRegionID: App.RegionID.id,
+                        ControlRegionDesc: App.RegionDesc.id,
+                        FilterRegionID: regionID,
+                        FilterRegionDesc: regionDesc,
+                        Exact: exact
+                    },
+                    success: getRegionSuccess,
+                    failure: getRegionFailed
+                });
+            }
+        };
+
+        getRegionSuccess = function () {
+            if (!App.RegionID.isDirty() && !App.RegionDesc.isDirty()) {
+                App.RegionID.originalValue = "";
+                App.RegionDesc.originalValue = "";
+            }
+            bPreventGetRegion = false;
+        };
+
+        getRegionFailed = function () {
+            eraseRegion();
+        };
+
+        regionIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRegion = true;
+                getRegion(field.getValue(), "", false);
+            }
+        };
+
+        regionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRegion = true;
+                getRegion("", field.getValue(), false);
+            }
+        };
+
+        regionIDBlur = function (regionID) {
+            console.log(bPreventGetRegion);
+            if (!bPreventGetRegion) {
+                bPreventGetRegion = true;
+                if (regionID.trim() == "")
+                    getRegionFailed();
+                else
+                    getRegion(regionID, "", true);
+            }
+            bPreventGetRegion = false;
+        };
+
+        regionDescBlur = function (regionDesc) {
+            if (!bPreventGetRegion) {
+                bPreventGetRegion = true;
+                if (regionDesc.trim() == "")
+                    getRegionFailed();
+                else
+                    getRegion("", regionDesc, true);
+            }
+            bPreventGetRegion = false;
+        };
+
+        eraseRegion = function () {
+            App.RegionID.clear();
+            App.RegionDesc.clear();
+            App.RegionID.originalValue = "";
+            App.RegionDesc.originalValue = "";
+        };
+
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            /*removeChildTree(App.treeSimulation);*/
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+            /*RecountAmount();*/
+        };
+
+        getProjectFailed = function () {
+            /*removeChildTree(App.treeSimulation);*/
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+
+    </script>
+
+    /**
+     *
+     * Cluster Browse
+     *
+     * **/
+    <script>
+        var bPreventGetCluster = false;
+
+        getCluster = function (clusterID, clusterDesc, exact) {
+            if (App.ClusterID.isDirty() || App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = App.ClusterID.getValue();
+                App.ClusterDesc.originalValue = App.ClusterDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCluster", "Cluster"))',
+                    params: {
+                        ControlClusterID: App.ClusterID.id,
+                        ControlClusterDesc: App.ClusterDesc.id,
+                        FilterClusterID: clusterID,
+                        FilterClusterDesc: clusterDesc,
+                        Exact: exact
+                    },
+                    success: getClusterSuccess,
+                    failure: getClusterFailed
+                });
+            }
+        };
+
+        getClusterSuccess = function () {
+            if (!App.ClusterID.isDirty() && !App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = "";
+                App.ClusterDesc.originalValue = "";
+            }
+            bPreventGetCluster = false;
+        };
+
+        getClusterFailed = function () {
+            eraseCluster();
+        };
+
+        clusterIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster(field.getValue(), "", false);
+            }
+        };
+
+        clusterDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster("", field.getValue(), false);
+            }
+        };
+
+        clusterIDBlur = function (clusterID) {
+            console.log(bPreventGetCluster);
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterID.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster(clusterID, "", true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        clusterDescBlur = function (clusterDesc) {
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterDesc.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster("", clusterDesc, true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+        };
+    </script>
+
+    /**
+     *
+     * Unit Type Browse
+     *
+     * **/
+    <script>
+        var bPreventGetUnitType = false;
+
+        getUnitType = function (unitTypeID, unitTypeDesc, exact) {
+            if (App.UnitTypeID.isDirty() || App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = App.UnitTypeID.getValue();
+                App.UnitTypeDesc.originalValue = App.UnitTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetUnitType", "UnitType"))',
+                    params: {
+                        ControlUnitTypeID: App.UnitTypeID.id,
+                        ControlUnitTypeDesc: App.UnitTypeDesc.id,
+                        FilterUnitTypeID: unitTypeID,
+                        FilterUnitTypeDesc: unitTypeDesc,
+                        Exact: exact
+                    },
+                    success: getUnitTypeSuccess,
+                    failure: getUnitTypeFailed
+                });
+            }
+        };
+
+        getUnitTypeSuccess = function () {
+            if (!App.UnitTypeID.isDirty() && !App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = "";
+                App.UnitTypeDesc.originalValue = "";
+            }
+            bPreventGetUnitType = false;
+        };
+
+        getUnitTypeFailed = function () {
+            eraseUnitType();
+        };
+
+        unitTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType(field.getValue(), "", false);
+            }
+        };
+
+        unitTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType("", field.getValue(), false);
+            }
+        };
+
+        unitTypeIDBlur = function (unitTypeID) {
+            console.log(bPreventGetUnitType);
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeID.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType(unitTypeID, "", true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        unitTypeDescBlur = function (unitTypeDesc) {
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeDesc.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType("", unitTypeDesc, true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        eraseUnitType = function () {
+            App.UnitTypeID.clear();
+            App.UnitTypeDesc.clear();
+            App.UnitTypeID.originalValue = "";
+            App.UnitTypeDesc.originalValue = "";
+        };
+
+        var loadGrid = function (a, result) {
+            toggleBack(App.grdItemVersionAHSReport);
+            App.grdItemVersionAHSReport.store.loadData(result.data, false);
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PItemVersionForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItemVersion")
+        .Padding(iBodyPadding)
+
+        .BottomBar(X.Toolbar().Items(btnSearch).PaddingSpec(sToolbarPaddingSpec))
+        .Items(
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.ItemID)
+                        .FieldLabel(ItemVersionVM.Prop.ItemID.Desc)
+                        .ReadOnly(false)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ItemIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ItemIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.ItemDesc)
+                        .FieldLabel("")
+                        .ReadOnly(false)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ItemDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ItemDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseItem
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate)),
+                            btnEraseItem.Handler("eraseItem")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        )
+                ),
+            X.TextFieldFor(model => model.Version)
+                .FieldLabel(ItemVersionVM.Prop.Version.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+             X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.RegionID)
+                        .FieldLabel(ItemPriceVM.Prop.RegionDesc.Desc)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "regionIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "regionIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.RegionDesc)
+                        .FieldLabel("")
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "regionDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "regionDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseRegion,
+                            btnEraseRegion.Handler("eraseRegion")
+                        )),
+            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.TextFieldFor(model => model.ProjectID)
+                                    .FieldLabel(ItemPriceVM.Prop.ProjectDesc.Desc)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "projectIDSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "projectIDBlur(this.getValue());";
+                                        //oListeners.Change.Handler = "RecountAmount();";
+                                    })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.ProjectDesc)
+                                    .FieldLabel("")
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "projectDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "projectDescBlur(this.getValue());";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseProject,
+                                        btnEraseProject.Handler("eraseProject")
+                                    )),
+                                X.FieldContainer()
+                                    .FieldLabel("")
+                                    .LabelWidth(0)
+                                    .Width(iFieldWidth)
+                                    .Layout(LayoutType.Column)
+                                    .Items(
+                                        X.TextFieldFor(model => model.ClusterID)
+                                            .FieldLabel(ItemPriceVM.Prop.ClusterDesc.Desc)
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "clusterIDSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "clusterIDBlur(this.getValue());";
+                                                //oListeners.Change.Handler = "RecountAmount();";
+                                            })
+                                            .LabelWidth(iLabelWidth)
+                                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                        X.TextFieldFor(model => model.ClusterDesc)
+                                            .FieldLabel("")
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "clusterDescSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "clusterDescBlur(this.getValue());";
+                                            })
+                                            .LabelWidth(0)
+                                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                            .RightButtons(
+                                                btnBrowseCluster,
+                                                btnEraseCluster.Handler("eraseCluster")
+                                            )),
+                                X.FieldContainer()
+                                    .FieldLabel("")
+                                    .LabelWidth(0)
+                                    .Width(iFieldWidth)
+                                    .Layout(LayoutType.Column)
+                                    .Items(
+                                        X.TextFieldFor(model => model.UnitTypeID)
+                                            .FieldLabel(ItemPriceVM.Prop.UnitTypeDesc.Desc)
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "unitTypeIDSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "unitTypeIDBlur(this.getValue());";
+                                                //oListeners.Change.Handler = "RecountAmount();";
+                                            })
+                                            .LabelWidth(iLabelWidth)
+                                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                        X.TextFieldFor(model => model.UnitTypeDesc)
+                                            .FieldLabel("")
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "unitTypeDescSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "unitTypeDescBlur(this.getValue());";
+                                            })
+                                            .LabelWidth(0)
+                                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                            .RightButtons(
+                                                btnBrowseUnitType,
+                                                btnEraseUnitType.Handler("eraseUnitType")
+                                            )
+                                            )
+
+            
+        )
+        .TopBar(
+         X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnList
+             )
+        ),
+        X.Panel()
+            .ID("ItemVersionStructure")
+            .Frame(true)
+            .Title("Structure")
+            .Collapsible(true)
+            .ItemsFromPartial("Preview/_List", Model.ListItemVersionChildVM, ViewData)
+            .MarginSpec("0 10 10 10")
+    )
+)

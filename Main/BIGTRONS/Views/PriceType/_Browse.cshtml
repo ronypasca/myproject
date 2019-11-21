@@ -1,0 +1,151 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model PriceTypeVM
+@{
+    
+    var X = Html.X();
+    string sPageName = "PriceType";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectPriceTypeBrowse('" + ViewData["Control" + PriceTypeVM.Prop.PriceTypeID.Name]
+        + "', '" + ViewData["Control" + PriceTypeVM.Prop.PriceTypeDesc.Name]
+        + "', App.grdPriceTypeBrowse.getRowsValues({selectedOnly:true})[0]['" + PriceTypeVM.Prop.PriceTypeID.Name + "']"
+        + ", App.grdPriceTypeBrowse.getRowsValues({selectedOnly:true})[0]['" + PriceTypeVM.Prop.PriceTypeDesc.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdPriceTypeBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdPriceTypeBrowse();
+        });
+
+        resizeGrdPriceTypeBrowse = function () {
+            if (App.grdPriceTypeBrowse != null)
+                App.grdPriceTypeBrowse.setHeight($(window).height() - App.grdPriceTypeBrowse.getY() - (App.grdPriceTypeBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionPriceTypeChange = function (length) {
+            App.ButtonSelectPriceType.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, PriceTypeID, PriceTypeDesc) {
+            filter.fields[0].items.items[0].setValue(PriceTypeID);
+            filter.fields[1].items.items[0].setValue(PriceTypeDesc);
+        };
+
+        selectPriceTypeBrowse = function (ControlPriceTypeID, ControlPriceTypeDesc, PriceTypeID, PriceTypeDesc) {
+            if (Ext.getCmp(ControlPriceTypeID) != undefined) {
+                Ext.getCmp(ControlPriceTypeID).setValue(PriceTypeID);
+                Ext.getCmp(ControlPriceTypeID).originalValue = PriceTypeID;
+            }
+            if (Ext.getCmp(ControlPriceTypeDesc) != undefined) {
+                Ext.getCmp(ControlPriceTypeDesc).setValue(PriceTypeDesc);
+                Ext.getCmp(ControlPriceTypeDesc).originalValue = PriceTypeDesc;
+            }
+            App.WinBrowsePriceType.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowsePriceType")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdPriceTypeBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionPriceTypeChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[PriceTypeVM.Prop.PriceTypeID.Name].ToString() + "', '" + ViewData[PriceTypeVM.Prop.PriceTypeDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "PriceType"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[PriceTypeVM.Prop.PriceTypeID.Name].ToString() == "" && ViewData[PriceTypeVM.Prop.PriceTypeDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.PriceTypeID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(PriceTypeVM.Prop.PriceTypeID.Desc)
+            .DataIndex(Model, model => model.PriceTypeID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(PriceTypeVM.Prop.PriceTypeDesc.Desc)
+            .DataIndex(Model, model => model.PriceTypeDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

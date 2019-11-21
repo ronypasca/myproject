@@ -1,0 +1,164 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<TaskTypesVM>
+    @{
+    ViewBag.Title = "Menu Action";
+    var X = Html.X();
+    int iGridMinHeight = 150;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+        <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdTaskTypes()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdTaskTypes();
+        });
+
+        resizeGrdTaskTypes = function () {
+            if (App.grdTaskTypes != null)
+                App.grdTaskTypes.updateLayout();
+                /*App.grdTaskTypes.setHeight($(window).height() - App.grdTaskTypes.getY() - (App.grdTaskTypes.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeTaskTypes = function (grid,record) {
+            App.grdTaskTypes.getSelectionModel().select(record);
+        };
+
+        var editTaskTypes = function (editor, e) {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        afterRenderTaskTypes = function(grid){           
+            var me = this;
+            grid.store.on('load', function(){
+                var data = me.getStore().data.items;
+                var recs = [];
+                Ext.each(data, function(item, index){
+                    if (item.data.Checked) {
+                        recs.push(item);
+                    }
+                });
+                me.getSelectionModel().select(recs);
+            })
+        };
+
+        viewReadyTaskTypes= function(grid){
+            grid.getStore().load();
+        };
+
+        beforeSelectTaskTypes = function (grid, record, index, eOpts) {
+            console.log(App.grdTaskTypes.getSelectionModel());
+            if("@isDisableButton" == "True"){
+                if(!record.get("Checked") && record.get("Descriptions")!=""){
+                    grid.getStore().load();
+                }
+
+            }
+        };
+        selectFromGrid = function(a,b,c,d){
+            
+            
+        };
+        afterRender= function(a,b,c,d){
+             
+        };
+        </script>
+    }
+    @(
+        X.GridPanel()
+        .ID("grdTaskTypes")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.CheckboxSelectionModel()
+            .Mode(SelectionMode.Simple)
+            .AllowDeselect(true)            
+        )
+        .Listeners(oListener =>
+         {
+             //oListener.SelectionChange.Fn = "selectionChangeTaskTypes";
+             oListener.AfterRender.Fn = "afterRenderTaskTypes";
+             oListener.ViewReady.Fn = "viewReadyTaskTypes";
+             //oListener.BeforeSelect.Fn = "beforeSelectTaskTypes";
+         })
+                    .Store(
+                           X.Store()
+                            .Proxy(
+                                X.AjaxProxy()
+                                .Url(Url.Action("ReadTaskType"))
+                                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .Parameters(ep =>
+                ep.AddRange(new StoreParameter[]{
+                    new StoreParameter()
+                    {
+                        Name = ApprovalDelegationVM.Prop.TaskGroupID.Name,
+                        Value = "App.TaskGroupID.value",
+                        Mode = ParameterMode.Raw
+                    },
+                    new StoreParameter()
+                    {
+                        Name = "List"+ApprovalDelegationVM.Prop.TaskTypeID.Name,
+                        Value = ViewData["SelectedTypes"] == null ? string.Empty : ViewData["SelectedTypes"].ToString(),
+                        Mode = ParameterMode.Value
+                    }
+                })
+            )
+            .AutoLoad(false)
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .SorterFor(Model, model => model.TaskTypeID, Ext.Net.SortDirection.ASC)
+            .Model(
+                X.Model()
+                .Name("ModelTaskTypes")
+                .Fields(
+                    X.ModelField().Name(Model, model => model.TaskTypeID),
+                    X.ModelField().Name(Model, model => model.Descriptions),
+                    X.ModelField().Name(Model, model => model.isSelected)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(TaskTypesVM.Prop.Descriptions.Desc)
+        .DataIndex(Model, model => model.Descriptions)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    oListener.AfterRender.Fn = "afterRender";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+    )

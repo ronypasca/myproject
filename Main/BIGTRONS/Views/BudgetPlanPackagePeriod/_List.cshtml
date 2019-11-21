@@ -1,0 +1,268 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model PackageVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "GetSelectedData()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    
+
+    <script>
+        var GetSelectedData=function(){
+            var data=App.grdPackage.getRowsValues({selectedOnly:true})[0];
+            var BudgetPlanListDesc=String(data.BudgetPlanListDesc).split('<br/>').join(',');
+            data.BudgetPlanListDesc=BudgetPlanListDesc;
+            return data;
+        };
+
+        var GetSelectedDataAll=function(){
+            var data=App.grdPackage.getRowsValues({selectedOnly:true});
+
+            for (var i = 0; i < data.length; i++) {
+                data[i].BudgetPlanListDesc=String(data.BudgetPlanListDesc).split('<br/>').join(',');
+            }
+            
+            return data;
+        };
+
+    </script>
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdPackage()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdPackage();
+        });
+
+        resizeGrdPackage = function () {
+            if (App.grdPackage != null)
+                App.grdPackage.setHeight($(window).height() - App.grdPackage.getY() - (App.grdPackage.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            
+        };
+
+        deleteSuccess = function () {
+            App.grdPackage.getStore().reload();
+        };
+
+    </script>
+}
+@(
+            X.GridPanel()
+            .ID("grdPackage")
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+            )
+            .Listeners(oListener =>
+            {
+                oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+            })
+            .Store(
+                X.StoreForModel()
+                .Proxy(
+                    X.AjaxProxy()
+                    .Url(Url.Action("Read"))
+                    .Reader(X.JsonReader().RootProperty("data"))
+                )
+                .AutoLoad(true)
+                .RemoteSort(true)
+                .RemotePaging(true)
+                .RemoteFilter(true)
+                .PageSize(iPageSize)
+                .SorterFor(Model, model => model.PackageID, Ext.Net.SortDirection.ASC)
+            )
+            .ColumnModel(
+                X.Column()
+                .Text(PackageVM.Prop.PackageID.Desc)
+                .DataIndex(Model, model => model.PackageID)
+                .Flex(1)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    )
+                ),
+                X.Column()
+                .Text(PackageVM.Prop.PackageDesc.Desc)
+                .DataIndex(Model, model => model.PackageDesc)
+                .Flex(3)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                .Items(
+                        X.TextField()
+                        .Flex(1)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    )
+                ),
+                X.TemplateColumn()
+                .Text(PackageVM.Prop.BudgetPlanListDesc.Desc)
+                .DataIndex(Model, model => model.BudgetPlanListDesc)
+                .Flex(3)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    )
+                )
+                .TemplateString("{BudgetPlanListDesc}"),
+                X.DateColumn()
+                .Text(PackageVM.Prop.CreatedDate.Desc)
+                .DataIndex(Model, model => model.CreatedDate)
+                .Flex(2)
+                .Align(ColumnAlign.Center)
+                .Format(global_asax.DefaultDateFormat)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueDateRange", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.DateField()
+                        .Flex(1)
+                        .Format(global_asax.DefaultDateFormat)
+                        .HideTrigger(true)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Blur.Handler = "this.triggerEl.hide();";
+                            oListener.Focus.Handler = "this.triggerEl.show();";
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        }),
+                        X.DateField()
+                        .Flex(1)
+                        .Format(global_asax.DefaultDateFormat)
+                        .HideTrigger(true)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Blur.Handler = "this.triggerEl.hide();";
+                            oListener.Focus.Handler = "this.triggerEl.show();";
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    ))
+                .Editor(
+                    X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .AllowBlank(false)
+                   .ID("ColCreatedDate")
+                ),
+                X.DateColumn()
+                .Text(PackageVM.Prop.ModifiedDate.Desc)
+                .DataIndex(Model, model => model.ModifiedDate)
+                .Flex(2)
+                .Align(ColumnAlign.Center)
+                .Format(global_asax.DefaultDateFormat)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueDateRange", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.DateField()
+                        .Flex(1)
+                        .Format(global_asax.DefaultDateFormat)
+                        .HideTrigger(true)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Blur.Handler = "this.triggerEl.hide();";
+                            oListener.Focus.Handler = "this.triggerEl.show();";
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        }),
+                        X.DateField()
+                        .Flex(1)
+                        .Format(global_asax.DefaultDateFormat)
+                        .HideTrigger(true)
+                        .Listeners(oListener =>
+                        {
+                            oListener.Blur.Handler = "this.triggerEl.hide();";
+                            oListener.Focus.Handler = "this.triggerEl.show();";
+                            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                        })
+                    ))
+                .Editor(
+                    X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .AllowBlank(false)
+                   .ID("ColModifiedDate")
+                ),
+                X.Column()
+                .Text(PackageVM.Prop.StatusDesc.Desc)
+                .DataIndex(Model, model => model.StatusDesc)
+                .Flex(1)
+                .Align(ColumnAlign.Center)
+                .Items(
+                    X.ComboBox()
+                    .DisplayField(StatusVM.Prop.StatusDesc.Name)
+                    .ValueField(StatusVM.Prop.StatusDesc.Name)
+                    .Store(
+                        X.StoreForModel()
+                        .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("/GetStatusList"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                        .AutoLoad(true)
+                    ).Plugins(Html.X().ClearButton())
+                )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnUpdate.Disabled(true)
+            
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

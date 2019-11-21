@@ -1,0 +1,131 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<RecipientsVM>
+@{
+    string sPageName = "HomeRecipient";
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 250;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdRecipientsTOVM", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GrdScheduleRecipient", "grdRecipientsTOVM", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(RecipientsVM.Prop.RecipientTypeID.Name, ((int)RecipientTypes.TO).ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseRecipientTO", "Add", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "TO" + sPageName, null, string.Empty, true);
+    //Button.Builder btnPreBuild = global_asax.Button(Buttons.ButtonList, "BrowsePreBuildTO", "Pre-Build Recipients", "../PreBuiltRecipient/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+}
+
+<script>
+    selectionChangeto = function (length) {
+        var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+        if (FromDetail !== 'Detail') {
+            App.ButtonDeleteTOHomeRecipient.setDisabled(length < 1);
+        }
+    };
+    deleteSelectedRecipientsTO = function () {
+        App.grdRecipientsTOVM.getStore().remove(App.grdRecipientsTOVM.getSelectionModel().getSelection());
+    };
+
+    GetListRecipientsTOVM = function () {
+        var data = [];
+        for (var x in App.grdRecipientsTOVM.store.data.items) {
+            data.push(App.grdRecipientsTOVM.store.data.items[x].data);
+        }
+        return data;
+    };
+</script>
+
+@(
+    X.GridPanel()
+        .ID("grdRecipientsTOVM")
+        .View(
+        Html.X()
+        .GridView()
+        )
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionChangeto(selected.length)";
+        })
+        .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            //.PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelRecipientList")
+                .Fields(
+            X.ModelField().Name(Model, model => model.RecipientID),
+            X.ModelField().Name(Model, model => model.OwnerID),
+            X.ModelField().Name(Model, model => model.RecipientDesc),
+            X.ModelField().Name(Model, model => model.RecipientTypeID),
+            X.ModelField().Name(Model, model => model.MailAddress)
+                )
+            )
+        )
+        .ColumnModel(
+        X.Column()
+        .Text("ID")
+        .Hidden(true)
+        .DataIndex(Model, model => model.RecipientID)
+        .Flex(4),
+        X.Column()
+        .Text("Name")
+        .DataIndex(Model, model => model.RecipientDesc)
+        .Flex(4),
+        X.Column()
+        .Text("Mail Address")
+        .DataIndex(Model, model => model.MailAddress)
+        .Flex(4)
+        //,X.ComponentColumn()
+        //        .Editor(true)
+        //        .DataIndex(Model, model => model.RecipientTypeID)
+        //        .Flex(1)
+        //        .Text("Type")
+        //        .Component(Html.X().ComboBox()
+        //            .Items(
+        //                new ListItem("To", 1),
+        //                new ListItem("Cc", 2),
+        //                new ListItem("Bcc", 3)
+        //            )
+        //        )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+        .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(false),
+            btnDelete.Disabled(true).Handler("deleteSelectedRecipientsTO();")
+            //,btnPreBuild.Disabled(false)
+        )
+    )
+
+
+)

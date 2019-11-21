@@ -1,0 +1,513 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<TCMembersDelegationVM>
+@{
+    ViewBag.Title = "TC Member Delegation";
+    var X = Html.X();
+    string sPageName = "HomeTCMemberDelegation";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + TCMembersVM.Prop.TCMemberID.Name, TCMembersVM.Prop.DelegateTo.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + TCMembersVM.Prop.EmployeeName.Name, TCMembersVM.Prop.DelegateName.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("Control" + TCMembersVM.Prop.Email.Name, "TC"+TCMembersVM.Prop.Email.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCMembersVM.Prop.SuperiorID.Name, "App.EmployeeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCMembersVM.Prop.PeriodStart.Name, "App.PeriodStart.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCMembersVM.Prop.PeriodEnd.Name, "App.PeriodEnd.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCMembersVM.Prop.TCTypeID.Name, "App.TCTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Value" + TCMembersVM.Prop.TCMemberID.Name, "App.TCMemberID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseDelegate = global_asax.Button(Buttons.ButtonBrowse, "Delegate", "", General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseDelegate = global_asax.Button(Buttons.ButtonErase, "Delegate", "", "", true);
+
+    var hdnTextFieldDelegateTo = X.Hidden().ID(TCMembersDelegationVM.Prop.DelegateTo.Name);
+    var hdnTextFieldDelegateName = X.Hidden().ID(TCMembersDelegationVM.Prop.DelegateName.Name);
+    var hdnTextFieldEmail = X.Hidden().ID(TCMembersDelegationVM.Prop.TCEmail.Name);
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, string.Empty, true);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+
+    <script>
+        var sTitleTCMemberDelegation = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdTCMemberDelegation()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdTCMemberDelegation();
+        });
+
+        resizeGrdTCMemberDelegation = function () {
+            if (App.grdTCMemberDelegation != null)
+                App.grdTCMemberDelegation.updateLayout();
+        };
+
+        selectionChangeTCMemberDelegation = function (length) {
+            App.ButtonDeleteHomeTCMemberDelegation.setDisabled(length < 1);
+        };
+
+        deleteSuccessDelegation = function () {
+            App.grdTCMemberDelegation.getStore().reload();
+        };
+
+        deleteRowTCMemberDelegation = function()
+        {
+            showMsgDeleteConfirmTCMemberDelegation();
+        };
+
+        showMsgDeleteConfirmTCMemberDelegation= function(){
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "deleteConfirmTCMemberDelegation"
+            });
+            return;
+        };
+
+        deleteConfirmTCMemberDelegation= function(btn){
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("DeleteTCMemberDelegation", "TCMember"))',
+                    params: {
+                        Selected: App.grdTCMemberDelegation.getRowsValues({ selectedOnly: true })
+                    },
+                    success: function (result) {
+                    },
+                    callback:function(){
+                        /*App.grdTCMemberDelegation.getStore().reload();*/
+
+                        App.grdTCMemberDelegation.getStore().remove(App.grdTCMemberDelegation.getSelectionModel().getSelection());
+                        var record = App.grdItemPriceVendor.getRowsValues({selectedOnly:true})[0];
+
+                    }
+                });
+            }
+        };
+
+        editTCMemberDelegation = function (editor, e) {
+
+            /*Check Start Date*/
+            if(e.field=='@TCMembersDelegationVM.Prop.DelegateStartDate.Name'){
+                debugger;
+                if(e.record.data.DelegateEndDate!== null){
+                    if(e.record.data.DelegateEndDate < e.record.data.DelegeteStartDate){
+                        debugger;
+                        e.record.set('@TCMembersDelegationVM.Prop.DelegateStartDate.Name','');
+                        return false;
+                    }
+                }
+                else if(duplicateDelegateDate()){
+                    e.record.set('@TCMembersDelegationVM.Prop.DelegateStartDate.Name','');
+                    return false;
+                }
+                else if(App.grdTCMemberDelegation.getStore().data.items.length>1)
+                {
+                    var beforeRow = App.grdTCMemberDelegation.getStore().data.items[App.grdTCMemberDelegation.getStore().data.items.length-2];
+
+                    if(beforeRow.data.DelegateStartDate >= e.record.data.DelegateStartDate){
+                        e.record.set('@TCMembersDelegationVM.Prop.DelegateStartDate.Name','');
+                        return false;
+                    }
+                }
+
+
+                App.grdTCMemberDelegation.getStore().sort({ property: '@TCMembersDelegationVM.Prop.DelegateStartDate.Name', direction: 'ASC' });
+                /*recalculateEndDate();*/
+
+            }
+
+            /*Check End Date*/
+            if(e.field=='@TCMembersDelegationVM.Prop.DelegateEndDate.Name'){
+                if(e.record.data.DelegeteStartDate!== null){
+                    if(e.record.data.DelegeteEndDate < e.record.data.DelegeteStartDate){
+                        e.record.set('@TCMembersDelegationVM.Prop.DelegateEndDate.Name','');
+                        return false;
+                    }
+                }
+                else if(App.grdTCMemberDelegation.getStore().data.items.length>1)
+                {
+                    var beforeRow = App.grdTCMemberDelegation.getStore().data.items[App.grdTCMemberDelegation.getStore().data.items.length-2];
+                    if(beforeRow.data.DelegeteStartDate > e.record.data.DelegateEndDate){
+                        e.record.set('@TCMembersDelegationVM.Prop.DelegateEndDate.Name','');
+                        return false;
+                    }
+                }
+
+
+
+            }
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        beforeEditTCMemberDelegation = function (editor, e) {
+            var message='';
+            if(Ext.isEmpty(App.PeriodStart.getValue())){
+                message = '@TCMembersVM.Prop.PeriodStart.Desc' + " " + '@General.EnumDesc(MessageLib.mustFill)';
+            }
+
+            if(Ext.isEmpty(App.PeriodEnd.getValue())){
+                message += '<br>' + '@TCMembersVM.Prop.PeriodEnd.Desc' + " " + '@General.EnumDesc(MessageLib.mustFill)';
+            } 
+            if(Ext.isEmpty(App.TCTypeID.getValue())){
+                message += '<br>' + '@TCMembersVM.Prop.TCTypeDesc.Desc' + " " + '@General.EnumDesc(MessageLib.mustFill)';
+            }
+            if(Ext.isEmpty(App.EmployeeID.getValue())){
+                message += '<br>' + '@TCMembersVM.Prop.EmployeeName.Desc' + " " + '@General.EnumDesc(MessageLib.mustFill)';
+            }
+
+
+            if(!Ext.isEmpty(message)){
+                showWarningAlert(sTitleTCMemberDelegation,message);
+                return;
+            }
+
+            if("@isDetailButton"== "True")
+                return false;
+
+            App.grdTCMemberDelegation.getSelectionModel().select(e.record);
+        };
+
+        addTCMemberDelegation = function(){
+
+            var model = new ModelTCMemberDelegation({
+                DelegeteTo: "",
+                DelegeteStartDate: "",
+                DelegeteEndDate: "",
+            });
+            App.grdTCMemberDelegation.store.add(model);
+
+        };
+
+        var setDelegateTo = function (rowIndex) {
+            var value = App.DelegateTo.getValue();
+            if (value != null && value != "") {
+                var record = App.grdTCMemberDelegation.store.getAt(rowIndex);
+                record.set('DelegateTo', value);
+                record.commit();
+                App.DelegateTo.setValue("");
+            }
+        };
+
+        var setDelegateName = function (rowIndex) {
+            var value = App.DelegateName.getValue();
+            if (value != null && value != "") {
+                var record = App.grdTCMemberDelegation.store.getAt(rowIndex);
+                record.set('DelegateName', value);
+                record.commit();
+                App.DelegateName.setValue("");
+            }
+        };
+
+        var setEmail = function (rowIndex) {
+            
+            var value = App.TCEmail.getValue();
+            if (value != null && value != "") {
+                var record = App.grdTCMemberDelegation.store.getAt(rowIndex);
+                record.set('TCEmail', value);
+                record.commit();
+                App.TCEmail.setValue("");
+            }
+            debugger;
+        };
+
+
+        viewReady = function (grid, record) {
+            var store = grid.store;
+
+            store.clearFilter();
+
+            App.ListTCMembersDelegationVM.setValue(JSON.stringify(grid.getRowsValues()));
+
+            store.filterBy(function(row, id){
+                return row.get('VendorID') === "-";
+            });
+        };
+
+        recalculateEndDate = function (){
+            var tempValidTo;
+            var tempValidFrom;
+            var tempRecord;
+            var rowID = 0;
+            App.grdTCMemberDelegation.getStore().sort({ property: 'DelegateStartDate', direction: 'ASC' });
+            var allRecords = App.grdTCMemberDelegation.getStore().data.items;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+                    /*row.set("ValidTo",new Date(9999, 11, 31));
+                    row.commit();*/
+                    if(rowID>0){
+
+                        /*var compareValidFrom = dateFromJSON(row.data.ValidFrom.valueOf())  > App.grdTCMemberDelegation.getStore().getAt(rowID-1).data.ValidFrom;
+                        */
+                        var compareValidTo = App.grdTCMemberDelegation.getStore().getAt(rowID-1).data.ValidTo>dateFromJSON(row.data.ValidFrom.valueOf());
+
+                        if(compareValidTo)
+                        {
+                            var record = App.grdTCMemberDelegation.getStore().getAt(rowID-1);
+                            tempValidFrom = dateFromJSON(row.data.ValidFrom.valueOf());
+                            tempValidTo = tempValidFrom.setDate(tempValidFrom.getDate() - 1);
+                            record.set("DelegateEndDate",new Date(tempValidTo));
+                            record.commit();
+                        }
+                    }
+                }
+                rowID++;
+            }
+        };
+
+        duplicateDelegeteTo = function(){
+            var store =App.grdItemPriceVendor.getStore();
+            var allRecords = store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+
+                    if (isDuplicatedVendor(store, 'VendorID', row.get("VendorID"), rowIdx)) {
+                        if(row["VendorDesc"]==""||row["VendorDesc"] == undefined) showWarningAlert(sTitleTCMemberDelegation, "cannot duplicate vendor!" );
+                        else showWarningAlert(sTitleTCMemberDelegation, Ext.String.format("{0} has been exist on the list, cannot duplicate vendor!",row.get("VendorDesc")) );
+
+                        return true;
+                        break;
+                    }
+                }
+                rowIdx++;
+            }
+
+            return false;
+        };
+
+
+        duplicateDelegateDate = function(){
+            var store =App.grdTCMemberDelegation.getStore();
+            var allRecords = store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+
+                    if (isDuplicatedDelegateDate(store, 'DelegateStartDate', row.get("DelegateStartDate"), rowIdx)) {
+                        if(row["DelegateStartDate"]==""||row["DelegateStartDate"] == undefined) showWarningAlert(sTitleTCMemberDelegation, "cannot duplicate Start Date!" );
+                        else showWarningAlert(sTitleTCMemberDelegation, Ext.String.format("{0} has been exist on the list!",row.get("ValidFrom")) );
+
+                        return true;
+                        break;
+                    }
+
+                    if (isDuplicatedDelegateDate(store, 'DelegateEndDate', row.get("DelegateEndDate"), rowIdx)) {
+                        if(row["DelegateEndDate"]==""||row["DelegateEndDate"] == undefined) showWarningAlert(sTitleTCMemberDelegation, "cannot duplicate End Date!" );
+                        else showWarningAlert(sTitleTCMemberDelegation, Ext.String.format("{0} has been exist on the list!",row.get("ValidFrom")) );
+
+                        return true;
+                        break;
+                    }
+                }
+                rowIdx++;
+            }
+
+            return false;
+        };
+
+        rangeValidateDelegateDate = function(){
+            var store =App.grdTCMemberDelegation.getStore();
+            var allRecords = store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+
+                    if (isRangeValidDelegateDate(store, 'DelegateStartDate','DelegateStartDate', row.get("DelegateStartDate"), rowIdx)) {
+                        if(row["DelegateStartDate"]==""||row["DelegateStartDate"] == undefined) showWarningAlert(sTitleTCMemberDelegation, "Invalid Delegate Start Date!" );
+                        else showWarningAlert(sTitleTCMemberDelegation, Ext.String.format("{0} has been exist on the list!",row.get("DelegateStartDate")) );
+
+                        return true;
+                        break;
+                    }
+
+                    if (isRangeValidDelegateDate(store, 'DelegateEndDate','DelegateEndDate', row.get("DelegateEndDate"), rowIdx)) {
+                        if(row["DelegateEndDate"]==""||row["DelegateEndDate"] == undefined) showWarningAlert(sTitleTCMemberDelegation, "Invalid Delegate End Date!" );
+                        else showWarningAlert(sTitleTCMemberDelegation, Ext.String.format("{0} has been exist on the list!",row.get("DelegateEndDate")) );
+
+                        return true;
+                        break;
+                    }
+                }
+                rowIdx++;
+            }
+
+            return false;
+        };
+
+        isDuplicatedDelegateDate = function (store, colName, value, rowIndex) {
+            var found = false;
+            store.each(function (record, idx) {
+                if ((idx != rowIndex) && record.data.hasOwnProperty(colName))
+                    if (found = (record.data[colName].getTime() == value.getTime()) ? true : false) { return false };
+            });
+            return found;
+        };
+
+        isRangeValidDelegateDate = function (store, colName, _colName,  value, rowIndex) {
+            var found = false;
+            store.each(function (record, idx) {
+                if ((idx != rowIndex) && record.data.hasOwnProperty(colName)&& record.data.hasOwnProperty(_colName))
+                    if (found = (record.data[colName].getTime() <= value.getTime() && value.getTime() <= record.data[_colName].getTime() ) ? true : false) { return false };
+            });
+            return found;
+        };
+
+        var eraseDelegate = function (rowIndex) {
+            var record = App.grdTCMemberDelegation.store.getAt(rowIndex);
+            record.set("DelegateTo", "");
+            record.set("DelegateName", "");
+            record.commit();
+
+            App.DelegateTo.clear();
+            App.DelegateName.clear();
+        };
+    </script>
+    var grdTCMemberDelegation = X.GridPanel()
+        .ID("grdTCMemberDelegation")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Single)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            //oListener.ViewReady.Fn = "viewReady";
+            oListener.SelectionChange.Handler = (!isDetailButton ? "selectionChangeTCMemberDelegation(selected.length)" : "");
+        })
+        .Store(
+                X.Store()
+                .AutoLoad(true)
+                .RemoteSort(false)
+                .RemotePaging(true)
+                .RemoteFilter(false)
+                .PageSize(iPageSize)
+                .DataSource(Model)
+                .Model(
+                    X.Model()
+                    .Name("ModelTCMemberDelegation")
+                    .Fields(
+                        X.ModelField().Name(Model, model => model.TCDelegationID),
+                        X.ModelField().Name(Model, model => model.DelegateTo),
+                        X.ModelField().Name(Model, model => model.DelegateName),
+                         X.ModelField().Name(Model, model => model.TCEmail),
+                        X.ModelField().Name(Model, model => model.DelegateStartDate).Type(ModelFieldType.Date),
+                        X.ModelField().Name(Model, model => model.DelegateEndDate).Type(ModelFieldType.Date)
+                    )
+                )
+            )
+        .ColumnModel(
+            X.Column().DataIndex(Model, model => model.TCEmail).Hidden(true),
+            X.Column()
+            .Text(TCMembersDelegationVM.Prop.DelegateName.Desc)
+            .DataIndex(Model, model => model.DelegateName)
+            .Flex(3)
+            .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("ColDelegate")
+                    .ReadOnly(true)
+                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                    .RightButtons(
+                        btnBrowseDelegate,
+                        btnEraseDelegate.Handler("eraseDelegate(App.grdTCMemberDelegation.store.indexOf(App.grdTCMemberDelegation.getSelectionModel().getSelection()[0]));")
+                    )
+                    )
+            ,
+            X.Column()
+            .Text(TCMembersDelegationVM.Prop.DelegateTo.Desc)
+            .DataIndex(Model, model => model.DelegateTo)
+            .Hidden(true)
+            .Flex(3)
+            ,
+            X.DateColumn()
+            .Text(TCMembersDelegationVM.Prop.DelegateStartDate.Desc)
+            .DataIndex(Model, model => model.DelegateStartDate)
+            .Flex(3)
+            .Format(global_asax.DefaultDateFormat)
+            .Editor(
+                X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .ID("ColValidForm")
+            ),
+            X.DateColumn()
+            .Text(TCMembersDelegationVM.Prop.DelegateEndDate.Desc)
+            .DataIndex(Model, model => model.DelegateEndDate)
+            .Flex(3)
+            .Format(global_asax.DefaultDateFormat)
+            .Editor(
+                X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .ID("ColValidTo")
+            )
+        )
+        .Plugins(
+            X.CellEditing()
+                .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editTCMemberDelegation")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditTCMemberDelegation")
+                .ID("rowEditorTCMemberDelegation")
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .Handler("addTCMemberDelegation();"),
+                btnDelete.Disabled(true)
+                .Handler("deleteRowTCMemberDelegation()")
+
+
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        );
+}
+@(
+    X.Panel()
+    .ID("pnlGridTCMemberDelegation")
+    .Items(
+        hdnTextFieldDelegateTo.Listeners(ls => ls.Change.Handler = "setDelegateTo(App.grdTCMemberDelegation.store.indexOf(App.grdTCMemberDelegation.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldDelegateName.Listeners(ls => ls.Change.Handler = "setDelegateName(App.grdTCMemberDelegation.store.indexOf(App.grdTCMemberDelegation.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldEmail.Listeners(ls => ls.Change.Handler = "setEmail(App.grdTCMemberDelegation.store.indexOf(App.grdTCMemberDelegation.getSelectionModel().getSelection()[0]))"),
+        //hdnTextFieldListTCMemberDelegation,
+        grdTCMemberDelegation
+    )
+
+)

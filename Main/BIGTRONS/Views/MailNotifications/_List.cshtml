@@ -1,0 +1,379 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MailNotificationsVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    /*bool IsDetailPage = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    */
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMailNotifications.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMailNotifications.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMailNotifications.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteFinish(true)", "deleteFinish(false, result.errorMessage)");
+
+
+    Button.Builder btnVerify = global_asax.Button(Buttons.ButtonVerify, sPageName, null, string.Empty, true);
+    Button.Builder btnResend = global_asax.Button(Buttons.ButtonReverse, sPageName, "Resend", string.Empty, true);
+
+    //oParamList = new List<Parameter>();
+    //oParam = new Parameter("MailNotificationID", "App.grdMailNotifications.getRowsValues({selectedOnly:true})[0].MailNotificationID", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    //Button.Builder btnPreview = global_asax.Button(Buttons.ButtonAssign, "Task", "Preview Mail", "../MyTask/Preview", true, false, false, null, oParamList);
+
+    Button.Builder btnPreview = global_asax.Button(Buttons.ButtonPreview,sPageName, "Preview Mail", string.Empty, true);
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizegrdMailNotifications()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizegrdMailNotifications();
+        });
+
+        resizegrdMailNotifications = function () {
+            if (App.grdMailNotifications != null)
+                App.grdMailNotifications.setHeight($(window).height() - App.grdMailNotifications.getY() - (App.grdMailNotifications.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (selected) {
+            App.ButtonPreviewHome.setDisabled(selected.length !== 1);
+            App.ButtonDetailHome.setDisabled(selected.length !== 1);
+            App.ButtonUpdateHome.setDisabled(true);
+            App.ButtonDeleteHome.setDisabled(selected.length < 1);
+            App.ButtonVerifyHome.setDisabled(selected.length !== 1);
+            App.ButtonReverseHome.setDisabled(selected.length !== 1);
+
+            var selectedRows=App.grdMailNotifications.getRowsValues({selectedOnly:true});
+            debugger;
+            if(selectedRows.length>0){
+                for (var i = 0; i < selectedRows.length; i++) {
+                    
+                    if(selectedRows[i].TaskStatusID != 2){ /*Approved*/
+                        App.ButtonReverseHome.setDisabled(true);
+                    }
+                    if(selectedRows[i].TaskID == ""){ /*draft*/
+                        App.ButtonUpdateHome.setDisabled(false);
+                    }
+                    if(selectedRows[i].TaskID != ""){ /*Verified*/
+                        App.ButtonVerifyHome.setDisabled(true);
+                    }
+                                       
+                    if(selectedRows[i].StatusID == 2){ /*sent*/
+                        App.ButtonVerifyHome.setDisabled(true);
+                        App.ButtonReverseHome.setDisabled(false);
+                    }
+                    
+                }
+            }
+            
+
+        };
+
+        deleteFinish = function (success, msg) {
+            if (success)
+                App.grdMailNotifications.getStore().reload();
+            else
+                showError(sTitle, msg);
+        };
+
+        getSelectedRow = function(){
+            var selected = App.grdMailNotifications.getRowsValues({selectedOnly:true})[0];
+            selected.Vendor = null;
+            return selected;
+
+        };
+
+        RendererBR = function(records){
+            var newchar = '<br>';
+            retval = records.split('$').join(newchar);
+            return retval;
+        };
+        verifyConfirm = function (btn) {
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Verify", "MailNotifications"))',
+                    params: {
+                        Selected: App.grdMailNotifications.getRowsValues({ selectedOnly: true })
+                    },
+                    callback: function () {
+                        App.grdMailNotifications.getStore().reload();
+                    }
+                });
+            }
+        };
+        verifyResend = function (btn) {
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Resend", "MailNotifications"))',
+                    params: {
+                        Selected: App.grdMailNotifications.getRowsValues({ selectedOnly: true })
+                    },
+                    callback: function () {
+                        App.grdMailNotifications.getStore().reload();
+                    }
+                });
+            }
+        };
+        showMsgConfirmVerify = function () {
+            Ext.Msg.show({
+                message: "You're going to verify current mail notification.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+        showMsgConfirmResend = function () {
+            Ext.Msg.show({
+                message: "You're going to resend current mail notification.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyResend"
+            });
+            return;
+        };
+
+        spreviewNotif = function() {
+            var mailNotificationID = App.grdMailNotifications.getRowsValues({selectedOnly:true})[0].MailNotificationID;
+            debugger;
+            var w = new Ext.window.Window({
+                loader: {
+                    url: '/MailNotifications/Preview?MailNotificationID=' + mailNotificationID,
+                    text: "Loading...",
+                    autoLoad: true,
+                    timeout: 60,
+                    scripts: true,
+                    renderer: 'html'
+                }, 
+                title: 'Preview',
+                frame: true,
+                modal: true,
+                width: 800,
+                height: 500,
+                autoScroll: true,
+                maximizable: true
+            }).show();
+           
+        };
+
+       
+
+    </script>
+}
+ 
+@(X.Window()
+        .CloseAction(CloseAction.Hide)
+        .ID("PreviewNotif")
+        .Frame(true)
+        .Modal(true)
+        .Icon(Icon.Html)
+        .Title("Preview")
+        .Hidden(true)
+        .Width(650)
+)
+
+@(
+    X.GridPanel()
+    .ID("grdMailNotifications")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.CreatedDate, Ext.Net.SortDirection.DESC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Hidden(true)
+        .Text(MailNotificationsVM.Prop.MailNotificationID.Desc)
+        .DataIndex(Model, model => model.MailNotificationID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Hidden(true)
+        .Text(MailNotificationsVM.Prop.TaskStatusID.Desc)
+        .DataIndex(Model, model => model.TaskStatusID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MailNotificationsVM.Prop.Subject.Desc)
+        .DataIndex(Model, model => model.Subject)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text("Function")
+        .DataIndex(Model, model => model.FunctionDesc)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.DateColumn()
+        .Text("Date Created")
+        .DataIndex(Model, model => model.CreatedDate)
+        .Flex(3)
+        .Format(global_asax.DefaultDateFormat)
+
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+
+        X.Column()
+        .Text("Approval Status")
+        .DataIndex(Model, model => model.TaskStatusDesc)
+        .Flex(3)
+        .Renderer("RendererBR")
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+
+         X.Column()
+        .Text("Mailing Status")
+        .DataIndex(Model, model => model.StatusDesc)
+        .Flex(3)
+        .Renderer("RendererBR")
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            //btnAdd.Disabled(false),
+            btnDetail.Disabled(true),
+            btnPreview.Disabled(true).Handler("spreviewNotif()"),
+            btnUpdate.Disabled(true),
+            btnDelete.Disabled(true),
+            btnVerify.Disabled(true).Handler("showMsgConfirmVerify()"),
+            btnResend.Disabled(true).Handler("showMsgConfirmResend()")
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

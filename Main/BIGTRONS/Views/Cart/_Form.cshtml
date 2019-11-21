@@ -1,0 +1,606 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model CatalogCartVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    
+   
+    List<Parameter> oParamList;
+    Parameter oParam;
+    
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.CompanyDesc.Name, ProjectVM.Prop.CompanyDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.LocationDesc.Name, ProjectVM.Prop.LocationDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.DivisionDesc.Name, ProjectVM.Prop.DivisionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + RegionVM.Prop.RegionID.Name, RegionVM.Prop.RegionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.RegionDesc.Name, ProjectVM.Prop.RegionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCluster = global_asax.Button(Buttons.ButtonBrowse, "Cluster", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeID.Name, UnitTypeVM.Prop.UnitTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeDesc.Name, UnitTypeVM.Prop.UnitTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseUnitType = global_asax.Button(Buttons.ButtonBrowse, "UnitType", "", "../UnitType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseUnitType = global_asax.Button(Buttons.ButtonErase, "UnitType", "", "", true);
+
+    oParam = new Parameter(General.EnumDesc(Params.Caller), "GetData", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "{ CatalogCartID: App.CFPCatalogCartID.getValue(), CatalogCartVersion: App.CFPCatalogCartVersion.getValue() }", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnGetData = global_asax.Button(Buttons.ButtonDetail, "ButtonGetData", "Get Data", "Add", true,false,false,null,oParamList);
+
+    <script>
+        /*budget plan*/
+        
+        var bPreventGetCatalogCart = false;
+
+        getCatalogCart = function (CatalogCartID, CatalogCartDesc, exact) {
+            if (App.CFPCatalogCartID.isDirty() || App.CFPDescription.isDirty()) {
+                App.CFPCatalogCartID.originalValue = App.CFPCatalogCartID.getValue();
+                App.CFPDescription.originalValue = App.CFPDescription.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCatalogCart", "CatalogCart"))',
+                    params: {
+                        ControlCatalogCartID: App.CFPCatalogCartID.id,
+                        ControlCatalogCartDesc: App.CFPDescription.id,
+                        ControlCatalogCartVersion: App.CFPCatalogCartVersion.id,
+                        FilterCatalogCartID: CatalogCartID,
+                        FilterCatalogCartDesc: CatalogCartDesc,
+                        Exact: exact
+                    },
+                    success: getCatalogCartSuccess,
+                    failure: getCatalogCartFailed
+                });
+            }
+        };
+
+        getCatalogCartSuccess = function () {
+            if (!App.CFPCatalogCartID.isDirty() && !App.CFPDescription.isDirty()
+                && !App.CFPCatalogCartVersion.isDirty()) {
+                App.CFPCatalogCartID.originalValue = "";
+                App.CFPDescription.originalValue = "";
+                App.CFPCatalogCartVersion.originalValue = "";
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        getCatalogCartFailed = function () {
+            eraseCatalogCart();
+        };
+
+        CatalogCartIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCart = true;
+                getCatalogCart(field.getValue(), "", false);
+                getListCatalogCartStructure();
+            }
+        };
+
+        CatalogCartDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCart = true;
+                getCatalogCart("", field.getValue(), false);
+            }
+        };
+
+        CatalogCartIDBlur = function (CatalogCartID) {
+            console.log(bPreventGetCatalogCart);
+            if (!bPreventGetCatalogCart) {
+                bPreventGetCatalogCart = true;
+                if (CatalogCartID.trim() == "")
+                    getCatalogCartFailed();
+                else {
+                    getCatalogCart(CatalogCartID, "", true);
+                    getListCatalogCartStructure();
+                }
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        CatalogCartDescBlur = function (CatalogCartDesc) {
+            if (!bPreventGetCatalogCart) {
+                bPreventGetCatalogCart = true;
+                if (CatalogCartDesc.trim() == "")
+                    getCatalogCartFailed();
+                else
+                    getCatalogCart("", CatalogCartDesc, true);
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        eraseCatalogCart = function () {
+            App.CFPCatalogCartID.clear();
+            App.CFPDescription.clear();
+            App.CFPCatalogCartVersion.clear();
+            App.CFPCatalogCartID.originalValue = "";
+            App.CFPDescription.originalValue = "";
+            App.CFPCatalogCartVersion.originalValue = "";
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        /*load template*/
+        getListCatalogCartTemplateStructure = function (bloadtemplate) {
+            if ((App.CatalogCartTemplateID.getValue() != undefined && App.CatalogCartTemplateID.getValue() != "") &&
+                    (App.ProjectID.getValue() != undefined && App.ProjectID.getValue() != "" && App.RegionID.getValue() != "") &&
+                    (App.CatalogCartVersion.getValue() == null || App.CatalogCartVersion.getValue() == undefined || App.CatalogCartVersion.getValue() == 1)
+                    ) {
+                App.IsLoadTemplate.setValue(bloadtemplate);
+                App.treePanelBudgetVersionStructure.store.getProxy().setExtraParams({
+                    CatalogCartID: App.CatalogCartID.getValue(),
+                    CatalogCartVersion: App.CatalogCartVersion.getValue(),
+                    CatalogCartTemplateID: App.CatalogCartTemplateID.getValue(),
+                    RegionID:App.RegionID.getValue(),
+                    ProjectID: App.ProjectID.getValue(),
+                    ClusterID: App.ClusterID.getValue(),
+                    UnitTypeID: App.UnitTypeID.getValue(),
+                    IsLoadTemplate: App.IsLoadTemplate.getValue(),
+                    IsRefreshPrice : false
+                });
+
+                Ext.getBody().mask('Loading');
+                App.treePanelBudgetVersionStructure.store.load({
+                    callback: function (a, b, c) {
+                        debugger;
+                        /*Ext.suspendLayouts();*/
+                        App.treePanelBudgetVersionStructure.getRootNode().expand();
+                        /*  Ext.resumeLayouts(true);*/
+                        if (b._response.responseText != "") {
+                            if (Ext.util.JSON.decode(b._response.responseText.toString()).hasOwnProperty("script")) {
+                                var func = new Function(Ext.util.JSON.decode(b._response.responseText.toString()).script);
+                                func.call();
+                                
+                            }
+                        }
+                        Ext.getBody().unmask();
+                        reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                        setTimeout("afterFirstLoadTree()", 1);
+
+                    }
+                });
+            }
+        };
+
+
+        getListCatalogCartTemplateStructureSuccess = function (response) {
+            var jsonData = Ext.util.JSON.decode(response.responseText);
+            if (jsonData.data.length > 0)
+                App.treePanelBudgetVersionStructure.getStore().loadData(jsonData.data);
+            else
+                App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        getListCatalogCartTemplateStructureFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdCatalogCartTemplateStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetCatalogCartTemplate = false;
+
+        getCatalogCartTemplate = function (CatalogCartTemplateID, CatalogCartTemplateDesc, exact) {
+            if (App.CatalogCartTemplateID.isDirty() || App.CatalogCartTemplateDesc.isDirty()) {
+                App.CatalogCartTemplateID.originalValue = App.CatalogCartTemplateID.getValue();
+                App.CatalogCartTemplateDesc.originalValue = App.CatalogCartTemplateDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCatalogCartTemplate", "CatalogCartTemplate"))',
+                    params: {
+                        ControlCatalogCartTemplateID: App.CatalogCartTemplateID.id,
+                        ControlCatalogCartTemplateDesc: App.CatalogCartTemplateDesc.id,
+                        ControlCatalogCartTypeDesc: App.CatalogCartTypeDesc.id,
+                        FilterCatalogCartTemplateID: CatalogCartTemplateID,
+                        FilterCatalogCartTemplateDesc: CatalogCartTemplateDesc,
+                        Exact: exact
+                    },
+                    success: getCatalogCartTemplateSuccess,
+                    failure: getCatalogCartTemplateFailed
+                });
+            }
+        };
+
+        getCatalogCartTemplateSuccess = function () {
+            if (!App.CatalogCartTemplateID.isDirty() && !App.CatalogCartTemplateDesc.isDirty()
+                && !App.CatalogCartTypeDesc.isDirty() ) {
+                App.CatalogCartTemplateID.originalValue = "";
+                App.CatalogCartTemplateDesc.originalValue = "";
+                App.CatalogCartTypeDesc.originalValue = "";
+            }
+            bPreventGetCatalogCartTemplate = false;
+        };
+
+        getCatalogCartTemplateFailed = function () {
+            eraseCatalogCartTemplate();
+        };
+
+        CatalogCartTemplateIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCartTemplate = true;
+                getCatalogCartTemplate(field.getValue(), "", false);
+                getListCatalogCartTemplateStructure();
+            }
+        };
+
+        CatalogCartTemplateDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCartTemplate = true;
+                getCatalogCartTemplate("", field.getValue(), false);
+            }
+        };
+
+        CatalogCartTemplateIDBlur = function (CatalogCartTemplateID) {
+            console.log(bPreventGetCatalogCartTemplate);
+            if (!bPreventGetCatalogCartTemplate) {
+                bPreventGetCatalogCartTemplate = true;
+                if (CatalogCartTemplateID.trim() == "")
+                    getCatalogCartTemplateFailed();
+                else {
+                    getCatalogCartTemplate(CatalogCartTemplateID, "", true);
+                    getListCatalogCartTemplateStructure();
+                }
+            }
+            bPreventGetCatalogCartTemplate = false;
+        };
+
+        CatalogCartTemplateDescBlur = function (CatalogCartTemplateDesc) {
+            if (!bPreventGetCatalogCartTemplate) {
+                bPreventGetCatalogCartTemplate = true;
+                if (CatalogCartTemplateDesc.trim() == "")
+                    getCatalogCartTemplateFailed();
+                else
+                    getCatalogCartTemplate("", CatalogCartTemplateDesc, true);
+            }
+            bPreventGetCatalogCartTemplate = false;
+        };
+
+        eraseCatalogCartTemplate = function () {
+            App.CatalogCartTemplateID.clear();
+            App.CatalogCartTemplateDesc.clear();
+            App.CatalogCartTemplateID.originalValue = "";
+            App.CatalogCartTemplateDesc.originalValue = "";
+
+            App.CatalogCartTypeDesc.clear();
+            App.CatalogCartTypeDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        ControlCompanyDesc: App.CompanyDesc.id,
+                        ControlRegionID: App.RegionID.id,
+                        ControlRegionDesc: App.RegionDesc.id,
+                        ControlLocationDesc: App.LocationDesc.id,
+                        ControlDivisionDesc: App.DivisionDesc.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+        };
+
+        getProjectFailed = function () {
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.RegionID.clear();
+            App.RegionDesc.clear();
+            App.CompanyDesc.clear();
+            App.LocationDesc.clear();
+            App.DivisionDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+            App.RegionID.originalValue = "";
+            App.RegionDesc.originalValue = "";
+            App.CompanyDesc.originalValue = "";
+            App.LocationDesc.originalValue = "";
+            App.DivisionDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetCluster = false;
+
+        getCluster = function (clusterID, clusterDesc, exact) {
+            if (App.ClusterID.isDirty() || App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = App.ClusterID.getValue();
+                App.ClusterDesc.originalValue = App.ClusterDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCluster", "Cluster"))',
+                    params: {
+                        ControlClusterID: App.ClusterID.id,
+                        ControlClusterDesc: App.ClusterDesc.id,
+                        FilterClusterID: clusterID,
+                        FilterClusterDesc: clusterDesc,
+                        Exact: exact
+                    },
+                    success: getClusterSuccess,
+                    failure: getClusterFailed
+                });
+            }
+        };
+
+        getClusterSuccess = function () {
+            if (!App.ClusterID.isDirty() && !App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = "";
+                App.ClusterDesc.originalValue = "";
+            }
+            bPreventGetCluster = false;
+        };
+
+        getClusterFailed = function () {
+            eraseCluster();
+        };
+
+        clusterIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster(field.getValue(), "", false);
+            }
+        };
+
+        clusterDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster("", field.getValue(), false);
+            }
+        };
+
+        clusterIDBlur = function (clusterID) {
+            console.log(bPreventGetCluster);
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterID.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster(clusterID, "", true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        clusterDescBlur = function (clusterDesc) {
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterDesc.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster("", clusterDesc, true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetUnitType = false;
+
+        getUnitType = function (unitTypeID, unitTypeDesc, exact) {
+            if (App.UnitTypeID.isDirty() || App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = App.UnitTypeID.getValue();
+                App.UnitTypeDesc.originalValue = App.UnitTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetUnitType", "UnitType"))',
+                    params: {
+                        ControlUnitTypeID: App.UnitTypeID.id,
+                        ControlUnitTypeDesc: App.UnitTypeDesc.id,
+                        FilterUnitTypeID: unitTypeID,
+                        FilterUnitTypeDesc: unitTypeDesc,
+                        Exact: exact
+                    },
+                    success: getUnitTypeSuccess,
+                    failure: getUnitTypeFailed
+                });
+            }
+        };
+
+        getUnitTypeSuccess = function () {
+            if (!App.UnitTypeID.isDirty() && !App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = "";
+                App.UnitTypeDesc.originalValue = "";
+            }
+            bPreventGetUnitType = false;
+        };
+
+        getUnitTypeFailed = function () {
+            eraseUnitType();
+        };
+
+        unitTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType(field.getValue(), "", false);
+            }
+        };
+
+        unitTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType("", field.getValue(), false);
+            }
+        };
+
+        unitTypeIDBlur = function (unitTypeID) {
+            console.log(bPreventGetUnitType);
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeID.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType(unitTypeID, "", true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        unitTypeDescBlur = function (unitTypeDesc) {
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeDesc.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType("", unitTypeDesc, true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        eraseUnitType = function () {
+            App.UnitTypeID.clear();
+            App.UnitTypeDesc.clear();
+            App.UnitTypeID.originalValue = "";
+            App.UnitTypeDesc.originalValue = "";
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+
+    </script>
+    
+}
+@(
+    X.FormPanel()
+    .ID("PCatalogCartForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FCatalogCart")
+        .Padding(iBodyPadding)
+        .Items(
+
+                X.TextFieldFor(model => model.CatalogCartID)
+                    .FieldLabel(CatalogCartVM.Prop.CatalogCartID.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.CatalogCartDesc)
+                    .FieldLabel(CatalogCartVM.Prop.CatalogCartDesc.Desc)
+                    .ReadOnly(isDisableButton)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                    //X.DateFieldFor(model => model.CreatedDate)
+                    //   .FieldLabel(CatalogCartVM.Prop.CreatedDate.Desc)
+                    //   .Format(global_asax.DefaultDateFormat)
+                    //   .ReadOnly(true)
+                    //   .LabelWidth(iLabelWidth)
+                    //   .Width(iFieldWidth),
+                    //   X.DateFieldFor(model => model.ModifiedDate)
+                    //   .FieldLabel(CatalogCartVM.Prop.ModifiedDate.Desc)
+                    //   .Format(global_asax.DefaultDateFormat)
+                    //   .ReadOnly(true)
+                    //   .LabelWidth(iLabelWidth)
+                    //   .Width(iFieldWidth),
+                    X.TextFieldFor(model => model.StatusDesc)
+                    .FieldLabel(CatalogCartVM.Prop.StatusDesc.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth)
+
+         ),
+         X.FormPanel()
+             .ID("pnlCatalogCartStructure")
+             .Title("Cart Detail")
+             .Collapsible(true)
+             .ItemsFromPartial("Structure/_List", Model.ListCartItemVM, ViewData)
+             .Padding(iBodyPadding)
+    ).TopBar(
+            X.Toolbar()
+            .Padding(iBodyPadding)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+)
+

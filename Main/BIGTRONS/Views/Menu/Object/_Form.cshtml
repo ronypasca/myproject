@@ -1,0 +1,142 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MenuObjectVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    
+
+    <script>
+        sTitleMenuObject = "Item Price";
+
+        menuObjectFormClose = function () {
+            activePageOne();
+            App.PMenuObjectForm.destroy();
+        };
+
+        menuObjectFormSave = function (caller) {
+            var menuID = App.MenuID.getValue();
+            var objectID = App.ObjectID.getValue();
+            var objectDesc = App.ObjectDesc.getValue();
+            var objectLongDesc = App.ObjectLongDesc.getValue();
+
+            if (menuObjectSave(caller, menuID, objectID, objectDesc, objectLongDesc))
+                menuObjectFormClose();
+        };
+
+        menuObjectSave = function (caller,menuID, objectID, objectDesc, objectLongDesc) {
+            var sMessage = "";
+            if (objectID == "")
+                sMessage = "ID cannot be blank<br />";
+            if (objectDesc == "" )
+                sMessage += "Description cannot be blank<br />";
+            if (objectLongDesc == "")
+                sMessage += "Long Description cannot be blank<br />";
+            if (sMessage != "") {
+                showError(sTitleMenuObject, sMessage);
+                return false;
+            }
+
+            var exists = false;
+            if (caller == "Add") {
+                var records = App.grdMenuObject.getRowsValues();
+                for (var rowKey in records) {
+                    if (records.hasOwnProperty(rowKey)) {
+                        var row = records[rowKey];
+                        if (row["MenuID"] == menuID && row["ObjectID"] == objectID ) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (caller == "Update") {
+                var allRecords = App.grdMenuObject.getRowsValues();
+                var selectedRecords = App.grdMenuObject.getRowsValues({ selectedOnly: true })[0];
+
+                for (var rowKey in allRecords) {
+                    if (allRecords.hasOwnProperty(rowKey)) {
+                        var row = allRecords[rowKey];
+                        if (!(row["MenuID"] == selectedRecords["MenuID"] && row["ObjectID"] == selectedRecords["ObjectID"])
+                            && row["ObejctID"] == objectID && row["ObjectDesc"] == objectDesc && row["ObjectLongDesc"] == objectLongDesc) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (exists) {
+                showError(sTitleMenuObject, "Data already exists");
+                return false;
+            }
+            if (caller == "Add") {
+                App.grdMenuObject.store.add(new ModelMenuObject({
+                    MenuID: menuID,
+                    ObjectID: objectID,
+                    ObjectDesc: objectDesc,
+                    ObjectLongDesc: objectLongDesc
+                }));
+
+            }
+            else if (caller == "Update") {
+                var record = App.grdMenuObject.getSelectionModel().getSelection()[0];
+                record.set("MenuID", menuID);
+                record.set("ObjectID", objectID);
+                record.set("ObjectDesc", objectDesc);
+                record.set("objectLongDesc", objectLongDesc);
+
+                record.commit();
+            }
+
+            return true;
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PMenuObjectForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FMenuObject")
+        .Padding(iBodyPadding)
+        .Listeners(oListener =>
+        {
+            //oListener.BeforeRender.Handler = "menuObjectFormBeforeRender()";
+            //oListener.AfterRender.Handler = "menuObjectFormAfterRender('" + ViewData[General.EnumDesc(Params.PageOne)].ToString() + "', '"
+            //    + ViewData[General.EnumDesc(Params.PageTwo)].ToString() + "');";
+        })
+        .Items(
+             X.TextFieldFor(model => model.ObjectID)
+                .FieldLabel(MenuObjectVM.Prop.ObjectID.Desc)
+                .ReadOnly(isDetailButton)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+             X.TextFieldFor(model => model.ObjectDesc)
+                .FieldLabel(MenuObjectVM.Prop.ObjectDesc.Desc)
+                .ReadOnly(isDetailButton)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+             X.TextFieldFor(model => model.ObjectLongDesc)
+                .FieldLabel(MenuObjectVM.Prop.ObjectLongDesc.Desc)
+                .ReadOnly(isDetailButton)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+         )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("Object/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+
+
+        )
+    )
+)
+

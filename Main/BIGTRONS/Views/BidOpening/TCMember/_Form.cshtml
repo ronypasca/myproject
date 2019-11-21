@@ -1,0 +1,141 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanBidOpeningVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdBudgetPlanBidOpening.store.reload()");
+
+
+    <script>
+        afterRender = function () {
+            loadRecord();
+        };
+
+        loadRecord = function () {
+            App.SVendorEntry.load({
+                params: {
+                    BudgetPlanID: App.BudgetPlanID.getValue(),
+                    BudgetPlanVersion: App.BudgetPlanVersion.getValue()
+                },
+                callback: function (records, operation, success) {
+                    record = records[0].data;
+                    App.VendorDesc.setValue(record.VendorDesc);
+                    App.FeePercentage.setValue(record.FeePercentage);
+                    App.Total.setValue(record.Total);
+                },
+                scope: this
+            });
+        };
+
+        Ext.onReady(function () {
+
+            Ext.define('ModelVendorsEntry', {
+                extend: 'Ext.data.Model',
+                fields: [
+                    { name: '@BudgetPlanVersionEntryVM.Prop.VendorDesc.Name', type: 'string' },
+                    { name: '@BudgetPlanVersionEntryVM.Prop.FeePercentage.Name', type: 'string' },
+                    { name: '@BudgetPlanVersionEntryVM.Prop.Total.Name', type: 'float' }
+                ]
+            });
+
+            var myStore = Ext.create('Ext.data.Store', {
+                id: 'SVendorEntry',
+                model: 'ModelVendorsEntry',
+                pageSize: 1,
+                proxy: {
+                    type: 'ajax',
+                    url: '@Url.Action("GetVendorsEntry")',
+                    params: {
+                        BudgetPlanID: "",
+                        BudgetPlanVersion: ""
+                    },
+                    reader: {
+                        type: 'json',
+                        rootProperty: 'data',
+                        totalProperty: 'total'
+                    }
+                },
+                autoLoad: false,
+                listeners: {
+                    datachanged: {
+                        fn:function () {
+                                    debugger;
+                                    var record = this.getAt(0) || {};
+                                    App.FVendorEntry.getForm().loadRecord(record);
+                                    App.FVendorEntry.clearInvalid();
+                                }
+                    },
+                    beforeload: {
+                        fn: function (a, b, c) {
+                            debugger;
+
+                        }
+                    }
+                }
+            });
+
+        });
+
+        afterRenderPagging = function (a,b,c) {
+            debugger;
+            a.next.on('click', function () { loadRecord(); });
+        };
+
+    </script>
+}
+
+@(
+    X.Panel()
+    .ID("PBidOpeningTCForm")
+    .Frame(true)
+    .Items(
+         X.FormPanel()
+            .ID("FBudgetPlanTC")
+            .Padding(iBodyPadding)
+            .Items(
+                X.Container()
+                .Items(
+                    X.Panel()
+                         .ID("pnlBudgetPlan")
+                         .Title("Budget Plan")
+                         .Collapsible(true)
+                         .ItemsFromPartial("BudgetPlan/_Form", Model.BudgetPlanVM, ViewData),
+                    //.Listeners(d=>d.AfterRender.Fn="afterRenderBudgetPlan"),
+
+                    X.Panel()
+                        .ID("FPBidOpeningTC")
+                        .PaddingSpec(sPanelPaddingSpec)
+                        .Loader(
+                            X.ComponentLoader()
+                            .ID("CLBidOpeningTC")
+                            .AutoLoad(true)
+                            .LoadMask(l => l.ShowMask = true)
+                            .Url(Url.Action("GetPanelTC"))
+                            .Params(new { Vendors = ViewData["Vendors"].ToString(), BudgetPlanID = ViewData["BudgetPlanID"].ToString(), BudgetPlanVersion = ViewData["BudgetPlanVersion"].ToString() })
+                            .Mode(LoadMode.Component)
+                        )
+
+
+                    )
+            )
+    ).TopBar(
+        X.Toolbar()
+        .Items(
+            btnList
+            )
+            ).BottomBar(
+        X.PagingToolbar()
+                .HideRefresh(true)
+                .DisplayInfo(false)
+                .StoreID("SVendorEntry")
+            )
+)

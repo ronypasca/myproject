@@ -1,0 +1,164 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model LocationVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + LocationVM.Prop.RegionID.Name, LocationVM.Prop.RegionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + LocationVM.Prop.RegionDesc.Name, LocationVM.Prop.RegionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseRegion = global_asax.Button(Buttons.ButtonBrowse, "Region", "", "../Region/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseRegion = global_asax.Button(Buttons.ButtonErase, "Region", "", "", true);
+
+    <script>
+        var bPreventGetRegion = false;
+
+        getRegion = function (regionID, regionDesc, exact) {
+            if (App.RegionID.isDirty() || App.RegionDesc.isDirty()) {
+                App.RegionID.originalValue = App.RegionID.getValue();
+                App.RegionDesc.originalValue = App.RegionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetRegion", "Region"))',
+                    params: {
+                        ControlRegionID: App.RegionID.id,
+                        ControlRegionDesc: App.RegionDesc.id,
+                        FilterRegionID: regionID,
+                        FilterRegionDesc: regionDesc,
+                        Exact: exact
+                    },
+                    success: getRegionSuccess,
+                    failure: getRegionFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getRegionSuccess = function () {
+            if (!App.RegionID.isDirty() && !App.RegionDesc.isDirty()) {
+                App.RegionID.originalValue = "";
+                App.RegionDesc.originalValue = "";
+            }
+            bPreventGetRegion = false;
+        };
+
+        getRegionFailed = function () {
+            eraseRegion();
+        };
+
+        regionIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRegion = true;
+                getRegion(field.getValue(), "", false);
+            }
+        };
+
+        regionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetRegion = true;
+                getRegion("", field.getValue(), false);
+            }
+        };
+
+        regionIDBlur = function (regionID) {
+            console.log(bPreventGetRegion);
+            if (!bPreventGetRegion) {
+                bPreventGetRegion = true;
+                if (regionID.trim() == "")
+                    getRegionFailed();
+                else
+                    getRegion(regionID, "", true);
+            }
+            bPreventGetRegion = false;
+        };
+
+        regionDescBlur = function (regionDesc) {
+            if (!bPreventGetRegion) {
+                bPreventGetRegion = true;
+                if (regionDesc.trim() == "")
+                    getRegionFailed();
+                else
+                    getRegion("", regionDesc, true);
+            }
+            bPreventGetRegion = false;
+        };
+
+        eraseRegion = function () {
+            App.RegionID.clear();
+            App.RegionDesc.clear();
+            App.RegionID.originalValue = "";
+            App.RegionDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PLocationForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FLocation")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.LocationID)
+                .FieldLabel(LocationVM.Prop.LocationID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.LocationDesc)
+                .FieldLabel(LocationVM.Prop.LocationDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.RegionID)
+                        .FieldLabel(LocationVM.Prop.RegionDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "regionIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "regionIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.RegionDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "regionDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "regionDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseRegion
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseRegion.Handler("eraseRegion")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

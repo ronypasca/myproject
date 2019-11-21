@@ -1,0 +1,1337 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MinutesEntryVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPanelPaddingSpec = "10 10 10 0";
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    //oParamList = new List<Parameter>();
+    //oParam = new Parameter();
+    //oParam = new Parameter("Control" + NegotiationConfigurationsVM.Prop.FPTID.Name, FPTVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + NegotiationConfigurationsVM.Prop.FPTDesc.Name, SchedulesVM.Prop.FPTDescription.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, "FunctionDescription", ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateID.Name, NotificationTemplateVM.Prop.NotificationTemplateID.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("FilterTemplate" + FunctionsVM.Prop.FunctionID.Name, "App.FunctionID.getValue()", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("OldValueFPTID", "App.FPTID.getValue()", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    //Button.Builder btnBrowseFPTID = global_asax.Button(Buttons.ButtonBrowse, "FPTID", "", "../NegotiationConfigurations/" + General.EnumDesc(Buttons.ButtonBrowse) + "FPT", true, false, false, null, oParamList);
+    //Button.Builder btnBrowseFunction = global_asax.Button(Buttons.ButtonBrowse, "Functions", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse) , true, false, false, null, oParamList);
+    //Button.Builder brnBrowseTemplate = global_asax.Button(Buttons.ButtonBrowse, "brwsTemplate", "", "../NotifTemplate/" + General.EnumDesc(Buttons.ButtonBrowse) , true, false, false, null, oParamList);
+
+    //Button.Builder btnEraseFPTID = global_asax.Button(Buttons.ButtonErase, "FPTID", "", "", true);
+
+    //Button FPT
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + FPTVM.Prop.FPTID.Name, FPTVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FPTVM.Prop.Descriptions.Name, MinutesEntryVM.Prop.FPTDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseFPT = global_asax.Button(Buttons.ButtonBrowse, "FPT", "", "../FPT/"  + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseFPT = global_asax.Button(Buttons.ButtonErase, "FPT", "", "", true);
+
+    //Button Function
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, FunctionsVM.Prop.FunctionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    //oParam = new Parameter("Filter" + FPTVM.Prop.FPTID.Name, "App.FPTID.value", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    Button.Builder btnBrowseFunctions = global_asax.Button(Buttons.ButtonBrowse, "Function", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseFunctions = global_asax.Button(Buttons.ButtonErase, "Functions", "", "", true);
+
+    //Button NotificationTemplates
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateID.Name, NotificationTemplateVM.Prop.NotificationTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterTemplateFunctionID" /*+ FunctionsVM.Prop.FunctionID.Name*/, "App.FunctionID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseNotificationTemplates = global_asax.Button(Buttons.ButtonBrowse, "NotifTemplate", "", "../NotifTemplate/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseNotificationTemplates = global_asax.Button(Buttons.ButtonErase, "NotifTemplate", "", "", true);
+
+    //Button MinutesTemplates
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + MinutesTemplateVM.Prop.MinuteTemplateID.Name, MinutesTemplateVM.Prop.MinuteTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + MinutesTemplateVM.Prop.MinuteTemplateDescriptions.Name, MinutesTemplateVM.Prop.MinuteTemplateDescriptions.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterTemplateFunctionID" /*+ FunctionsVM.Prop.FunctionID.Name*/, "App.FunctionID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseMinutesTemplates = global_asax.Button(Buttons.ButtonBrowse, "MinutesTemplate", "", "../MinutesTemplate/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseMinutesTemplates = global_asax.Button(Buttons.ButtonErase, "MinutesTemplate", "", "", true);
+
+
+    //Schedule
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + SchedulesVM.Prop.FPTID.Name, MinutesEntryVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.FPTDescription.Name, MinutesEntryVM.Prop.FPTDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.FunctionDescription.Name, FunctionsVM.Prop.FunctionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.ScheduleID.Name, MinutesEntryVM.Prop.ScheduleID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.Subject.Name, MinutesEntryVM.Prop.ScheduleDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseSchedule = global_asax.Button(Buttons.ButtonBrowse, "Schedule", "", "../Scheduling/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseSchedule = global_asax.Button(Buttons.ButtonErase, "Schedule", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GrdScheduleRecipient", "grdAttendanceRecipient,grdAttendanceRecipientCC,grdAttendanceRecipientBCC", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnPreBuilRec = global_asax.Button(Buttons.ButtonList, "BrowsePreBuild", "Pre-Build Recipients", "../PreBuiltRecipient/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+<script>
+    var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+
+            /**
+             * FPT
+             */
+            var bPreventGetFPT = false;
+
+            getFPT = function (FPTID, FPTDesc, exact) {
+                if (App.FPTID.isDirty() || App.FPTDesc.isDirty()) {
+                    App.FPTID.originalValue = App.FPTID.getValue();
+                    App.FPTDesc.originalValue = App.FPTDesc.getValue();
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("GetFPT", "FPT"))',
+                        params: {
+                            ControlFPTID: App.FPTID.id,
+                            ControlFPTDesc: App.FPTDesc.id,
+                            FilterFPTID: FPTID,
+                            FilterFPTDesc: FPTDesc,
+                            Exact: exact
+                        },
+                        success: getFPTSuccess,
+                        failure: getFPTFailed
+                    });
+                }
+                else
+                    console.log("not dirty");
+            };
+
+            getFPTSuccess = function () {
+                if (!App.FPTID.isDirty() && !App.FPTDesc.isDirty()) {
+                    App.FPTID.originalValue = "";
+                    App.FPTDesc.originalValue = "";
+                }
+                bPreventGetFPT = false;
+            };
+
+            getFPTFailed = function () {
+                eraseFPT();
+            };
+
+            FPTIDSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetFPT = true;
+                    getFPT(field.getValue(), "", false);
+                }
+            };
+
+            FPTDescSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetFPT = true;
+                    getFPT("", field.getValue(), false);
+                }
+            };
+
+            FPTIDBlur = function (FPTID) {
+                console.log(bPreventGetFPT);
+                if (!bPreventGetFPT) {
+                    bPreventGetFPT = true;
+                    if (FPTID.trim() == "")
+                        getFPTFailed();
+                    else
+                        getFPT(FPTID, "", true);
+                }
+                bPreventGetFPT = false;
+            };
+
+            FPTDescBlur = function (FPTDesc) {
+                if (!bPreventGetFPT) {
+                    bPreventGetFPT = true;
+                    if (FPTDesc.trim() == "")
+                        getFPTFailed();
+                    else
+                        getFPT("", FPTDesc, true);
+                }
+                bPreventGetFPT = false;
+            };
+            FPTIDChange = function (field, e, eOpts) {
+                FPTID = field.getValue();
+                if (!bPreventGetFPT) {
+                    bPreventGetFPT = true;
+                    if (FPTID.trim() == "")
+                        getFPTFailed();
+                    else {
+
+                        if (FPTID != field.originalValue) {
+                            eraseFunctions();
+                        }
+                    }
+                }
+                bPreventGetFPT = false;
+            };
+
+            FPTDescChange = function (field, e, eOpts) {
+                FPTDesc = field.getValue();
+                if (!bPreventGetFPT) {
+                    bPreventGetFPT = true;
+                    if (FPTDesc.trim() == "")
+                        getFPTFailed();
+                    else {
+
+                        if (FPTDesc != field.originalValue) {
+                            eraseFunctions();
+                        }
+                    }
+                }
+                bPreventGetFPT = false;
+            };
+            eraseFPT = function () {
+                App.FPTID.clear();
+                App.FPTDesc.clear();
+                App.FPTID.originalValue = "";
+                App.FPTDesc.originalValue = "";
+            };
+            /**
+             * End of FPT
+             */
+
+            /*Schedule*/
+            var bPreventGetSchedule = false;
+
+            getSchedule = function (pscheduleID, pscheduleDesc, exact) {
+                if (App.ScheduleID.isDirty() || App.ScheduleDesc.isDirty()) {
+                    App.ScheduleID.originalValue = App.ScheduleID.getValue();
+                    App.ScheduleDesc.originalValue = App.ScheduleDesc.getValue();
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("GetSchedule", "Schedule"))',
+                        params: {
+                            ControlScheduleID: App.ScheduleID.id,
+                            ControlScheduleDesc: App.ScheduleDesc.id,
+                            FilterScheduleID: pscheduleID,
+                            FilterScheduleDesc: pscheduleDesc,
+                            Exact: exact
+                        },
+                        success: getScheduleSuccess,
+                        failure: getScheduleFailed
+                    });
+                }
+                else
+                    console.log("not dirty");
+            };
+
+            getScheduleSuccess = function () {
+                if (!App.ScheduleID.isDirty() && !App.ScheduleDesc.isDirty()) {
+                    App.ScheduleID.originalValue = "";
+                    App.ScheduleDesc.originalValue = "";
+                }
+                bPreventGetSchedule = false;
+            };
+
+            getScheduleFailed = function () {
+                eraseSchedule();
+            };
+
+            ScheduleIDSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetSchedule = true;
+                    getSchedule(field.getValue(), "", false);
+                }
+            };
+
+            ScheduleDescSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetSchedule = true;
+                    getSchedule("", field.getValue(), false);
+                }
+            };
+
+            ScheduleIDBlur = function (pscheduleID) {
+                console.log(bPreventGetSchedule);
+                if (!bPreventGetSchedule) {
+                    bPreventGetSchedule = true;
+                    if (pscheduleID.trim() == "")
+                        getScheduleFailed();
+                    else
+                        getSchedule(pscheduleID, "", true);
+                }
+                bPreventGetSchedule = false;
+            };
+
+            ScheduleDescBlur = function (pscheduleDesc) {
+
+                App.Subject.setValue(pscheduleDesc);
+                if (!bPreventGetSchedule) {
+                    bPreventGetSchedule = true;
+                    if (pscheduleDesc.trim() == "") {
+                        getScheduleFailed();
+                        App.Subject.setValue("");
+                    } else
+                        getSchedule("", pscheduleDesc, true);
+                }
+                bPreventGetSchedule = false;
+            };
+
+            eraseSchedule = function () {
+                App.ScheduleID.clear();
+                App.ScheduleDesc.clear();
+                App.ScheduleID.originalValue = "";
+                App.ScheduleDesc.originalValue = "";
+            };
+
+            /*end schedule*/
+
+        /**
+         * Functions
+         */
+             var bPreventGetFunctions = false;
+
+            getFunctions = function (FunctionID, FunctionDesc, exact) {
+                if (App.FunctionID.isDirty() || App.FunctionDesc.isDirty()) {
+                    App.FunctionID.originalValue = App.FunctionID.getValue();
+                    App.FunctionDesc.originalValue = App.FunctionDesc.getValue();
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("GetFunctions", "Functions"))',
+                        params: {
+                            ControlFunctionID: App.FunctionID.id,
+                            ControlFunctionDesc: App.FunctionDesc.id,
+                            FilterFunctionID: FunctionID,
+                            FilterFunctionDesc: FunctionDesc,
+                            Exact: exact
+                        },
+                        success: getFunctionsSuccess,
+                        failure: getFunctionsFailed
+                    });
+                }
+                else
+                    console.log("not dirty");
+            };
+
+            getFunctionsSuccess = function () {
+                if (!App.FunctionID.isDirty() && !App.FunctionDesc.isDirty()) {
+                    App.FunctionID.originalValue = "";
+                    App.FunctionDesc.originalValue = "";
+                }
+                bPreventGetFunctions = false;
+                eraseNotificationTemplates();
+
+            };
+
+            getFunctionsFailed = function () {
+                App.FunctionID.clear();
+                App.FunctionDesc.clear();
+                App.FunctionID.originalValue = "";
+                App.FunctionDesc.originalValue = "";
+            };
+
+            FunctionIDSpecialKey = function (field, event) {
+                debugger;
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetFunctions = true;
+                    getFunctions(field.getValue(), "", false);
+                }
+            };
+
+            FunctionDescSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetFunctions = true;
+                    getFunctions("", field.getValue(), false);
+                }
+            };
+
+            FunctionIDBlur = function (FunctionID) {
+                console.log(bPreventGetFunctions);
+                if (!bPreventGetFunctions) {
+                    bPreventGetFunctions = true;
+                    if (FunctionID.trim() == "")
+                        getFunctionsFailed();
+                    else
+                        getFunctions(FunctionID, "", true);
+                }
+                bPreventGetFunctions = false;
+            };
+
+            FunctionDescBlur = function (FunctionDesc) {
+                if (!bPreventGetFunctions) {
+                    bPreventGetFunctions = true;
+                    if (FunctionDesc.trim() == "")
+                        getFunctionsFailed();
+                    else
+                        getFunctions("", FunctionDesc, true);
+                }
+                bPreventGetFunctions = false;
+            };
+            FunctionIDChange = function (field, e, eOpts) {
+                FunctionID = field.getValue();
+                if (!bPreventGetFunctions) {
+                    bPreventGetFunctions = true;
+                    if (FunctionID.trim() == "")
+                        getFunctionsFailed();
+                    else {
+
+                        if (FunctionID != field.originalValue) {
+                            eraseNotificationTemplates();
+                        }
+                    }
+                }
+                bPreventGetFunctions = false;
+            };
+
+            FunctionDescChange = function (field, e, eOpts) {
+                FunctionDesc = field.getValue();
+                if (!bPreventGetFunctions) {
+                    bPreventGetFunctions = true;
+                    if (FunctionDesc.trim() == "")
+                        getFunctionsFailed();
+                    else {
+
+                        if (FunctionDesc != field.originalValue) {
+                            eraseNotificationTemplates();
+                        }
+                    }
+                }
+                bPreventGetFunctions = false;
+            };
+            eraseFunctions = function () {
+                App.FunctionID.clear();
+                App.FunctionDesc.clear();
+                App.FunctionID.originalValue = "";
+                App.FunctionDesc.originalValue = "";
+                eraseNotificationTemplates();
+            };
+        /* end funtion */
+
+        /**
+         * Notification Template
+         */
+        var bPreventGetNotificationTemplates = false;
+
+            getNotificationTemplates = function (NotificationTemplateID, NotificationTemplateDesc, exact) {
+                if (App.NotificationTemplateID.isDirty() || App.NotificationTemplateDesc.isDirty()) {
+                    App.NotificationTemplateID.originalValue = App.NotificationTemplateID.getValue();
+                    App.NotificationTemplateDesc.originalValue = App.NotificationTemplateDesc.getValue();
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("GetNotificationTemplates", "NotificationTemplates"))',
+                        params: {
+                            ControlNotificationTemplateID: App.NotificationTemplateID.id,
+                            ControlNotificationTemplateDesc: App.NotificationTemplateDesc.id,
+                            FilterNotificationTemplateID: NotificationTemplateID,
+                            FilterNotificationTemplateDesc: NotificationTemplateDesc,
+                            Exact: exact
+                        },
+                        success: getNotificationTemplatesSuccess,
+                        failure: getNotificationTemplatesFailed
+                    });
+                }
+                else
+                    console.log("not dirty");
+            };
+
+            getNotificationTemplatesSuccess = function () {
+                if (!App.NotificationTemplateID.isDirty() && !App.NotificationTemplateDesc.isDirty()) {
+                    App.NotificationTemplateID.originalValue = "";
+                    App.NotificationTemplateDesc.originalValue = "";
+                }
+                bPreventGetNotificationTemplates = false;
+
+            };
+
+            getNotificationTemplatesFailed = function () {
+                App.NotificationTemplateID.clear();
+                App.NotificationTemplateDesc.clear();
+                App.NotificationTemplateID.originalValue = "";
+                App.NotificationTemplateDesc.originalValue = "";
+            };
+
+            NotificationTemplateIDSpecialKey = function (field, event) {
+                debugger;
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetNotificationTemplates = true;
+                    getNotificationTemplates(field.getValue(), "", false);
+                }
+            };
+
+            NotificationTemplateDescSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetNotificationTemplates = true;
+                    getNotificationTemplates("", field.getValue(), false);
+                }
+            };
+
+            NotificationTemplateIDBlur = function (NotificationTemplateID) {
+                console.log(bPreventGetNotificationTemplates);
+                if (!bPreventGetNotificationTemplates) {
+                    bPreventGetNotificationTemplates = true;
+                    if (NotificationTemplateID.trim() == "")
+                        getNotificationTemplatesFailed();
+                    else
+                        getNotificationTemplates(NotificationTemplateID, "", true);
+                }
+                bPreventGetNotificationTemplates = false;
+            };
+
+            NotificationTemplateDescBlur = function (NotificationTemplateDesc) {
+                if (!bPreventGetNotificationTemplates) {
+                    bPreventGetNotificationTemplates = true;
+                    if (NotificationTemplateDesc.trim() == "")
+                        getNotificationTemplatesFailed();
+                    else
+                        getNotificationTemplates("", NotificationTemplateDesc, true);
+                }
+                bPreventGetNotificationTemplates = false;
+            };
+            NotificationTemplatesChange = function () {
+
+            };
+            NotificationTemplateIDChange = function (field, e, eOpts) {
+
+                getListNotificationTagsByTemplateID();
+                NotificationTemplateID = field.getValue();
+                if (!bPreventGetNotificationTemplates) {
+                    bPreventGetNotificationTemplates = true;
+                    if (NotificationTemplateID.trim() == "")
+                        getNotificationTemplatesFailed();
+                    else {
+
+                        if (NotificationTemplateID != field.originalValue) {
+                        }
+                    }
+                }
+                bPreventGetNotificationTemplates = false;
+            };
+
+            NotificationTemplateDescChange = function (field, e, eOpts) {
+
+                NotificationTemplateDesc = field.getValue();
+                if (!bPreventGetNotificationTemplates) {
+                    bPreventGetNotificationTemplates = true;
+                    if (NotificationTemplateDesc.trim() == "")
+                        getNotificationTemplatesFailed();
+                    else {
+
+                        if (NotificationTemplateDesc != field.originalValue) {
+
+                        }
+                    }
+                }
+                bPreventGetNotificationTemplates = false;
+            };
+            eraseNotificationTemplates = function () {
+                App.NotificationTemplateID.clear();
+                App.NotificationTemplateDesc.clear();
+                App.NotificationTemplateID.originalValue = "";
+                App.NotificationTemplateDesc.originalValue = "";
+            };
+
+        /*End Notification Template*/
+
+        /**
+         * Minutes Template
+         */
+        var bPreventGetMinutesTemplates = false;
+
+            getMinutesTemplates = function (MinuteTemplateID, MinuteTemplateDescriptions, exact) {
+                if (App.MinuteTemplateID.isDirty() || App.MinuteTemplateDescriptions.isDirty()) {
+                    App.MinuteTemplateID.originalValue = App.MinuteTemplateID.getValue();
+                    App.MinuteTemplateDescriptions.originalValue = App.MinuteTemplateDescriptions.getValue();
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("GetMinutesTemplates", "MinutesTemplates"))',
+                        params: {
+                            ControlMinuteTemplateID: App.MinuteTemplateID.id,
+                            ControlMinuteTemplateDescriptions: App.MinuteTemplateDescriptions.id,
+                            FilterMinuteTemplateID: MinuteTemplateID,
+                            FilterMinuteTemplateDescriptions: MinuteTemplateDescriptions,
+                            Exact: exact
+                        },
+                        success: getMinutesTemplatesSuccess,
+                        failure: getMinutesTemplatesFailed
+                    });
+                }
+                else
+                    console.log("not dirty");
+            };
+
+            getMinutesTemplatesSuccess = function () {
+                if (!App.MinuteTemplateID.isDirty() && !App.MinuteTemplateDescriptions.isDirty()) {
+                    App.MinuteTemplateID.originalValue = "";
+                    App.MinuteTemplateDescriptions.originalValue = "";
+                }
+                bPreventGetMinutesTemplates = false;
+
+            };
+
+            getMinutesTemplatesFailed = function () {
+                App.MinuteTemplateID.clear();
+                App.MinuteTemplateDescriptions.clear();
+                App.MinuteTemplateID.originalValue = "";
+                App.MinuteTemplateDescriptions.originalValue = "";
+            };
+
+            MinuteTemplateIDSpecialKey = function (field, event) {
+                debugger;
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetMinutesTemplates = true;
+                    getMinutesTemplates(field.getValue(), "", false);
+                }
+            };
+
+            MinuteTemplateDescriptionsSpecialKey = function (field, event) {
+                if (event.getKey() == event.ENTER) {
+                    bPreventGetMinutesTemplates = true;
+                    getMinutesTemplates("", field.getValue(), false);
+                }
+            };
+
+            MinuteTemplateIDBlur = function (MinuteTemplateID) {
+                console.log(bPreventGetMinutesTemplates);
+                if (!bPreventGetMinutesTemplates) {
+                    bPreventGetMinutesTemplates = true;
+                    if (MinuteTemplateID.trim() == "")
+                        getMinutesTemplatesFailed();
+                    else
+                        getMinutesTemplates(MinuteTemplateID, "", true);
+                }
+                bPreventGetMinutesTemplates = false;
+            };
+
+            MinuteTemplateDescriptionsBlur = function (MinuteTemplateDescriptions) {
+                if (!bPreventGetMinutesTemplates) {
+                    bPreventGetMinutesTemplates = true;
+                    if (MinuteTemplateDescriptions.trim() == "")
+                        getMinutesTemplatesFailed();
+                    else
+                        getMinutesTemplates("", MinuteTemplateDescriptions, true);
+                }
+                bPreventGetMinutesTemplates = false;
+            };
+            MinutesTemplatesChange = function () {
+
+            };
+            MinuteTemplateIDChange = function (field, e, eOpts) {
+
+                getListMinutesTagsByTemplateID();
+                MinuteTemplateID = field.getValue();
+                if (!bPreventGetMinutesTemplates) {
+                    bPreventGetMinutesTemplates = true;
+                    if (MinuteTemplateID.trim() == "")
+                        getMinutesTemplatesFailed();
+                    else {
+
+                        if (MinuteTemplateID != field.originalValue) {
+                        }
+                    }
+                }
+                bPreventGetMinutesTemplates = false;
+            };
+
+            MinuteTemplateDescriptionsChange = function (field, e, eOpts) {
+
+                MinuteTemplateDescriptions = field.getValue();
+                if (!bPreventGetMinutesTemplates) {
+                    bPreventGetMinutesTemplates = true;
+                    if (MinuteTemplateDescriptions.trim() == "")
+                        getMinutesTemplatesFailed();
+                    else {
+
+                        if (MinuteTemplateDescriptions != field.originalValue) {
+
+                        }
+                    }
+                }
+                bPreventGetMinutesTemplates = false;
+            };
+            eraseMinutesTemplates = function () {
+                App.MinuteTemplateID.clear();
+                App.MinuteTemplateDescriptions.clear();
+                App.MinuteTemplateID.originalValue = "";
+                App.MinuteTemplateDescriptions.originalValue = "";
+            };
+
+        /*End Minutes Template*/
+</script>
+<script>
+
+         /*Load Attendance By ScheduleID*/
+        getListAttendanceByScheduleID = function () {
+            Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetListAttendanceByScheduleID", "MinutesEntry"))',
+                    method: 'POST',
+                    params: { ScheduleID: App.ScheduleID.getValue() },
+                    success: getListAttendanceByScheduleIDSuccess,
+                    failure: getListAttendanceByScheduleIDFailure
+            });
+        };
+
+        getListAttendanceByScheduleIDSuccess = function (response) {
+            if (response.data.length > 0)
+                App.grdAttendanceRecipient.getStore().loadData(response.data);
+            else
+                App.grdAttendanceRecipient.getStore().loadData([], false);
+        };
+
+        getListAttendanceByScheduleIDFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdAttendanceRecipient.getStore().loadData([], false);
+        };
+
+        /*Load Minutes Tags*/
+        getListMinutesTagsByTemplateID = function () {
+            Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetListTemplateTagsVM", "MinutesEntry"))',
+                    method: 'POST',
+                    params: { TemplateID: App.MinuteTemplateID.getValue(), TemplateType : 'MOM', ScheduleID : App.ScheduleID.getValue(), FunctionDesc : App.FunctionDesc.getValue() },
+                    success: getListMinutesTagsByTemplateIDSuccess,
+                    failure: getListMinutesTagsByTemplateIDFailure
+            });
+        };
+
+        getListMinutesTagsByTemplateIDSuccess = function (response) {
+            if (response.data.length > 0)
+                App.grdEntryValues.getStore().loadData(response.data);
+            else
+                App.grdEntryValues.getStore().loadData([], false);
+        };
+
+        getListMinutesTagsByTemplateIDFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdAttendanceRecipient.getStore().loadData([], false);
+        };
+
+        /*Load Notification Tags*/
+        getListNotificationTagsByTemplateID = function () {
+            Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetListTemplateTagsVM", "MinutesEntry"))',
+                    method: 'POST',
+                    params: { TemplateID: App.NotificationTemplateID.getValue(), TemplateType: 'NOT', ScheduleID: App.ScheduleID.getValue() },
+                    success: getListNotificationTagsByTemplateIDSuccess,
+                    failure: getListNotificationTagsByTemplateIDFailure
+            });
+        };
+
+        getListNotificationTagsByTemplateIDSuccess = function (response) {
+            if (response.data.length > 0)
+                App.grdNotificationValues.getStore().loadData(response.data);
+            else
+                App.grdNotificationValues.getStore().loadData([], false);
+        };
+
+        getListNotificationTagsByTemplateIDFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdAttendanceRecipient.getStore().loadData([], false);
+        };
+        var SetTimeConfigStart = function (a, b, c, d) {
+            App.StartDateHour.setValue(b);
+
+
+        };
+        var SetTimeConfigEnd = function (a, b, c, d) {
+            App.EndDateHour.setValue(b);
+        };
+
+
+        changeFile = function () {
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };
+
+        testAdd = function () {
+            FormPanel1.add({
+                xtype: 'container',
+                layout: 'hbox', anchor: '90%',
+                cls: 'cntnr-pad',
+                items: [{
+                    xtype: 'fileuploadfield',
+                    flex: 1, cls: 'flupd-height'
+                },
+                    {
+                        xtype: 'button',
+                        text: 'Remove', listeners: {
+                            click: {
+                                fn: function (btn) {
+                                    var ct = btn.ownerCt,
+                                   formPanel = ct.ownerCt;
+                                    formPanel.remove(ct);
+                                }
+                            }
+                        }
+                    }],
+            });
+
+            FormPanel1.addAndDoLayout({
+                xtype: 'container',
+                layout: 'hbox',
+                anchor: '90%',
+                items: [{
+                    xtype: 'textfield',
+                    fieldLabel: 'Description'
+                }]
+            });
+        };
+
+
+
+
+        reloadParameterValues = function (notiftemplateiid) {
+
+
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadParameter", "Scheduling"))',
+                params: {
+                    MailNotificationID: App.MailNotificationID.value,
+                    TemplateID: notiftemplateiid
+                },
+                success: function (result) {
+                    var data = result.data;
+                    App.grdNotificationValues.store.removeAll();
+                    for (var n = 0; n < data.length; n++) {
+                        var s = data[n];
+                        App.grdNotificationValues.store.add(new ModelNotificationValues({
+                            NotificationValueID: "",
+                            MailNotificationID: "",
+                            TagDesc: s.TagDesc,
+                            FieldTagID: s.FieldTagID,
+                            Value: ""
+                        }));
+                    };
+                },
+                failure: function () { }
+            });
+
+        };
+        showMsgConfirmReload = function (FunctionID) {
+            if (App.grdReipient.store.allData.items.length > 0) {
+                Ext.Msg.show({
+                    title:"Confirmation",
+                    message: "Function changes will reload Participant List.",
+                    buttons: Ext.MessageBox.YESNO,
+                    fn: function (btn) {
+                        if (btn == "yes") {
+                            reloadFunction(FunctionID);
+                        }
+                        else {
+                            App.FunctionID.clear();
+                            App.FunctionDescription.clear();
+                            Ext.Msg.close();
+                        }
+                    }
+                });
+                return;
+            } else {
+                reloadFunction(FunctionID);
+            }
+        };
+        reloadFunction = function (functionID) {
+            debugger;
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadFunction", "Scheduling"))',
+                params: {
+                    FunctionID: functionID
+                },
+                success: function (result) {
+                    var data = result.data;
+                    App.grdReipient.store.removeAll();
+                    for (var n = 0; n < data.length; n++) {
+                        var s = data[n];
+                        App.grdReipient.store.add(new ModelRecipientList({
+                            OwnerID: s.UserID,
+                            RecipientDesc: s.FirstName,
+                            RecipientTypeID: 1,
+                            MailAddress: s.Email
+                        }));
+                    };
+                },
+                failure: function () { }
+            });
+
+        };
+
+    beforeSave = function(){
+        CKEDITOR.instances["Contents"].fire('blur');
+        return true;
+    };
+
+    afterRenderTextArea = function () {
+        for (name in CKEDITOR.instances) {
+            CKEDITOR.instances[name].destroy(true);
+        }
+
+        CKEDITOR.addCss('span > .cke_placeholder { background-color: #ffeec2; }');
+        CKEDITOR.focusManager._.blurDelay = 10;
+        /*   config.enterMode = 2; //disabled <p> completely */
+        CKEDITOR.config.enterMode = CKEDITOR.ENTER_BR; /*pressing the ENTER KEY input <br/>*/
+        CKEDITOR.config.shiftEnterMode = CKEDITOR.ENTER_P; /*pressing the SHIFT + ENTER KEYS input <p>*/
+        CKEDITOR.config.autoParagraph = false; /* stops automatic insertion of <p> on focus*/
+        CKEDITOR.replace('@MinutesTemplateVM.Prop.Contents.Name', {
+            toolbar: [
+
+                    { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat'] },
+                    { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+                    { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+                    { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'PageBreak'] },
+                    '/',
+                    { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                    { name: 'colors', items: ['TextColor', 'BGColor'] },
+                    { name: 'tools', items: ['Maximize'] },
+                    { name: 'document', items: ['Source', 'Preview'] }
+
+
+            ],
+            height: 500,
+            removeDialogTabs: 'image:advanced;link:advanced;link:target',
+            on: {
+                instanceReady: function (evt) {
+                    ed = evt.editor;
+                    ed.setData('');
+                    ed.setReadOnly(true);
+                    ed.on('focus', function (e) {
+                        
+                        notiftags = App.grdNotificationValues.getSelectionModel().selected.items.length;
+                        minutestags = App.grdEntryValues.getSelectionModel().selected.items.length;
+
+                        if (notiftags + minutestags == 0) {
+                            showInfoAlert("Minutes", "Please select the tags first!");
+                            
+                        }
+                    });
+                },
+
+                loaded: function (evt) {
+                    resizeContainer();
+
+                },
+                blur: function (evt) {
+                    value = evt.editor.getData();
+
+                    debugger;
+                    if (App.grdEntryValues.selModel.selected.length > 0) {
+                        rowIndex = App.grdEntryValues.getSelectionModel().selectionStartIdx;
+                        var record = App.grdEntryValues.store.getAt(rowIndex);
+                        record.set('Value', value);
+
+                        record.commit();
+                    }
+                    if (App.grdNotificationValues.selModel.selected.length > 0) {
+                        rowIndex = App.grdNotificationValues.getSelectionModel().selectionStartIdx;
+                        var record = App.grdNotificationValues.store.getAt(rowIndex);
+                        record.set('Value', value);
+
+                        record.commit();
+                    }
+                }
+                
+            }
+        });
+    };
+
+    blurEditor = function ( el, event, eOpts) {
+        debugger;
+        if (App.grdEntryValues.selModel.selected.length > 0) {
+            rowIndex = App.grdEntryValues.getSelectionModel().selectionStartIdx;
+            var record = App.grdEntryValues.store.getAt(rowIndex);
+            record.set('Value', value);
+
+            record.commit();
+        }
+        if (App.grdNotificationValues.selModel.selected.length > 0) {
+            rowIndex = App.grdNotificationValues.getSelectionModel().selectionStartIdx;
+            var record = App.grdNotificationValues.store.getAt(rowIndex);
+            record.set('Value', value);
+
+            record.commit();
+        }
+    };
+
+    getListAttendance = function () {
+        listTO = App.grdAttendanceRecipient.getRowsValues();
+        listCC = App.grdAttendanceRecipientCC.getRowsValues();
+        listBCC = App.grdAttendanceRecipientBCC.getRowsValues();
+        return listTO.concat(listCC).concat(listBCC);
+    };
+
+    
+</script>
+}
+@(
+    X.Panel()
+    .ID("PMinutesEntryForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FMinutesEntry")
+        .Padding(iBodyPadding)
+        .Items(
+                    X.TextFieldFor(model => model.MinuteEntryID)
+                        .Hidden(true),
+                    //Start FieldContainer 2
+                    X.FieldContainer()
+                    .FieldLabel("")
+                    .LabelWidth(0)
+                    .Width(iFieldWidth)
+                    .Layout(LayoutType.Column)
+                    //Start FieldContainer 2 items
+                    .Items(
+                        X.TextFieldFor(model => model.ScheduleID)
+                        .FieldLabel(MinutesEntryVM.Prop.ScheduleID.Desc)
+                        //.ReadOnly(true)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ScheduleIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ScheduleIDBlur(this.getValue());";
+                            oListeners.Change.Fn = "getListAttendanceByScheduleID";
+                        })
+                            .LabelWidth(iLabelWidth)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                        X.TextFieldFor(model => model.ScheduleDesc)
+                            .FieldLabel("")
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                            //.ReadOnly(true)
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.SpecialKey.Handler = "ScheduleDescSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "ScheduleDescBlur(this.getValue());";
+                                oListeners.Change.Handler = "App.Subject.setValue(this.getValue());";
+                            })
+                            .LabelWidth(0)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                            .RightButtons(
+                                btnBrowseSchedule
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseSchedule.Handler("eraseSchedule")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                            )
+                    )
+                //End FieldContainer 2 items
+                //End FieldContainer 2
+                ,
+                            //Start FieldContainer 1
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 1 items
+                            .Items(
+                                X.TextFieldFor(model => model.FPTID)
+                                .FieldLabel("FPT")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FPTDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseFPT
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseFPT.Handler("eraseFPT")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                            )
+                            //END FieldContainer 1 items
+                            //End FieldContainer 1
+                            ,
+
+                            //Start FieldContainer 2
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 2 items
+                            .Items(
+                                X.TextFieldFor(model => model.FunctionID)
+                                .FieldLabel("Functions")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FunctionIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FunctionIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "FunctionIDChange";
+                                })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FunctionDesc)
+                                    .FieldLabel("")
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    //.ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "FunctionDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "FunctionDescBlur(this.getValue());";
+                                        oListeners.Change.Fn = "FunctionDescChange";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseFunctions
+                                        //.Disabled(true),
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseFunctions.Handler("eraseFunctions")
+                                        //.Disabled(true)
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                            )
+                            //End FieldContainer 2 items
+                            //End FieldContainer 2
+                            ,
+                            //Start FieldContainer 3
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 3 items
+                            .Items(
+                                X.TextFieldFor(model => model.NotificationTemplateID)
+                                .FieldLabel("Mail Templates")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "NotificationTemplateIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "NotificationTemplateIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "NotificationTemplateIDChange";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.NotificationTemplateDesc)
+                                .FieldLabel("")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "NotificationTemplateDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "NotificationTemplateDescBlur(this.getValue());";
+                                    oListeners.Change.Fn = "getListNotificationTagsByTemplateID";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseNotificationTemplates
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseNotificationTemplates.Handler("eraseNotificationTemplates")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ))
+                            //End FieldContainer 3 items
+                            //End FieldContainer 3
+
+                            ,
+                            //Start FieldContainer 3
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 3 items
+                            .Items(
+                                X.TextFieldFor(model => model.MinuteTemplateID)
+                                .FieldLabel("Minutes Templates")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "MinuteTemplateIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "MinuteTemplateIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "MinuteTemplateIDChange";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.MinuteTemplateDescriptions)
+                                .FieldLabel("")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "MinuteTemplateDescriptionsSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "MinuteTemplateDescriptionsBlur(this.getValue());";
+                                    oListeners.Change.Fn = "getListMinutesTagsByTemplateID";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseMinutesTemplates
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseMinutesTemplates.Handler("eraseMinutesTemplates")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ))
+                            //End FieldContainer 3 items
+                            //End FieldContainer 3
+                            ,
+            X.TextFieldFor(model => model.Subject)
+                .FieldLabel(SchedulesVM.Prop.Subject.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.StatusID).Hidden(true),
+            X.TextFieldFor(model => model.MailNotificationID).Hidden(true),
+            X.TextFieldFor(model => model.TaskID)
+                .FieldLabel(SchedulesVM.Prop.TaskID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth).Hidden(true)
+        ).TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+            ),
+         X.Panel()
+                  .Title("Attendance")
+                  .Collapsible(true)
+                  .TopBar(
+             
+                            X.Toolbar()
+                            .PaddingSpec("10 10 0 10")
+                            .Items(
+                                btnPreBuilRec.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == "Detail").Icon(Icon.UserAdd)
+
+                            )
+    
+                    )
+                  .PaddingSpec("10 10 10 10")
+                  .Items(
+                     X.Container()
+                        .Layout(LayoutType.Column)
+                        .Items(
+                     X.Panel()
+                        .Cls("fullOnSmall")
+                        .ColumnWidth(0.33)
+                        .ID("pnlTO")
+                        //.PaddingSpec(sPanelPaddingSpec)
+                        .Items(
+                            X.FormPanel()
+                            .ID("panelParticipants")
+                            .Title("TO")
+                            .Collapsible(true)
+                            .ItemsFromPartial("Attendance/_List", Model.ListRecipients.Where(d=>int.Parse(d.RecipientTypeID)==(int)RecipientTypes.TO).ToList(), ViewData)
+                            .Padding(iBodyPadding)
+                        ),
+                        X.Panel()
+                        .Cls("fullOnSmall")
+                        .ColumnWidth(0.33)
+                        .ID("pnlCC")
+                        //.PaddingSpec(sPanelPaddingSpec)
+                        .Items(
+                            X.FormPanel()
+                            .ID("panelParticipantsCC")
+                            .Title("CC")
+                            .Collapsible(true)
+                            .ItemsFromPartial("CC/_List", Model.ListRecipients.Where(d => int.Parse(d.RecipientTypeID) == (int)RecipientTypes.CC).ToList(), ViewData)
+                            .Padding(iBodyPadding)
+                        ),
+                         X.Panel()
+                        .Cls("fullOnSmall")
+                        .ColumnWidth(0.33)
+                        .ID("pnlBCC")
+                        //.PaddingSpec(sPanelPaddingSpec)
+                        .Items(
+                             X.FormPanel()
+                            .ID("panelParticipantsBCC")
+                            .Title("BCC")
+                            .Collapsible(true)
+                            .ItemsFromPartial("BCC/_List", Model.ListRecipients.Where(d => int.Parse(d.RecipientTypeID) == (int)RecipientTypes.BCC).ToList(), ViewData)
+                            .Padding(iBodyPadding)
+                        )
+
+                    )
+                    ),
+
+                    X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlEntryValues")
+                    //.PaddingSpec(sPanelPaddingSpec)
+                    .Items(
+                            X.FormPanel()
+                                .ID("panelEntryValues")
+                                .Title("Minutes Tags")
+                                .Collapsible(true)
+                                .ItemsFromPartial("MinutesValues/_List", Model.ListMinutesValues, ViewData)
+                                .Padding(iBodyPadding),
+                             X.FormPanel()
+                                .ID("panelNotificationValues")
+                                .Title("Notification Tags")
+                                .Collapsible(true)
+                                .ItemsFromPartial("NotificationValues/_List", Model.ListNotificationValues, ViewData)
+                                .Padding(iBodyPadding)
+
+                       ),
+                     X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlContent")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    .Items(
+                     X.TextArea()
+                     .ID(MinutesTemplateVM.Prop.Contents.Name)
+                     .Name(MinutesTemplateVM.Prop.Contents.Name)
+                     .Listeners(ls=> { ls.AfterRender.Fn = "afterRenderTextArea";ls.Blur.Handler = "blurEditor"; })
+                     .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                   ))
+
+
+
+
+
+            //X.FormPanel()
+            //.ID("panelAttachment")
+            //.Title("Attachment")
+            //.Collapsible(true)
+            //.ItemsFromPartial("Attachment/_listAttachment", Model.LstNotificationAttachment, ViewData)
+            //.Padding(iBodyPadding)
+
+
+            )
+)

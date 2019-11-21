@@ -1,0 +1,277 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanBidOpeningVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.BudgetPlanID.Name, BudgetPlanVM.Prop.BudgetPlanID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.Description.Name, BudgetPlanVM.Prop.Description.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.BudgetPlanVersion.Name, BudgetPlanVM.Prop.BudgetPlanVersion.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlan = global_asax.Button(Buttons.ButtonBrowse, "BudgetPlan", "", "../BudgetPlan/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBudgetPlan = global_asax.Button(Buttons.ButtonErase, "BudgetPlan", "", "", true);
+    
+
+
+    <script>
+        /*budget plan*/
+
+        var bPreventGetBudgetPlan = false;
+
+        getBudgetPlan = function (budgetPlanID, budgetPlanDesc, exact) {
+            if (App.CFPBudgetPlanID.isDirty() || App.CFPDescription.isDirty()) {
+                App.CFPBudgetPlanID.originalValue = App.CFPBudgetPlanID.getValue();
+                App.CFPDescription.originalValue = App.CFPDescription.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBudgetPlan", "BudgetPlan"))',
+                    params: {
+                        ControlBudgetPlanID: App.CFPBudgetPlanID.id,
+                        ControlBudgetPlanDesc: App.CFPDescription.id,
+                        ControlBudgetPlanVersion: App.CFPBudgetPlanVersion.id,
+                        FilterBudgetPlanID: budgetPlanID,
+                        FilterBudgetPlanDesc: budgetPlanDesc,
+                        Exact: exact
+                    },
+                    success: getBudgetPlanSuccess,
+                    failure: getBudgetPlanFailed
+                });
+            }
+        };
+
+        getBudgetPlanSuccess = function () {
+            if (!App.CFPBudgetPlanID.isDirty() && !App.CFPDescription.isDirty()
+                && !App.CFPBudgetPlanVersion.isDirty()) {
+                App.CFPBudgetPlanID.originalValue = "";
+                App.CFPDescription.originalValue = "";
+                App.CFPBudgetPlanVersion.originalValue = "";
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        getBudgetPlanFailed = function () {
+            eraseBudgetPlan();
+        };
+
+        budgetPlanIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlan = true;
+                getBudgetPlan(field.getValue(), "", false);
+                getListBudgetPlanStructure();
+            }
+        };
+
+        budgetPlanDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlan = true;
+                getBudgetPlan("", field.getValue(), false);
+            }
+        };
+
+        budgetPlanIDBlur = function (budgetPlanID) {
+            console.log(bPreventGetBudgetPlan);
+            if (!bPreventGetBudgetPlan) {
+                bPreventGetBudgetPlan = true;
+                if (budgetPlanID.trim() == "")
+                    getBudgetPlanFailed();
+                else {
+                    getBudgetPlan(budgetPlanID, "", true);
+                    getListBudgetPlanStructure();
+                }
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        budgetPlanDescBlur = function (budgetPlanDesc) {
+            if (!bPreventGetBudgetPlan) {
+                bPreventGetBudgetPlan = true;
+                if (budgetPlanDesc.trim() == "")
+                    getBudgetPlanFailed();
+                else
+                    getBudgetPlan("", budgetPlanDesc, true);
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        eraseBudgetPlan = function () {
+            App.CFPBudgetPlanID.clear();
+            App.CFPDescription.clear();
+            App.CFPBudgetPlanVersion.clear();
+            App.CFPBudgetPlanID.originalValue = "";
+            App.CFPDescription.originalValue = "";
+            App.CFPBudgetPlanVersion.originalValue = "";
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+        /*End BudgetPlan*/
+
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PBudgetPlanBidOpeningForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FBudgetPlanBidOpening")
+        .Padding(iBodyPadding)
+        .Items(
+
+            X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlLeft")
+                  .Items(
+                      X.HiddenFor(model => model.BPBidOpeningID),
+                      X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .PaddingSpec(sPanelPaddingSpec)
+                        .Items(
+                                X.DateFieldFor(model => model.PeriodStart)
+                                .FieldLabel(BudgetPlanBidOpeningVM.Prop.PeriodStart.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Format(global_asax.DefaultDateFormat)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TimeFieldFor(model => model.PeriodStartTime)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Format(global_asax.ShortTimeFormat)
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                ),
+                    //X.DateFieldFor(model => model.PeriodStart)
+                    //    .FieldLabel(BudgetPlanBidOpeningVM.Prop.PeriodStart.Desc)
+                    //    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                    //    .LabelWidth(iLabelWidth)
+                    //    .Width(iFieldWidth)
+                    //    .Format(global_asax.DefaultDateTimeFormat)
+                    //    ,
+
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .PaddingSpec(sPanelPaddingSpec)
+                        .Items(
+                                X.DateFieldFor(model => model.PeriodEnd)
+                                .FieldLabel(BudgetPlanBidOpeningVM.Prop.PeriodEnd.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Format(global_asax.DefaultDateFormat)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TimeFieldFor(model=>model.PeriodEndTime)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Format(global_asax.ShortTimeFormat)
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                ),
+
+                     X.ComboBoxFor(model => model.StatusID)
+                        .FieldLabel(BudgetPlanBidOpeningVM.Prop.StatusDesc.Desc)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .DisplayField(StatusVM.Prop.StatusDesc.Name)
+                        .ValueField(StatusVM.Prop.StatusID.Name)
+                        .EmptyValue("")
+                        .Store(
+                            X.StoreForModel()
+                            .Proxy(X.AjaxProxy()
+                                .Url(Url.Action("/GetStatusList"))
+                                .Reader(X.JsonReader().RootProperty("data"))
+                            )
+                            .AutoLoad(true)
+                        ).Plugins(Html.X().ClearButton())
+
+                            ),
+
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlRight")
+                  .Items(
+                          X.TextFieldFor(model => model.BudgetPlanID)
+                                .FieldLabel(BudgetPlanBidOpeningVM.Prop.BudgetPlanID.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                          X.TextFieldFor(model => model.Description)
+                                .FieldLabel(BudgetPlanBidOpeningVM.Prop.Description.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                     //X.FieldContainer()
+                     //    .FieldLabel("")
+                     //    .LabelWidth(0)
+                     //    .Width(iFieldWidth)
+                     //    .Layout(LayoutType.Column)
+                     //    .Items(
+                     //        X.TextFieldFor(model => model.BudgetPlanID)
+                     //            .FieldLabel(BudgetPlanBidOpeningVM.Prop.BudgetPlanID.Desc)
+                     //            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                     //            .Listeners(oListeners =>
+                     //            {
+                     //                oListeners.SpecialKey.Handler = "budgetPlanIDSpecialKey(item, e);";
+                     //                oListeners.Blur.Handler = "budgetPlanIDBlur(this.getValue());";
+                     //            })
+                     //            .LabelWidth(iLabelWidth)
+                     //            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                     //        X.TextFieldFor(model => model.Description)
+                     //            .FieldLabel("")
+                     //            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                     //            .Listeners(oListeners =>
+                     //            {
+                     //                oListeners.SpecialKey.Handler = "budgetPlanDescSpecialKey(item, e);";
+                     //                oListeners.Blur.Handler = "budgetPlanDescBlur(this.getValue());";
+                     //            })
+                     //            .LabelWidth(0)
+                     //            .Width((iFieldWidth - iLabelWidth) / 2)
+                     //            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                     //            .RightButtons(
+                     //                btnBrowseBudgetPlan
+                     //                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd)),
+                     //                btnEraseBudgetPlan.Handler("eraseBudgetPlan")
+                     //                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                     //            )
+                     //    ),
+
+                     X.TextFieldFor(model => model.BudgetPlanVersion)
+                        .FieldLabel(BudgetPlanBidOpeningVM.Prop.BudgetPlanVersion.Desc)
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                      )
+          )
+          ,
+            X.Panel()
+                .ID("pnlTCMember")
+                .Title("TC Member")
+                .Collapsible(true)
+                .ItemsFromPartial("TCMember/_List", Model.ListTCMembersVM, ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

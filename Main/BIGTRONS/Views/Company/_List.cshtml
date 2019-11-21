@@ -1,0 +1,218 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model CompanyVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdCompany.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdCompany.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdCompany.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteSuccess()");
+
+    Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, "", null, "");
+
+    Button.Builder btnSync = global_asax.Button(Buttons.ButtonGenerate, sPageName, "Get Data", "Sync", true, false,false,null,null,null, "App.grdCompany.store.reload()");
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdCompany()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdCompany();
+        });
+
+        resizeGrdCompany = function () {
+            if (App.grdCompany != null)
+                App.grdCompany.setHeight($(window).height() - App.grdCompany.getY() - (App.grdCompany.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdCompany.getStore().reload();
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdCompany")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.CompanyID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(CompanyVM.Prop.CompanyID.Desc)
+        .DataIndex(Model, model => model.CompanyID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(CompanyVM.Prop.CompanyDesc.Desc)
+        .DataIndex(Model, model => model.CompanyDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(CompanyVM.Prop.CountryDesc.Desc)
+        .DataIndex(Model, model => model.CountryDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(CompanyVM.Prop.City.Desc)
+        .DataIndex(Model, model => model.City)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(CompanyVM.Prop.Street.Desc)
+        .DataIndex(Model, model => model.Street)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(CompanyVM.Prop.Postal.Desc)
+        .DataIndex(Model, model => model.Postal)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd,
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnDelete.Disabled(true),
+            btnExport.Handler("exportGrid(App.grdCompany, false, true, 'Company', 'xls', 'Company');"),
+            btnSync.Disabled(false)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

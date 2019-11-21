@@ -1,0 +1,769 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionVM
+@{
+    var X = Html.X();
+    int iTreeMinHeight = 200;
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPageName = "Simulation";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCluster = global_asax.Button(Buttons.ButtonBrowse, "Cluster", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeID.Name, UnitTypeVM.Prop.UnitTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeDesc.Name, UnitTypeVM.Prop.UnitTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseUnitType = global_asax.Button(Buttons.ButtonBrowse, "UnitType", "", "../UnitType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseUnitType = global_asax.Button(Buttons.ButtonErase, "UnitType", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlTreePanel", "treeSimulation", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("NodeID", "App.treeSimulation.getSelectedNodes()[0].nodeID", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Alternative", "App.treeSimulation.getSelectedNodes()[0].attributes.alternative", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, General.EnumDesc(Buttons.ButtonBrowse) + "Alternative", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Value" + ItemPriceVM.Prop.ItemID.Name, "App.treeSimulation.getSelectedNodes()[0].attributes.itemid", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnChangeSupplier = global_asax.Button(Buttons.ButtonBrowse, "ItemPriceVendor", "Change Supplier", "../Item/" + General.EnumDesc(Buttons.ButtonBrowse) + "ItemPriceVendorPeriod", true, false, false, null, oParamList);
+
+    Button.Builder btnRefreshPrice = global_asax.Button(Buttons.ButtonReverse, sPageName, "Refresh", string.Empty, true);
+
+    /***
+     * 
+     * Main
+     * 
+     **/
+     <script>
+         var iTreeInitHeight = -1;
+         $(window).resize(function () {
+             resizeTreeSimulation();
+             resizeContainer();
+         });
+         var resizeTreeSimulation = function () {
+             return false;
+             if (App.treeSimulation != null) {
+                 var iHeight = $(window).height() - (App.treeSimulation.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                 if (iHeight > iTreeInitHeight)
+                     iHeight = iTreeInitHeight;
+                 App.treeSimulation.setHeight(iHeight);
+                 /*if (iTreeInitHeight > iHeight)
+                     App.treeSimulation.setHeight(iHeight);*/
+             }
+             /*App.treeSimulation.updateLayout();*/
+         };
+         var afterFirstLoadTreeSimulation = function () {
+             if (iTreeInitHeight = -1)
+                 iTreeInitHeight = App.treeSimulation.getHeight();
+             resizeTreeSimulation();
+             resizeContainer();
+         };
+     </script>
+    /**
+     *
+     * treeSimulation
+     *
+     * **/
+    <script>
+        var removeChildTree = function (tree) {
+            var x = tree.getRootNode().childNodes.length;
+            for (var i = 0; i < x; i++) {
+                tree.removeNode(tree.getRootNode().childNodes[0]);
+            }
+        };
+
+        var treeSimulationSelectionChange = function (length) {
+
+            if (length >= 1) {
+
+                if (App.treeSimulation.getSelection()[0].data.alternative.length > 0) {
+                    App.ButtonUpdateSimulation.setDisabled(false);
+                } else {
+                    App.ButtonUpdateSimulation.setDisabled(true);
+                }
+
+            } else {
+                App.ButtonUpdateSimulation.setDisabled(true);
+            }
+
+            App.ButtonBrowseItemPriceVendor.setDisabled(length < 1);
+        };
+
+        var idTreeFrom = [];
+        var ItemIDItemVersionChildID = [];
+        var ItemIDItemVersionChildIDWithFormula = [];
+
+        var duplicateTree = function (treeFrom, treeTo) {
+
+            if (App.ProjectID.value == '') {
+
+                showWarningAlert('Unit Price Analysis -  Simulation', 'Select Project First.');
+
+                return false;
+            }
+
+            removeChildTree(treeTo);
+            idTreeFrom = [];
+            ItemIDItemVersionChildID = [];
+            ItemIDItemVersionChildIDWithFormula = [];
+            for (var i = 0; i < treeFrom.getRootNode().childNodes.length; i++) {
+                var child = treeFrom.store.getNodeById(treeFrom.getRootNode().childNodes[i].id);
+                treeTo.getRootNode().appendChild(extractNodeToObject(child));
+            }
+            RecountAmount();
+        };
+
+        var RecountAmount = function () {
+
+            for (var i = 0; i < ItemIDItemVersionChildIDWithFormula.length; i++) {
+                App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[i]).set("formulatranslate",
+                     App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[i]).data.formula);
+            }
+            
+            for (var i = 0; i < idTreeFrom.length; i++) {
+
+                var formula = '';
+                formula = App.treeSimulation.store.getNodeById(idTreeFrom[i]).data.formula;
+
+                Ext.Ajax.request({
+                    url: '../UnitPriceAnalysis/GetItemPrice',
+                    method: 'POST',
+                    params: {
+                        ItemID: App.treeSimulation.store.getNodeById(idTreeFrom[i]).data.itemid,
+                        ProjectID: App.ProjectID.value,
+                        ClusterID: App.ClusterID.value,
+                        UnitTypeID: App.UnitTypeID.value,
+                        NodeID: idTreeFrom[i],
+                        Formula: formula,
+                        VendorID: App.treeSimulation.store.getNodeById(idTreeFrom[i]).data.vendorid
+                    },
+                    success: function (response) {
+                        var jsonData = Ext.util.JSON.decode(response.responseText);
+                        var _amount = jsonData.data.amount * App.treeSimulation.store.getNodeById(jsonData.data.NodeID).data.coefficient;
+
+                        App.treeSimulation.store.getNodeById(jsonData.data.NodeID).set("ammount",_amount);
+                        if (jsonData.data.Formula.length > 0) {
+                            App.treeSimulation.store.getNodeById(jsonData.data.NodeID).set("ammount", 0);
+                        }
+                        App.treeSimulation.store.getNodeById(jsonData.data.NodeID).set("itemprice", jsonData.data.amount);
+
+                        for (var j = 0; j < ItemIDItemVersionChildIDWithFormula.length; j++) {
+
+                            var formulatranslate = String(App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[j]).data.formulatranslate)
+                                .replace('[' + App.treeSimulation.store.getNodeById(jsonData.data.NodeID).data.itemversionchildid + ']', jsonData.data.amount);
+
+                            App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[j]).set("formulatranslate", formulatranslate);
+
+                            Ext.Ajax.request({
+                                url: '../UnitPriceAnalysis/GetItemPrice',
+                                method: 'POST',
+                                params: {
+                                    ItemID: "",
+                                    ProjectID: "",
+                                    ClusterID: "",
+                                    UnitTypeID: "",
+                                    NodeID: ItemIDItemVersionChildIDWithFormula[j],
+                                    Formula: App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[j]).data.formulatranslate,
+                                    VendorID: ""
+                                },
+                                success: function (responseFormula) {
+                                    var _jsonData = Ext.util.JSON.decode(responseFormula.responseText);
+
+                                    App.treeSimulation.store.getNodeById(_jsonData.data.NodeID).set("ammount",
+                                        _jsonData.data.amount * App.treeSimulation.store.getNodeById(_jsonData.data.NodeID).data.coefficient);
+
+                                    /*App.treeSimulation.store.getNodeById(_jsonData.data.NodeID).parentNode.collapse();
+                                    App.treeSimulation.store.getNodeById(_jsonData.data.NodeID).parentNode.expand();*/
+                                }
+                            });
+                        }
+
+                        if (App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.data.id != "root") {
+                            _amount = 0;
+                            for (var j = 0; j < App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.childNodes.length; j++) {
+                                _amount = _amount +
+                                    App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.childNodes[j].data.ammount;
+                            }
+                            App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.set("ammount", _amount);
+                            /*App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.parentNode.collapse();
+                            App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.parentNode.expand();*/
+                        } else {
+                            /*App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.collapse();
+                            App.treeSimulation.store.getNodeById(jsonData.data.NodeID).parentNode.expand();*/
+                        }
+                    }
+                });
+            }
+        };
+
+        var extractNodeToObject = function (node) {
+            var child = [];
+            if (node.childNodes.length > 0) {
+                child = extractChildNode(node);
+            }
+
+            idTreeFrom.push(node.data.itemversionchildid + node.sequencedesc);
+            ItemIDItemVersionChildID.push(
+                {
+                    itemid: node.data.childitemid,
+                    itemversionchildid: node.data.itemversionchildid,
+                    formula: node.data.formula
+                });
+
+            if (String(node.data.formula).length > 0) {
+                ItemIDItemVersionChildIDWithFormula.push(node.data.itemversionchildid + node.sequencedesc);
+            }
+
+            var nodeReturn = {
+                sequencedesc: node.data.sequencedesc,
+                itemversionchildid: node.data.itemversionchildid,
+                itemid: node.data.childitemid,
+                version: node.data.childversion,
+                coefficient: node.data.coefficient,
+                uom: node.data.uomdesc,
+                itemprice: 0,
+                vendorid: "",
+                formulatranslate: node.data.formula,
+                formula: node.data.formula,
+                ammount: 0,
+                formuladesc: node.data.formuladesc,
+                expandable: child.length == 0 ? false : true,
+                leaf: child.length == 0 ? true : false,
+                iconCls: node.data.iconCls,
+                desc: node.data.versiondesc,
+                alternative: node.data.alternative,
+                itemtype: node.data.childitemtypeid,
+                id: node.data.itemversionchildid + node.sequencedesc,
+                children: child,
+                expanded: child.length == 0 ? false : true
+            };
+            return nodeReturn;
+        };
+
+        var extractChildNode = function (node) {
+            var child = [];
+            for (var i = 0; i < node.childNodes.length; i++) {
+                idTreeFrom.push(node.childNodes[i].data.itemversionchildid + node.childNodes[i].sequencedesc);
+                ItemIDItemVersionChildID.push(
+                {
+                    itemid: node.childNodes[i].data.childitemid,
+                    itemversionchildid: node.childNodes[i].data.itemversionchildid,
+                    formula: node.childNodes[i].data.formula
+                });
+
+                if (String(node.childNodes[i].data.formula).length > 0) {
+                    ItemIDItemVersionChildIDWithFormula.push(node.childNodes[i].data.itemversionchildid + node.childNodes[i].sequencedesc);
+                }
+
+                child.push({
+                    sequencedesc: node.childNodes[i].data.sequencedesc,
+                    itemversionchildid: node.childNodes[i].data.itemversionchildid,
+                    itemid: node.childNodes[i].data.childitemid,
+                    version: node.childNodes[i].data.childversion,
+                    coefficient: node.childNodes[i].data.coefficient,
+                    uom: node.childNodes[i].data.uomdesc,
+                    formula: node.childNodes[i].data.formula,
+                    itemprice: 0,
+                    vendorid: "",
+                    formulatranslate: node.childNodes[i].data.formula,
+                    ammount: 0,
+                    formuladesc: node.childNodes[i].data.formuladesc,
+                    expandable: child.length == 0 ? false : true,
+                    leaf: child.length == 0 ? true : false,
+                    iconCls: node.childNodes[i].data.iconCls,
+                    desc: node.childNodes[i].data.versiondesc,
+                    alternative: node.childNodes[i].data.alternative,
+                    itemtype: node.childNodes[i].data.childitemtypeid,
+                    id: node.childNodes[i].data.itemversionchildid + node.childNodes[i].sequencedesc,
+                    children: node.childNodes.length > 0 ? extractChildNode(node.childNodes[i]) : [],
+                    expanded: child.length == 0 ? false : true
+                });
+            }
+
+            return child;
+        };
+
+        var treeSimulationReady = function (e, Ops) {
+            /**setTimeout("afterFirstLoadTreeSimulation()", 1);**/
+        };
+    </script>
+
+    /**
+     *
+     * Project Browse
+     *
+     * **/
+    <script>
+
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            removeChildTree(App.treeSimulation);
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+            RecountAmount();
+        };
+
+        getProjectFailed = function () {
+            removeChildTree(App.treeSimulation);
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+
+    </script>
+
+    /**
+     *
+     * Cluster Browse
+     *
+     * **/
+    <script>
+        var bPreventGetCluster = false;
+
+        getCluster = function (clusterID, clusterDesc, exact) {
+            if (App.ClusterID.isDirty() || App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = App.ClusterID.getValue();
+                App.ClusterDesc.originalValue = App.ClusterDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCluster", "Cluster"))',
+                    params: {
+                        ControlClusterID: App.ClusterID.id,
+                        ControlClusterDesc: App.ClusterDesc.id,
+                        FilterClusterID: clusterID,
+                        FilterClusterDesc: clusterDesc,
+                        Exact: exact
+                    },
+                    success: getClusterSuccess,
+                    failure: getClusterFailed
+                });
+            }
+        };
+
+        getClusterSuccess = function () {
+            if (!App.ClusterID.isDirty() && !App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = "";
+                App.ClusterDesc.originalValue = "";
+            }
+            bPreventGetCluster = false;
+        };
+
+        getClusterFailed = function () {
+            eraseCluster();
+        };
+
+        clusterIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster(field.getValue(), "", false);
+            }
+        };
+
+        clusterDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster("", field.getValue(), false);
+            }
+        };
+
+        clusterIDBlur = function (clusterID) {
+            console.log(bPreventGetCluster);
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterID.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster(clusterID, "", true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        clusterDescBlur = function (clusterDesc) {
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterDesc.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster("", clusterDesc, true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+        };
+    </script>
+
+    /**
+     *
+     * Unit Type Browse
+     *
+     * **/
+    <script>
+        var bPreventGetUnitType = false;
+
+        getUnitType = function (unitTypeID, unitTypeDesc, exact) {
+            if (App.UnitTypeID.isDirty() || App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = App.UnitTypeID.getValue();
+                App.UnitTypeDesc.originalValue = App.UnitTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetUnitType", "UnitType"))',
+                    params: {
+                        ControlUnitTypeID: App.UnitTypeID.id,
+                        ControlUnitTypeDesc: App.UnitTypeDesc.id,
+                        FilterUnitTypeID: unitTypeID,
+                        FilterUnitTypeDesc: unitTypeDesc,
+                        Exact: exact
+                    },
+                    success: getUnitTypeSuccess,
+                    failure: getUnitTypeFailed
+                });
+            }
+        };
+
+        getUnitTypeSuccess = function () {
+            if (!App.UnitTypeID.isDirty() && !App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = "";
+                App.UnitTypeDesc.originalValue = "";
+            }
+            bPreventGetUnitType = false;
+        };
+
+        getUnitTypeFailed = function () {
+            eraseUnitType();
+        };
+
+        unitTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType(field.getValue(), "", false);
+            }
+        };
+
+        unitTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType("", field.getValue(), false);
+            }
+        };
+
+        unitTypeIDBlur = function (unitTypeID) {
+            console.log(bPreventGetUnitType);
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeID.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType(unitTypeID, "", true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        unitTypeDescBlur = function (unitTypeDesc) {
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeDesc.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType("", unitTypeDesc, true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        eraseUnitType = function () {
+            App.UnitTypeID.clear();
+            App.UnitTypeDesc.clear();
+            App.UnitTypeID.originalValue = "";
+            App.UnitTypeDesc.originalValue = "";
+        };
+    </script>
+
+}
+@(
+            X.Panel().Items(
+        X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.TextFieldFor(model => model.ProjectID)
+                                    .FieldLabel(ItemPriceVM.Prop.ProjectDesc.Desc)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "projectIDSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "projectIDBlur(this.getValue());";
+                                        oListeners.Change.Handler = "RecountAmount();";
+                                    })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.ProjectDesc)
+                                    .FieldLabel("")
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "projectDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "projectDescBlur(this.getValue());";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseProject,
+                                        btnEraseProject.Handler("eraseProject")
+                                    )),
+                                X.FieldContainer()
+                                    .FieldLabel("")
+                                    .LabelWidth(0)
+                                    .Width(iFieldWidth)
+                                    .Layout(LayoutType.Column)
+                                    .Items(
+                                        X.TextFieldFor(model => model.ClusterID)
+                                            .FieldLabel(ItemPriceVM.Prop.ClusterDesc.Desc)
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "clusterIDSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "clusterIDBlur(this.getValue());";
+                                                oListeners.Change.Handler = "RecountAmount();";
+                                            })
+                                            .LabelWidth(iLabelWidth)
+                                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                        X.TextFieldFor(model => model.ClusterDesc)
+                                            .FieldLabel("")
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "clusterDescSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "clusterDescBlur(this.getValue());";
+                                            })
+                                            .LabelWidth(0)
+                                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                            .RightButtons(
+                                                btnBrowseCluster,
+                                                btnEraseCluster.Handler("eraseCluster")
+                                            )),
+                                X.FieldContainer()
+                                    .FieldLabel("")
+                                    .LabelWidth(0)
+                                    .Width(iFieldWidth)
+                                    .Layout(LayoutType.Column)
+                                    .Items(
+                                        X.TextFieldFor(model => model.UnitTypeID)
+                                            .FieldLabel(ItemPriceVM.Prop.UnitTypeDesc.Desc)
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "unitTypeIDSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "unitTypeIDBlur(this.getValue());";
+                                                oListeners.Change.Handler = "RecountAmount();";
+                                            })
+                                            .LabelWidth(iLabelWidth)
+                                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                        X.TextFieldFor(model => model.UnitTypeDesc)
+                                            .FieldLabel("")
+                                            .Listeners(oListeners =>
+                                            {
+                                                oListeners.SpecialKey.Handler = "unitTypeDescSpecialKey(item, e);";
+                                                oListeners.Blur.Handler = "unitTypeDescBlur(this.getValue());";
+                                            })
+                                            .LabelWidth(0)
+                                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                            .RightButtons(
+                                                btnBrowseUnitType,
+                                                btnEraseUnitType.Handler("eraseUnitType")
+                                            )),
+         X.TreePanel()
+                .ID("treeSimulation")
+                .WidthSpec("100%")
+                .MinHeight(iTreeMinHeight)
+                .UseArrows(true)
+                .RootVisible(false)
+                .MultiSelect(false)
+                .AllowDeselect(true)
+                .Expand(true)
+                .RowLines(true)
+                .FolderSort(false)
+                .TopBar(
+                    X.Toolbar()
+                    .PaddingSpec(sToolbarPaddingSpec)
+                    .Items(
+                        btnUpdate.Disabled(true),
+                        btnChangeSupplier.Disabled(true),
+                        btnRefreshPrice.Icon(Icon.ArrowRefresh).Handler("duplicateTree(App.treeStructure, App.treeSimulation);")
+                        )
+                )
+                .Fields(
+                    X.ModelField().Name("sequencedesc"),
+                    X.ModelField().Name("itemversionchildid"),
+                    X.ModelField().Name("itemid"),
+                    X.ModelField().Name("version"),
+                    X.ModelField().Name("itemtype"),
+                    X.ModelField().Name("desc"),
+                    X.ModelField().Name("coefficient").Type(ModelFieldType.Float),
+                    X.ModelField().Name("itemprice").Type(ModelFieldType.Float),
+                    X.ModelField().Name("vendorid"),
+                    X.ModelField().Name("uom"),
+                    X.ModelField().Name("formula"),
+                    X.ModelField().Name("formulatranslate"),
+                    X.ModelField().Name("alternative"),
+                    X.ModelField().Name("formuladesc"),
+                    X.ModelField().Name("ammount").Type(ModelFieldType.Float)
+                )
+                .ColumnModel(
+                    X.Column()
+                        .Sortable(false)
+                        .Text("No.")
+                        .Flex(1)
+                        .DataIndex("sequencedesc"),
+                     X.TreeColumn()
+                        .Sortable(false)
+                        .Text("Item")
+                        .Flex(2)
+                        .DataIndex("itemid"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("Item Type")
+                        .Flex(1)
+                        .DataIndex("itemtype"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("Description")
+                        .Flex(2)
+                        .DataIndex("desc"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("Version")
+                        .Flex(1)
+                        .DataIndex("version"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("Coefficient")
+                        .Flex(1)
+                        .DataIndex("coefficient"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("UoM")
+                        .Flex(1)
+                        .DataIndex("uom"),
+                    X.Column()
+                        .Sortable(false)
+                        .Text("Formula")
+                        .Flex(2)
+                        .DataIndex("formuladesc"),
+                    X.NumberColumn()
+                        .Align(ColumnAlign.End)
+                        .Sortable(false)
+                        .Text("Amount")
+                        .Flex(2)
+                        .DataIndex("ammount")
+                        .Format(global_asax.DefaultNumberFormat)
+            )
+            .Listeners(listener =>
+            {
+                //listener.ViewReady.Fn = "treeSimulationReady";
+                listener.SelectionChange.Handler = "treeSimulationSelectionChange(selected.length);";
+            })
+            .Root(new Node() { NodeID = "root", Expandable = true })
+)
+)

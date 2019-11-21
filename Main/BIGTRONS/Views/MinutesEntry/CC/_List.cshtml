@@ -1,0 +1,185 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<RecipientsVM>
+@{
+    var X = Html.X();
+    string sPageName = "RecipientCC";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdAttendanceRecipientCC", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GrdScheduleRecipient", "grdAttendanceRecipientCC", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(RecipientsVM.Prop.RecipientTypeID.Name, ((int)RecipientTypes.CC).ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseRecipientCC", "Add", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "BrowseRecipientCC", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+    
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdAttendanceCC()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdAttendanceCC();
+        });
+
+        resizeGrdAttendanceCC = function () {
+            if (App.grdAttendanceRecipientCC != null)
+                App.grdAttendanceRecipientCC.setHeight($(window).height() - App.grdAttendanceRecipientCC.getY() - (App.grdAttendanceRecipientCC.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangedCC = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+            if(FromDetail !== 'Detail'){
+                App.ButtonDeleteRecipientCC.setDisabled(length<1);
+            }
+        };
+
+        editRecipientCC = function (editor, e) {
+
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        beforeEditRecipientCC = function (editor, e) {
+            if ("@isDetailButton" == "True")
+                return false;
+
+            App.grdAttendanceRecipientCC.getSelectionModel().select(e.record);
+        };
+
+
+        deleteSuccessCC = function () {
+            App.grdAttendanceRecipientCC.getStore().reload();
+        };
+
+        deleteSelectedRecipientsCC = function(){
+            App.grdAttendanceRecipientCC.getStore().remove(App.grdAttendanceRecipientCC.getSelectionModel().getSelection());
+        };
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdAttendanceRecipientCC")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangedCC(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(false)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelRecipientList")
+                .Fields(
+                    X.ModelField().Name(Model, model => model.RecipientNRK),
+                    X.ModelField().Name(Model, model => model.OwnerID),
+                    X.ModelField().Name(Model, model => model.RecipientDesc),
+                    X.ModelField().Name(Model, model => model.RecipientTypeID),
+                    X.ModelField().Name(Model, model => model.RecipientTypeDesc),
+                    X.ModelField().Name(Model, model => model.MailAddress)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(RecipientsVM.Prop.RecipientNRK.Desc)
+        .DataIndex(Model, model => model.RecipientNRK)
+        .Flex(1)
+        .Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        ),
+        //X.Column()
+        //    .Text(RecipientsVM.Prop.RecipientTypeDesc.Desc)
+        //    .DataIndex(Model, model => model.RecipientTypeDesc)
+        //    .Flex(1)
+        //    .Editor(
+        //        Html.X().ComboBox()
+        //            .TypeAhead(true)
+        //            .SelectOnTab(true)
+        //            .Items(
+        //                "TO",
+        //                "CC",
+        //                "BCC"
+        //            )
+        //    ).Hidden(true),
+        X.Column()
+        .Text("Email").Flex(2)
+        .DataIndex(Model, model => model.MailAddress)
+        .Hidden(false),
+        X.Column()
+        .Text("Name")
+        .DataIndex(Model, model => model.RecipientDesc)
+        .Flex(4)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(false),
+        Html.X().CellEditing().ClicksToEdit(1)
+                    .Listeners(ls => ls.Edit.Fn = "editRecipientCC")
+                    .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditRecipientCC")
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+            btnDelete.Disabled(true).Handler("deleteSelectedRecipientsCC();")
+            //btnPreBuilRec.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == "Detail")
+
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+        .HideRefresh(true)
+    )
+)

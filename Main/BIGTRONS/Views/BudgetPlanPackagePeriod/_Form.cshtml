@@ -1,0 +1,352 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model PackageVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    
+
+
+    /* Budget Plan List */
+    <script>
+
+        var applyFilter = function (field) {
+            var store = App.grdBudgetPlanList.getStore();
+            store.filterBy(getRecordFilter());
+        };
+
+        var filterString = function (value, dataIndex, record) {
+
+            var val = record.get(dataIndex);
+
+            if (typeof val != "string") {
+                return value.length == 0;
+            }
+
+            return val.toLowerCase().indexOf(value.toLowerCase()) > -1;
+        };
+
+        var filterDate = function (value, dataIndex, record) {
+            var val = Ext.Date.clearTime(record.get(dataIndex), true).getTime();
+
+            if (!Ext.isEmpty(value, false) && val != Ext.Date.clearTime(value, true).getTime()) {
+                return false;
+            }
+            return true;
+        };
+
+        var filterNumber = function (value, dataIndex, record) {
+            var val = record.get(dataIndex);
+
+            if (!Ext.isEmpty(value, false) && val != value) {
+                return false;
+            }
+
+            return true;
+        };
+
+        var getRecordFilter = function () {
+            var f = [];
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.StatusDescFilter.getValue() || "", "StatusDesc", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.BudgetPlanIDFilter.getValue(), "BudgetPlanID", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterNumber(App.BudgetPlanVersionFilter.getValue(), "BudgetPlanVersion", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.BudgetPlanTypeDescFilter.getValue(), "BudgetPlanTypeDesc", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.DescriptionFilter.getValue(), "Description", record);
+                }
+            });
+
+            var len = f.length;
+
+            return function (record) {
+                for (var i = 0; i < len; i++) {
+                    if (!f[i].filter(record)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+        };
+
+    </script>
+
+   
+}
+@(
+    X.Panel()
+    .ID("PPackageForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FPackage")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.PackageID)
+                .FieldLabel(PackageVM.Prop.PackageID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PackageDesc)
+                .FieldLabel(PackageVM.Prop.PackageDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.CompanyID)
+                .FieldLabel(PackageVM.Prop.CompanyID.Desc)
+                .Hidden(true),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.ProjectID)
+                                .FieldLabel(ItemPriceVM.Prop.ProjectDesc.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.ProjectDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                ),
+            X.TextFieldFor(model => model.StatusID)
+                .FieldLabel(PackageVM.Prop.StatusID.Desc)
+                .Hidden(true),
+            X.TextFieldFor(model => model.StatusDesc)
+                .FieldLabel(PackageVM.Prop.StatusDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.DateField()
+                            .ID("ColStartDate")
+                            .FieldLabel("Start Date")
+                            .LabelWidth(iLabelWidth)
+                            .ReadOnly(false)
+                            .Format(global_asax.DefaultDateFormat)
+                            .SubmitValue(true)
+                            .AllowBlank(false)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                            ,
+                            X.TimeField()
+                            .ID("ColStartTime")
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Format(global_asax.ShortTimeFormat)
+                            .SubmitValue(true)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.DateField()
+                            .ID("ColEndDate")
+                            .FieldLabel("End Date")
+                            .LabelWidth(iLabelWidth)
+                            .ReadOnly(false)
+                            .Format(global_asax.DefaultDateFormat)
+                            .SubmitValue(true)
+                            .AllowBlank(false)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                            ,
+                            X.TimeField()
+                            .ID("ColEndTime")
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Format(global_asax.ShortTimeFormat)
+                            .SubmitValue(true)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                                ),
+            X.GridPanel()
+                        .ID("grdBudgetPlanList")
+                        .Title("Budget Plan")
+                        .Collapsible(true)
+                        .MinHeight(250)
+                        .SelectionModel(
+                        X.CheckboxSelectionModel()
+                        .Mode(SelectionMode.Simple)
+                        .AllowDeselect(true)
+                        )
+                        //.Listeners(oListener =>
+                        //{
+                        //    oListener.SelectionChange.Handler = "selectionBudgetPlanListChange(selected.length)";
+                        //})
+                        .ColumnModel(
+                            X.Column()
+                                .Text("Budget Plan ID")
+                                .DataIndex("BudgetPlanID")
+                                .Flex(1)
+                                .Filterable(true)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanIDFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Budget Plan Version")
+                                .DataIndex("BudgetPlanVersion")
+                                .Flex(2)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanVersionFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Budget Type")
+                                .DataIndex("BudgetPlanTypeDesc")
+                                .Flex(2)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanTypeDescFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Description")
+                                .DataIndex("Description")
+                                .Flex(1)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("DescriptionFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Status")
+                                .DataIndex("StatusDesc")
+                                .Flex(1)
+                                .Items(
+                                    Html.X().ComboBox()
+                                    .ID("StatusDescFilter")
+                                    .TriggerAction(TriggerAction.All)
+                                    .QueryMode(DataLoadMode.Local)
+                                    .Editable(false)
+                                    .DisplayField("StatusDesc")
+                                    .ValueField("StatusDesc")
+                                    .Store(
+                                       X.StoreForModel()
+                                        .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("/GetStatusList"))
+                                            .Reader(X.JsonReader().RootProperty("data"))
+                                        )
+                                        .AutoLoad(true)
+                                    )
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Status ID")
+                                .Hidden(true)
+                                .DataIndex("StatusID")
+                                .Flex(1)
+                                .Sortable(false)
+                        )
+                        .Store(
+                             X.Store()
+                                .ID("grdBudgetPlanListStore")
+                                .AutoLoad(true)
+                                .PageSize(30)
+                                .DataSource(Model.BudgetPlanList)
+                                .Model(
+                                    X.Model()
+                                    .Name("ModelBudgetPlanList")
+                                    .Fields(
+                                        X.ModelField().Name(PackageListVM.Prop.BudgetPlanID.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.BudgetPlanVersion.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.BudgetPlanTypeDesc.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.Description.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.StatusDesc.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.StatusID.Name),
+                                        X.ModelField().Name(PackageListVM.Prop.MaxVersion.Name)
+                                    )
+                                )
+                         )
+
+                        .BottomBar(
+                            X.PagingToolbar()
+                                .DisplayInfo(true)
+                                .BaseCls("paging")
+                                .DisplayMsg("Displaying {0} - {1} of {2}")
+                                .EmptyMsg("No records to display")
+                                .HideRefresh(true)
+                        )
+                        ,
+                        X.Panel()
+                         .ID("pnlVendor")
+                         .Frame(true)
+                         .Title("Vendor")
+                         .Collapsible(true)
+                         .ItemsFromPartial("Vendor/_List", new List<BudgetPlanVersionVendorVM>(), ViewData)
+
+
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

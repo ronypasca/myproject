@@ -1,0 +1,387 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    /*bool IsDetailPage = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    */
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdBudgetPlan.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteFinish(true)", "deleteFinish(false, result.errorMessage)");
+
+
+    Button.Builder btnVerify = global_asax.Button(Buttons.ButtonVerify, sPageName, null, string.Empty, true);
+
+    Button.Builder btnUnverify = global_asax.Button(Buttons.ButtonUnverify, sPageName, null, string.Empty, true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("BPID", "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0].BudgetPlanID", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Descriptions", "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0].Description", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    //oParam = new Parameter("BPDesc", "App.Description.getValue()", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("VendorCount", ViewData["VendorListName"].ToString(), ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, sPageName, "Export", "../ReportBudgetPlan/ExportReportToExcel", true, false, false, null, oParamList, null, "SuccessExport");
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlan()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdBudgetPlan();
+        });
+
+        resizeGrdBudgetPlan = function () {
+            if (App.grdBudgetPlan != null)
+                App.grdBudgetPlan.setHeight($(window).height() - App.grdBudgetPlan.getY() - (App.grdBudgetPlan.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+            App.grdBudgetPlan.updateLayout();
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+            App.ButtonVerifyHome.setDisabled(true);
+            App.ButtonUnverifyHome.setDisabled(true);
+            var selectedRows=App.grdBudgetPlan.getRowsValues({selectedOnly:true});
+            if(selectedRows.length>0){
+                for (var i = 0; i < selectedRows.length; i++) {
+                    if(selectedRows[i].StatusID!=0){ /*draft*/
+                        App.ButtonDeleteHome.setDisabled(true);
+                    }
+
+                    if(selectedRows[i].StatusID==0 && selectedRows[i].BudgetPlanVersion>1){ /*draft*/
+                        App.ButtonVerifyHome.setDisabled(false);
+                       
+                    }
+                    if(selectedRows[i].StatusID==2 ){ /*approved*/
+                        if (selectedRows[i].BudgetPlanVersion>1){
+                        App.ButtonUnverifyHome.setDisabled(false);
+                    }
+                        App.ButtonExportHome.setDisabled(false);
+                    }else{
+                        App.ButtonExportHome.setDisabled(true);
+                    }
+                    
+                    if(selectedRows[i].StatusID==1 ){ /*submitted*/
+                        App.ButtonUpdateHome.setDisabled(true);
+                    }
+                }
+            }
+            App.ButtonExportHome.setDisabled(length != 1);
+
+        };
+
+        showMsgConfirmVerify= function(){
+            Ext.Msg.show({
+                message: "You're going to verify current Budget Plan version.</br>Do you want to continue?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+
+        showMsgConfirmUnverify= function(){
+            Ext.Msg.show({
+                message: "You're going to Un-verify current Budget Plan version.</br>"+
+                         "Important Notes: If there is currently no submitted entries from vendor refering to this Budget Plan, it will marked as <strong>DELETED</strong> </br>"+
+                         "Do you want to continue?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "unverifyConfirm"
+            });
+            return;
+        };
+
+        verifyConfirm= function(btn){
+            if (btn == "yes") {
+               /* */
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Verify", "BudgetPlan"))',
+                    params: {
+                        Selected: App.grdBudgetPlan.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        App.grdBudgetPlan.getStore().reload();
+                    }
+                });
+            }
+        };
+
+        unverifyConfirm= function(btn){
+            if (btn == "yes") {
+                /* */
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("UnVerify", "BudgetPlan"))',
+                    params: {
+                        Selected: App.grdBudgetPlan.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        App.grdBudgetPlan.getStore().reload();
+                    }
+                });
+            }
+        };
+
+        deleteFinish = function (success, msg) {
+            if (success)
+                App.grdBudgetPlan.getStore().reload();
+            else
+                showError(sTitle, msg);
+        };
+
+        verifyFinish = function (success, msg) {
+            if (success)
+                App.grdBudgetPlan.getStore().reload();
+            else
+                showError(sTitle, msg);
+        };
+
+
+        showResultText = function (btn) {
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Add", "BudgetPlan"))',
+                    params: {
+                        Caller : '@(General.EnumDesc(Buttons.ButtonUpdate))',
+                        Selected: App.grdBudgetPlan.getRowsValues({ selectedOnly: true })[0]
+                    }
+                });
+            }else{
+                Ext.Msg.alert("Budget Plan - Error", "Cannot update and Create new version!");
+            }
+        };
+        var SuccessExport = function (filename) {      
+            window.location = "Content/"+JSON.parse(filename.responseText).result;  
+            Ext.Ajax.request({
+                url: '../ReportBudgetPlan/ClearExcelFile',
+                method: 'POST',
+                params:{
+                    filename: JSON.parse(filename.responseText).result
+                },
+                failure: function (response) {
+                    Ext.Msg.alert("Error Delete from Server", response);
+                }
+            });
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdBudgetPlan")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.BudgetPlanID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(BudgetPlanVM.Prop.BudgetPlanID.Desc)
+        .DataIndex(Model, model => model.BudgetPlanID)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text("Last Ver.")
+        .DataIndex(Model, model => model.BudgetPlanVersion)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.Description.Desc)
+        .DataIndex(Model, model => model.Description)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.BudgetPlanTemplateDesc.Desc)
+        .DataIndex(Model, model => model.BudgetPlanTemplateDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.ProjectDesc.Desc)
+        .DataIndex(Model, model => model.ProjectDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.ClusterDesc.Desc)
+        .DataIndex(Model, model => model.ClusterDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.UnitTypeDesc.Desc)
+        .DataIndex(Model, model => model.UnitTypeDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanVM.Prop.StatusDesc.Desc)
+        .DataIndex(Model, model => model.StatusDesc)
+        .Flex(2)
+
+        .Items(
+                X.ComboBox()
+                    .DisplayField(StatusVM.Prop.StatusDesc.Name)
+                    .ValueField(StatusVM.Prop.StatusDesc.Name)
+                    .Store(
+                        X.StoreForModel()
+                        .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("/GetStatusList"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                        .AutoLoad(true)
+                    ).Plugins(Html.X().ClearButton())
+
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(false),
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnDelete.Disabled(true),
+            btnVerify.Disabled(true).Handler("showMsgConfirmVerify()"),
+            btnUnverify.Disabled(true).Handler("showMsgConfirmUnverify()"),
+            btnExport.Disabled(true)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

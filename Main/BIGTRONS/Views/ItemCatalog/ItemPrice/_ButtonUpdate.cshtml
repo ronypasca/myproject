@@ -1,0 +1,16 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.BIGTRONS.ViewModels;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Update";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, General.EnumName(Buttons.ButtonSave) + "ItemPrice", null, string.Empty);
+
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, General.EnumName(Buttons.ButtonCancel) + "ItemPrice", null, string.Empty);
+}
+@(btnSave.Handler("itemPriceFormSave('" + General.EnumDesc(Buttons.ButtonUpdate) + "');"))
+
+@(btnCancel.Handler("itemPriceFormClose();"))

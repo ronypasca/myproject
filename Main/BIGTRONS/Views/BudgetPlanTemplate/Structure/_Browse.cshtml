@@ -1,0 +1,402 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanTemplateStructureVM
+@{
+    ViewBag.Title = "Budget Plan Template Structure";
+    var X = Html.X();
+    string sPageName = "BudgetPlanTemplateStructure";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectBudgetPlanTemplateStructureBrowse('" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.Version.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.Sequence.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemVersionChildID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.IsDefault.Name]
+        + "', App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ItemID.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.Version.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.Sequence.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.ItemVersionChildID.Name + "']"
+        + ", App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTemplateStructureVM.Prop.IsDefault.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlanTemplateStructureBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdBudgetPlanTemplateStructureBrowse();
+        });
+
+        resizeGrdBudgetPlanTemplateStructureBrowse = function () {
+            if (App.grdBudgetPlanTemplateStructureBrowse != null)
+                App.grdBudgetPlanTemplateStructureBrowse.setHeight($(window).height() - App.grdBudgetPlanTemplateStructureBrowse.getY() - (App.grdBudgetPlanTemplateStructureBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionBudgetPlanTemplateStructureChange = function (length) {
+            App.ButtonSelectBudgetPlanTemplateStructure.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ItemDesc, Version) {
+            filter.fields[0].items.items[0].setValue(ItemDesc);
+            filter.fields[1].items.items[0].setValue(Version);
+        };
+
+        updateNodeSuccess = function (response) {
+
+            nodeID = App.treePanelBudgetVersionStructure.getSelectedNodes()[0].nodeID;
+            node = App.treePanelBudgetVersionStructure.store.getNodeById(nodeID);
+            nodeParent  = node.parentNode;
+            for (var i = 0; i < nodeParent.childNodes.length; i++) {
+                @*if (nodeParent.childNodes[i].data.itemid == response.data.itemid && nodeParent.childNodes[i].data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Update Structure", response.data.itemdesc + " " + '@General.EnumDesc(MessageLib.exist)');
+                    return;
+                }*@
+
+                if (nodeParent.data.itemid == response.data.itemid && nodeParent.data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Update Structure", "Cirular detected!");
+                    return;
+                }
+                if (nodeParent.childNodes[i].data.isboi && response.data.isahs) {
+                    Ext.Msg.alert("Budget Plan - Update Structure", "Cannot add structure inside selected item!");
+                    return;
+                }
+            }
+            nodeParent.replaceChild(response.data, node);
+            parent.recalculatePrice(nodeParent);
+
+            parent.sequence = 0;
+            parent.reSequence(App.treePanelBudgetVersionStructure.store.getRootNode());
+        };
+
+        updateNodeFailure = function (response) {
+            Ext.Msg.alert("Budget Plan - Load Child", response);
+        };
+
+        addNodeSuccess = function (response) {
+            nodeID = App.treePanelBudgetVersionStructure.getSelectedNodes()[0].nodeID;
+            node = App.treePanelBudgetVersionStructure.store.getNodeById(nodeID);
+            for (var i = 0; i < node.childNodes.length; i++) {
+                if (node.childNodes[i].data.itemid == response.data.itemid && node.childNodes[i].data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", response.data.itemdesc + " " + '@General.EnumDesc(MessageLib.exist)');
+                    return;
+                }
+                if (node.data.itemid == response.data.itemid && node.data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", "Cirular detected!");
+                    return;
+                }
+                if (node.childNodes[i].data.isboi && response.data.isahs) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", "Cannot add structure inside selected item!");
+                    return;
+                }
+            }
+            
+            response.data.parentsequence = node.data.sequence;
+            response.data.parentitemid = node.data.itemid;
+            response.data.parentversion = node.data.version;
+
+            node.appendChild(response.data);
+            parent.recalculatePrice(node);
+            parent.sequence = 0;
+            parent.reSequence(App.treePanelBudgetVersionStructure.store.getRootNode());
+        };
+
+        addNodeFailure = function (response) {
+            Ext.Msg.alert("Budget Plan - Load Child", response);
+        };
+
+        selectBudgetPlanTemplateStructureBrowse = function (ControlItemID, ControlItemDesc, ControlVersion, ControlSequence,
+            ControlItemTypeID, ControlParentItemID, ControlParentVersion, ControlParentSequence, ControlParentTypeID, ControlItemVersionChildID,ControlIsDefault,
+            ItemID, ItemDesc, Version, Sequence, ItemTypeID, ParentItemID, ParentVersion, ParentSequence, ParentTypeID, ItemVersionChildID, IsDefault) {
+            if (Ext.getCmp(ControlItemID) != undefined) {
+                Ext.getCmp(ControlItemID).setValue(ItemID);
+                Ext.getCmp(ControlItemID).originalValue = ItemID;
+            }
+            if (Ext.getCmp(ControlItemDesc) != undefined) {
+                Ext.getCmp(ControlItemDesc).setValue(ItemDesc);
+                Ext.getCmp(ControlItemDesc).originalValue = ItemDesc;
+            }
+            if (Ext.getCmp(ControlVersion) != undefined) {
+                Ext.getCmp(ControlVersion).setValue(Version);
+                Ext.getCmp(ControlVersion).originalValue = Version;
+            }
+            if (Ext.getCmp(ControlItemTypeID) != undefined) {
+                Ext.getCmp(ControlItemTypeID).setValue(ItemTypeID);
+                Ext.getCmp(ControlItemTypeID).originalValue = ItemTypeID;
+            }
+            if (Ext.getCmp(ControlParentItemID) != undefined) {
+                Ext.getCmp(ControlParentItemID).setValue(ParentItemID);
+                Ext.getCmp(ControlParentItemID).originalValue = ParentItemID;
+            }
+            if (Ext.getCmp(ControlParentVersion) != undefined) {
+                Ext.getCmp(ControlParentVersion).setValue(ParentVersion);
+                Ext.getCmp(ControlParentVersion).originalValue = ParentVersion;
+            }
+            if (Ext.getCmp(ControlParentSequence) != undefined) {
+                Ext.getCmp(ControlParentSequence).setValue(ParentSequence);
+                Ext.getCmp(ControlParentSequence).originalValue = ParentSequence;
+            }
+            if (Ext.getCmp(ControlParentTypeID) != undefined) {
+                Ext.getCmp(ControlParentTypeID).setValue(ParentTypeID);
+                Ext.getCmp(ControlParentTypeID).originalValue = ParentTypeID;
+            }
+            if (Ext.getCmp(ControlItemVersionChildID) != undefined) {
+                Ext.getCmp(ControlItemVersionChildID).setValue(ItemVersionChildID);
+                Ext.getCmp(ControlItemVersionChildID).originalValue = ItemVersionChildID;
+            }
+            if (Ext.getCmp(ControlIsDefault) != undefined) {
+                Ext.getCmp(ControlIsDefault).setValue(IsDefault);
+                Ext.getCmp(ControlIsDefault).originalValue = IsDefault;
+            }
+
+            if ("@ViewData[General.EnumDesc(Params.Caller)]" == "Update") {
+                objItemPrice = { RegionID: App.RegionID.getValue(), ProjectID: App.ProjectID.getValue(), ClusterID: App.ClusterID.getValue(), UnitTypeID: App.UnitTypeID.getValue() };
+
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("UpdateNodeTemplateStructure", "BudgetPlan"))',
+                    params: {
+                        Selected: App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({ selectedOnly: true })[0],
+                        jsonItemPrice: JSON.stringify(objItemPrice)
+                    },
+                    success: updateNodeSuccess,
+                    failure: updateNodeFailure
+                });
+            }
+
+            if ("@ViewData[General.EnumDesc(Params.Caller)]" == "Add") {
+                objItemPrice = { RegionID: App.RegionID.getValue(), ProjectID: App.ProjectID.getValue(), ClusterID: App.ClusterID.getValue(), UnitTypeID: App.UnitTypeID.getValue() };
+               
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("AddNodeTemplateStructure", "BudgetPlan"))',
+                    params: {
+                        Selected: App.grdBudgetPlanTemplateStructureBrowse.getRowsValues({ selectedOnly: true })[0],
+                        jsonItemPrice: JSON.stringify(objItemPrice)
+                    },
+                    success: addNodeSuccess,
+                    failure: addNodeFailure
+                });
+            }
+
+            App.WinBrowseBudgetPlanTemplateStructure.close();
+        };
+
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseBudgetPlanTemplateStructure")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .ConstrainHeader(true)
+    .Layout(LayoutType.Fit)
+    .Items(
+        X.GridPanel()
+        .ID("grdBudgetPlanTemplateStructureBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionBudgetPlanTemplateStructureChange(selected.length)";
+            //oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name].ToString() + "', '" + ViewData[BudgetPlanTemplateStructureVM.Prop.Version.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowseStructure", "BudgetPlanTemplate"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(exParam =>
+                        exParam.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name,
+                                Value = ViewData["BudgetPlanTemplateID"] == null ? string.Empty : ViewData["BudgetPlanTemplateID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name,
+                                Value = ViewData["ParentItemID"] == null ? string.Empty : ViewData["ParentItemID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name,
+                                Value = ViewData["ParentVersion"] == null ? string.Empty : ViewData["ParentVersion"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name =  General.EnumDesc(Params.Caller),
+                                Value = ViewData[General.EnumDesc(Params.Caller)] == null ? string.Empty : ViewData[General.EnumDesc(Params.Caller)].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                        })
+                    )
+            )
+            .AutoLoad(true)
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ItemID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ItemID.Desc)
+            .DataIndex(Model, model => model.ItemID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Desc)
+            .DataIndex(Model, model => model.ItemDesc)
+            .Flex(2)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Desc)
+            .DataIndex(Model, model => model.ItemTypeID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.Version.Desc)
+            .DataIndex(Model, model => model.Version)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.Sequence.Desc)
+            .DataIndex(Model, model => model.Sequence)
+            .Flex(1)
+            .Hidden(true)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.CheckColumn()
+            .Text(BudgetPlanTemplateStructureVM.Prop.IsDefault.Desc)
+            .DataIndex(Model, model => model.IsDefault)
+            .Flex(2)
+            .Items(
+                X.ComboBox()
+                .DisplayField(ConfigBoolVM.Prop.Description.Name)
+                .ValueField(ConfigBoolVM.Prop.ID.Name)
+                .Store(
+                        X.StoreForModel()
+                        .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("../Config/GetBoolList"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                        .AutoLoad(true)
+                     )
+
+            )
+
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

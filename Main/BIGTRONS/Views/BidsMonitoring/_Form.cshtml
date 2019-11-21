@@ -1,0 +1,386 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTNegotiationRoundVM
+@{
+    var iBodyPadding = 10;
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+
+    var X = Html.X();
+    var FPTID = ViewData["FPTIDData"].ToString();
+    var RoundID = ViewData["RoundIDData"].ToString();
+    var SubItemLevel = (int)ViewData["SubItemLevelData"];
+    //var BusinessUnitIDs = ViewData["BusinessUnitIDs"];
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdBidMonitoring.store.reload()");
+
+    decimal pricemargintop = (decimal)ViewData["PriceMarginTopData"];
+    decimal pricemarginbottom = (decimal)ViewData["PriceMarginBottomData"];
+
+    string m_strScheduleStart = ViewData["ScheduleStart"].ToString();
+    string m_strScheduleEnd = ViewData["ScheduleEnd"].ToString();
+    string m_strDuration = ViewData["Duration"].ToString();
+}
+
+
+
+<script>
+    var iTreeInitHeight = -1;
+
+    var ExColHandler = function (e) {
+        var BPTree = Ext.getCmp(e.tag);
+
+        if (e.text == '@General.EnumDesc(Buttons.ButtonExpand)') {
+            BPTree.expandAll();
+            e.setText('@General.EnumDesc(Buttons.ButtonCollapse)');
+        }
+        else {
+            BPTree.collapseAll();
+            e.setText('@General.EnumDesc(Buttons.ButtonExpand)');
+        }
+
+        return;
+    };
+
+    var handlerLoadOffer = function (btn, pressed,e) {
+        debugger;
+        var tree = Ext.getCmp("treePanel" + btn.tag + "structure"),
+               store = tree.store;
+
+        if(pressed)
+        {
+            Ext.getBody().mask('Loading');
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetLastOffer"))',
+                params: {
+                    BudgetPlanID: btn.tag,
+                    RoundID: ""
+                },
+                success: function (result) {
+                    /*console.log(result);*/
+                    if (result.length > 0) {
+                        /*setEmptyBid(store, vendorID);*/
+                        Ext.Array.each(result,function(value){
+                            record = store.getNodeById(value.NegotiationBidID);
+                            if(!Ext.isEmpty(record))
+                            {
+                                record.set('offer' + value.VendorID + '', value.BidValue);
+                                record.commit();
+                            }
+                        });
+                    }
+                },
+                failure: getNegoEntryFailed,
+                complete: function(){
+
+                    Ext.getBody().unmask();
+                }
+            });
+        }
+
+
+        return;
+    };
+
+
+    updateTreeView = function(tree, fn) {
+        var view = tree.getView();
+        view.getStore().loadRecords(fn(tree.getRootNode()));
+        view.refresh();
+        Ext.getBody().unmask();
+    };
+
+    collapseAll = function(tree) {
+        this.updateTreeView(tree, function(root) {
+            root.cascadeBy(function(node) {
+                if (!node.isRoot() || tree.rootVisible) {
+                    node.data.expanded = false;
+                }
+            });
+            return tree.rootVisible ? [root] : root.childNodes;
+        });
+    };
+
+    var viewReady = function (treeID, budgetPlanID, roundID, vendorID) {
+        if (treeID != '') {
+            var tree = Ext.getCmp(treeID),
+            store = tree.store;
+
+
+
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetBids"))',
+                params: {
+                    BudgetPlanID: budgetPlanID,
+                    RoundID: roundID,
+                    FPTID:App.FPTID.getValue()
+                },
+                success: function (result) {
+                    /*console.log(result);*/
+                    if (result.length > 0) {
+                        setEmptyBid(store, vendorID);
+                        for (var j = 0; j < result.length; j++) {
+                            record = store.getNodeById(result[j].NegotiationBidID);
+                            if(!Ext.isEmpty(record))
+                            {
+                                record.set('' + result[j].VendorID + '', result[j].BidValue);
+                                record.commit();
+                            }
+                        }
+
+                    }
+
+
+                },
+                failure: getNegoEntryFailed
+            });
+
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetTotalRounds"))',
+                params: {
+                    BudgetPlanID: budgetPlanID
+                },
+                success: function (result) {
+                    /*console.log(result);*/
+
+                    if (result.length > 0) {
+                        /*setEmptyBid(store, vendorID);*/
+                        for (var j = 0; j < result.length; j++) {
+                            record = store.getNodeById(result[j].NegotiationBidID + result[j].RoundID);
+                            if(!Ext.isEmpty(record))
+                            {
+                                record.set('' + result[j].VendorID + '', result[j].BidValue);
+                                record.commit();
+                            }
+                        }
+
+                    }
+
+                    /*setTimeout("afterFirstLoadTree('"+treeID+"')",1);*/
+                },
+                failure: getNegoEntryFailed
+            });
+
+            setTimeout("afterFirstLoadTree('"+treeID+"')",1);
+        }
+    };
+
+    setEmptyBid = function (store, VendorID) {
+
+        data = store.data.items;
+        if (!Ext.isEmpty(VendorID))
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].data.hasOwnProperty('negotiationbidid')) {
+                    record = store.getNodeById(data[i].data.negotiationbidid);
+                    record.set('' + VendorID + '', '');
+                    record.commit();
+                }
+            }
+    };
+
+    var getNegoEntryFailed = function (result) {
+        showInfoAlert(sTitle, result);
+    };
+
+
+    var succes = function(a,b,c,d){
+        if(!Ext.isEmpty(b.responseText.success) && !b.responseText.success){
+            showErrorAlert(sTitle,b.responseText.errorMessage);
+        }
+
+    };
+
+    var renderTreeColumn = function(a,b,c,d,e,f,g){
+        if(a > b.record.data.bpvalue ){
+            b.style = "color:red;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+
+    var renderGridColumn = function(a,b,c,d,e,f,g){
+        if(b.record.data.sequencelevel == @((int)VendorBidTypes.Fee)) return Ext.util.Format.number(a, integerNumberFormat);
+
+        var valuetop = (b.record.data.budgetplandefaultvalue * (1+((@pricemargintop)/100)));
+        var valuebottom = (b.record.data.budgetplandefaultvalue * (1-((@pricemarginbottom)/100)));
+
+        if(a > valuetop ){
+            b.style = "color:red;font-weight:400;";
+        }
+        else if(a < valuebottom ){
+            b.style = "color:blue;font-weight:400;";
+        }
+        else
+        {
+            b.style = "color:green;font-weight:400;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+
+    $(window).resize(function () {
+        resizeContainer();
+    });
+
+    resizeTreeBidMonitoring = function (treeID) {
+        var tree = Ext.getCmp(treeID);
+        if (tree != null) {
+            var iHeight = $(window).height() - (tree.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height() ;
+            if (iHeight > iTreeInitHeight)
+                iHeight = iTreeInitHeight;
+            tree.setHeight(iHeight);
+        }
+    };
+
+    var afterFirstLoadTree = function (treeID) {
+        var tree = Ext.getCmp(treeID);
+        if (iTreeInitHeight = -1)
+            iTreeInitHeight = tree.getHeight();
+        resizeTreeBidMonitoring(treeID);
+        resizeContainer();
+    };
+
+</script>
+
+@(
+    X.Panel()
+    .ID("PBidForm")
+    .Frame(true)
+    .Items(
+        X.Container()
+        .Items(
+           X.FormPanel()
+            .ID("FPBidMonitoring")
+            .Collapsible(true)
+            .Title("FPT")
+            .Padding(iBodyPadding)
+            .Items(
+                X.Container()
+                .Layout(LayoutType.Column)
+                .Items(
+                      X.Panel()
+                      .Cls("fullOnSmall")
+                      .ColumnWidth(0.5)
+                      .ID("pnlBidInfoLeft")
+                      .PaddingSpec(sPanelPaddingSpec)
+                      .Items(
+                              X.TextFieldFor(model => model.FPTID)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.FPTID.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                               X.TextFieldFor(model => model.Schedule)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.Schedule.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                               X.TextFieldFor(model => model.RoundNo)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.RoundNo.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+
+                               X.TextFieldFor(model => model.TotalRound)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.TotalRound.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                               X.TextFieldFor(model => model.RoundRemaining)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.RoundRemaining.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth),
+                                X.TextFieldFor(model => model.TimeRemaining)
+                                .FieldLabel(FPTNegotiationRoundVM.Prop.TimeRemaining.Desc)
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth)
+                                .RawValue("00:00:00")
+                          ),
+                      X.Panel()
+                      .Cls("fullOnSmall")
+                      .ColumnWidth(0.5)
+                      .ID("pnlBidInfoRight")
+                      .PaddingSpec(sPanelPaddingSpec)
+                      .Items(
+                          X.Label("FPT Additional Info"),
+                        X.TextField()
+                        .ReadOnly(true)
+                        .FieldLabel("Schedule Start")
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Value(m_strScheduleStart),
+                        X.TextField()
+                        .ReadOnly(true)
+                        .FieldLabel("Schedule End")
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Value(m_strScheduleEnd),
+                        X.TextFieldFor(model => model.FPTDuration)
+                        .FieldLabel("Duration")
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Value(m_strDuration),
+                        X.TextFieldFor(model => model.MaintenancePeriod)
+                        .FieldLabel("Maintenance Period")
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.Guarantee)
+                        .FieldLabel("Guarantee")
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.ContractType)
+                        .FieldLabel("Contract Type")
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextAreaFor(model => model.PaymentMethod)
+                        .FieldLabel("Payment Method")
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.Label().Text(String.Format("*{0}",ViewData[FPTVM.Prop.AdditionalInfo1Desc.MapAlias].ToString())),
+                        X.Label().Text("*Tidak ada eskalasi sampai dengan proyek selesai"),
+                        X.Label().Text("*Harga Negosiasi telah disetujui oleh vendor melalui sistem dan tidak memerlukan tanda tangan untuk keabsahannya")
+                          )
+                      )
+
+                ),
+            X.FormPanel()
+             .Padding(iBodyPadding)
+                .ID("FPBid")
+                .Loader(
+                    X.ComponentLoader()
+                    .ID("CLBid")
+                    .AutoLoad(true)
+                    .LoadMask(l=>l.ShowMask=true)
+                    .Url(Url.Action("GetPanel"))
+                    .Params(new { FPTID = FPTID, RoundID = RoundID, lastLevel = SubItemLevel })
+                    .Mode(LoadMode.Component)
+                    .Success("succes")
+                )
+            )
+    )
+    .TopBar(
+        X.Toolbar()
+        .Items(
+            btnList,
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:green;'>&nbsp;</span><i> Acceptable</i>")
+                .Cls("lblhigherinfo"),
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:blue;';>&nbsp;</span><i> Below Standard Cost</i>")
+                .Cls("lblhigherinfo"),
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:red;'>&nbsp;</span><i> Higher than Standard Cost</i>")
+                .Cls("lblhigherinfo")
+            )
+            )
+        )
+
+
+
+

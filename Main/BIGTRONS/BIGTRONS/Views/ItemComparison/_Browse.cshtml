@@ -1,0 +1,453 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemPriceVendorPeriodVM
+@{
+    ViewBag.Title = "Item Price Vendor Period";
+    var X = Html.X();
+    string sPageName = "ItemPriceVendorPeriod";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string ReadBrowse = ViewData["ControlFromItem"].ToString() != "" ? "ReadBrowse" : "ReadBrowseChild";
+    //string ReadBrowse = ViewData["ControlFromItem"].ToString() != "" ? "ReadBrowseChild" : "ReadBrowse";
+    // Check Controller 
+
+    string sHandler = "selectItemPriceVendorPeriodBrowse('" + ViewData["Control" + ItemPriceVendorPeriodVM.Prop.ItemID.Name]
+        + "', '" + ViewData["Control" + ItemPriceVendorPeriodVM.Prop.ItemDesc.Name]
+        + "', '" + ViewData["Control" + ItemPriceVendorVM.Prop.ItemPriceID.Name]
+        + "', '" + ViewData["Control" + ItemPriceVendorVM.Prop.VendorDesc.Name]
+        + "', '" + ViewData["Control" + ItemPriceVendorVM.Prop.VendorID.Name]
+        + "', '" + ViewData["Control" + ItemPriceVendorPeriodVM.Prop.Amount.Name]
+        + "', '" + ViewData["ControlTreePanel"]
+        + "', '" + ViewData["ControlAlternativeItem"]
+        + "', App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorPeriodVM.Prop.ItemID.Name + "']"
+        + ", App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorPeriodVM.Prop.ItemDesc.Name + "']"
+        + ", App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorPeriodVM.Prop.ItemPriceID.Name + "']"
+        + ", App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorVM.Prop.VendorDesc.Name + "']"
+        + ", App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorVM.Prop.VendorID.Name + "']"
+        + ", App.grdItemPriceVendorPeriodBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemPriceVendorPeriodVM.Prop.Amount.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemPriceVendorPeriodBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdItemPriceVendorPeriodBrowse();
+        });
+
+        resizeGrdItemPriceVendorPeriodBrowse = function () {
+            if (App.grdItemPriceVendorPeriodBrowse != null)
+                App.grdItemPriceVendorPeriodBrowse.setHeight($(window).height() - App.grdItemPriceVendorPeriodBrowse.getY() - (App.grdItemPriceVendorPeriodBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionItemPriceVendorPeriodChange = function (length) {
+            App.ButtonSelectItemPriceVendorPeriod.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, uoMID, uoMDesc, uoMPriceID)
+        {
+            debugger;
+            filter.fields[0].items.items[0].setValue(uoMID);
+            filter.fields[1].items.items[0].setValue(uoMDesc);
+            filter.fields[2].items.items[0].setValue(uoMPriceID);
+        };
+
+        getController = function () {
+            var ret = "";
+            if (ViewData["ControlFromItem"] !== "") {
+                ret = "ReadBrowseFilter"
+            }
+            else {
+                ret = "ReadBrowse"
+            }
+
+            return ret;
+        };
+
+        var getforModel = function (grid) {
+            var ret = [];
+            for (var x = 0; x < grid.getColumns().length; x++) {
+                ret.push({ name: grid.getColumns()[x].dataIndex });
+            }
+            return ret;
+        };
+
+        var createModel = function (grid) {
+            Ext.define('ModelItemCompare', {
+                extend: 'Ext.data.Model',
+                fields: getforModel(grid)
+            });
+        };
+
+        selectionItemVersionChange = function (length) {
+            App.ButtonSelectItemPriceVendorPeriod.setDisabled(length < 1);
+        };
+
+        selectItemPriceVendorPeriodBrowse = function (ControlItemID, ControlItemDesc, ControlItemPriceID, ControlVendorDesc,
+            ControlVendorID, ControlAmount, ControlTreePanel, ControlAlternativeItem,
+            ItemID, ItemDesc, ItemPriceID, VendorDesc, VendorID, Amount) {
+
+            var grid = App.treePanelItemComparison;
+
+            createModel(App.treePanelItemComparison);
+
+            if (Ext.getCmp(ControlItemID) != undefined) {
+                Ext.getCmp(ControlItemID).setValue(ItemID);
+                Ext.getCmp(ControlItemID).originalValue = ItemID;
+            }
+            if (Ext.getCmp(ControlItemDesc) != undefined) {
+                Ext.getCmp(ControlItemDesc).setValue(ItemDesc);
+                Ext.getCmp(ControlItemDesc).originalValue = ItemDesc;
+            }
+            if (Ext.getCmp(ControlItemPriceID) != undefined) {
+                Ext.getCmp(ControlItemPriceID).setValue(ItemPriceID);
+                Ext.getCmp(ControlItemPriceID).originalValue = ItemPriceID;
+            }
+            if (Ext.getCmp(ControlVendorDesc) != undefined) {
+                Ext.getCmp(ControlVendorDesc).setValue(VendorDesc);
+                Ext.getCmp(ControlVendorDesc).originalValue = VendorDesc;
+            }
+            if (Ext.getCmp(ControlVendorID) != undefined) {
+                Ext.getCmp(ControlVendorID).setValue(VendorID);
+                Ext.getCmp(ControlVendorID).originalValue = VendorID;
+            }
+            if (Ext.getCmp(ControlAmount) != undefined) {
+                Ext.getCmp(ControlAmount).setValue(Amount);
+                Ext.getCmp(ControlAmount).originalValue = Amount;
+            }
+
+            if (App.treePanelItemComparison != undefined)
+            {
+                var node;
+                if (App.treePanelItemComparison.getSelection().length > 0) {
+                    node = App.treePanelItemComparison.getSelection()[0];
+                } else {
+                    node = App.treePanelItemComparison.store.getNodeById("root");
+                }
+
+                var errorMsg = [];
+
+                for (var i = 0; i < App.grdItemPriceVendorPeriodBrowse.getSelection().length; i++)
+                {
+                    var allowAppend = true;
+                    
+                    for (var j = 0; j < node.childNodes.length; j++)
+                    {
+                        if (node.childNodes[j].data.ItemID == App.grdItemPriceVendorPeriodBrowse.getSelection()[i].data.ItemID)
+                        {
+                            allowAppend = false;
+                            break;
+                        }
+                    }
+
+                    if(allowAppend)
+                    {
+                        node.data.leaf = false;
+                        node.data.iconCls = "icon-folder";
+                        node.data.expandable = true;
+                        node.data.expand = true;
+                        node.data.info = "";
+                        node.data.volume = null;
+
+                        node.appendChild({
+                            ItemID: App.grdItemPriceVendorPeriodBrowse.getSelection()[i].data.ItemID,
+                            ItemDesc: App.grdItemPriceVendorPeriodBrowse.getSelection()[i].data.ItemDesc,
+                            ItemPriceID: App.grdItemPriceVendorPeriodBrowse.getSelection()[i].data.ItemPriceID
+                        })
+                    }
+                }
+                App.ButtonAddVendorComparison.setDisabled(false);
+                App.ButtonDeleteItemComparison.setDisabled(false);
+            }
+            App.WinBrowseItemPriceVendorPeriod.close();
+
+        };
+
+        selectItemPriceVendorPeriodBrowsea = function (ControlItemID, ControlItemDesc, ControlVendorDesc,
+            ControlVendorID, ControlAmount, ControlTreePanel,ControlAlternativeItem,
+            ItemID, ItemDesc, VendorDesc, VendorID, Amount)
+        {
+            var grid = App.treePanelItemComparison;
+
+            createModel(App.treePanelItemComparison);
+
+            if (Ext.getCmp(ControlItemID) != undefined) {
+                Ext.getCmp(ControlItemID).setValue(ItemID);
+                Ext.getCmp(ControlItemID).originalValue = ItemID;
+            }
+            if (Ext.getCmp(ControlItemDesc) != undefined) {
+                Ext.getCmp(ControlItemDesc).setValue(ItemDesc);
+                Ext.getCmp(ControlItemDesc).originalValue = ItemDesc;
+            }
+            if (Ext.getCmp(ControlVendorDesc) != undefined) {
+                Ext.getCmp(ControlVendorDesc).setValue(VendorDesc);
+                Ext.getCmp(ControlVendorDesc).originalValue = VendorDesc;
+            }
+            if (Ext.getCmp(ControlVendorID) != undefined) {
+                Ext.getCmp(ControlVendorID).setValue(VendorID);
+                Ext.getCmp(ControlVendorID).originalValue = VendorID;
+            }
+            if (Ext.getCmp(ControlAmount) != undefined) {
+                Ext.getCmp(ControlAmount).setValue(Amount);
+                Ext.getCmp(ControlAmount).originalValue = Amount;
+            }
+            
+            if (ControlTreePanel.length > 0) {
+                if (ControlTreePanel.length > 0 && !(String(ControlTreePanel).indexOf('treePanelAdditional') >= 0)) {
+                    var default_ = '0';
+                    var ParentItemid = default_;
+                    var ParentSequence_ = 0;
+                    var lastsequence = 0;
+                    var ParentVersion_ = 0;
+                    var ParentTypeID = default_;
+                    var childid = App.treePanelItemComparison.store.getNodeById("root").childNodes.length;
+                    var BudgetTempID = ControlTreePanel;
+                    var ItemComparisonDetailID = ControlTreePanel;
+                    var id = "root";
+                    var lastnode = App.treePanelItemComparison.getRootNode().lastChild;
+                    if (App.treePanelItemComparison.getSelectedNodes(0)[0] !== undefined)
+                    {
+                        ParentItemid = App.treePanelItemComparison.getSelectedNodes()[0]['attributes']['itemid'];
+                        id = App.treePanelItemComparison.getSelection()[0].id;
+                        ParentSequence_ = App.treePanelItemComparison.getSelectedNodes()[0]['attributes']['sequence'];
+                        var hasSequenceChild = App.treePanelItemComparison.getSelection()[0].childNodes.length;
+                        lastsequence = ParentSequence_ + hasSequenceChild + 1;
+                        ParentVersion_ = App.treePanelItemComparison.getSelectedNodes()[0]['attributes']['version'];
+                        ParentTypeID = App.treePanelItemComparison.getSelectedNodes()[0]['attributes']['parentitemtypeid'];
+                        childid = App.treePanelItemComparison.getSelection()[0].childNodes.length;
+                        
+                    }
+                    else {
+                        if (lastnode !== null)
+                        {
+                            var taslim = 2;
+                            lastsequence = getSequence(lastnode, lastsequence);
+                        }
+                        lastsequence++;
+                    }
+                    var nodelength = App.treePanelItemComparison.store.getData().items.length;
+
+                    var loadNodeFromController = function (objchild, nextNode) {
+                        var x;
+                        for (x in objchild) {
+
+                            var objchild_ = [];
+                            objchild_ = objchild[x].children;
+                            objchild[x].children = null;
+                            console.log(nextNode.id);
+                            nextNode.appendChild(objchild[x]);
+                            if (objchild_ != undefined) {
+                                if (objchild_.length > 0) {
+
+                                    /* var nextNode_ = nextNode.childNodes[x];*/
+                                    var nextNode_ = App.treePanelItemComparison.store.getNodeById(nextNode.childNodes[x].id);
+                                    loadNodeFromController(objchild_, nextNode_);
+                                }
+                            }
+                        }
+                    };
+
+                    var fordefaultCheck = false;
+                    if (id == "root") { fordefaultCheck = true; }
+                    var childroot = App.treePanelItemComparison.store.getNodeById(id).childNodes.length;
+                    if (childroot > 0) { fordefaultCheck = false; }
+                    else { fordefaultCheck = true; }
+
+                    node = App.treePanelItemComparison.store.getNodeById(id);
+
+                    debugger;
+                    Ext.Ajax.request({
+                        url: '../ItemComparison/GetNodeAppend',
+                        method: 'POST',
+                        params: {
+                            thisItemDesc: ItemDesc,
+                            thisItem: ItemID,
+                            ItemComparisonDetailID: ItemComparisonDetailID
+                        },
+                        success: function (response) {
+                            console.log("Tes Response = " + response);
+                            
+                        }
+                    });
+                }
+
+            }
+            
+            App.WinBrowseItemPriceVendorPeriod.close();
+            
+        };
+
+        getSequence = function (node, seq) {
+
+            if (node.childNodes.length > 0) {
+                seq = getSequence(node.lastChild, seq);
+            }
+            else {
+                seq = node.data.sequence;
+            }
+            return seq;
+        };
+
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseItemPriceVendorPeriod")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdItemPriceVendorPeriodBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionItemVersionChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '"
+            + ViewData[ItemPriceVendorPeriodVM.Prop.ItemID.Name].ToString() + "', '"
+            + ViewData[ItemPriceVendorPeriodVM.Prop.ItemDesc.Name].ToString() + "', '"
+            + ViewData[ItemPriceVendorPeriodVM.Prop.ItemPriceID.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1; oListener.RowDblClick.Handler = sHandler; oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowseItemPriceVendorPeriod", "ItemComparison"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(exParam =>
+                        exParam.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = ItemPriceVendorPeriodVM.Prop.ItemID.Name,
+                                Value = ViewData["ItemID"] == null ? string.Empty : ViewData["ItemID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },new Parameter()
+                            {
+                                Name = ItemPriceVendorPeriodVM.Prop.RegionID.Name,
+                                Value = ViewData["RegionID"] == null ? string.Empty : ViewData["RegionID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemPriceVendorPeriodVM.Prop.ProjectID.Name,
+                                Value = ViewData["ProjectID"] == null ? string.Empty : ViewData["ProjectID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemPriceVendorPeriodVM.Prop.ClusterID.Name,
+                                Value = ViewData["ClusterID"] == null ? string.Empty : ViewData["ClusterID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemPriceVendorPeriodVM.Prop.UnitTypeID.Name,
+                                Value = ViewData["UnitTypeID"] == null ? string.Empty : ViewData["UnitTypeID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                    )
+            )
+            .AutoLoad(ViewData[ItemPriceVendorPeriodVM.Prop.ItemID.Name].ToString() == "" && ViewData[ItemPriceVendorPeriodVM.Prop.ItemDesc.Name].ToString() == "" && ViewData[ItemPriceVendorPeriodVM.Prop.ItemPriceID.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ItemID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.ItemID.Desc)
+            .DataIndex(Model, model => model.ItemID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.ItemDesc.Desc)
+            .DataIndex(Model, model => model.ItemDesc)
+            .Flex(3)
+            //.Hidden(true)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.ItemPriceID.Desc)
+            .DataIndex(Model, model => model.ItemPriceID)
+            .Flex(3)
+            .Hidden(true)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

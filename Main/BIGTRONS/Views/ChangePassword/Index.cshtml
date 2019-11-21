@@ -1,0 +1,31 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ClusterVM
+@{
+    var X = Html.X();
+
+}
+@section title{
+    @ViewBag.Title
+}
+@section head{
+    <script>
+        $(window).resize(function () {
+            resizeContainer();
+        });
+
+        resizeContainer = function () {
+            App.HomePage.updateLayout(true);
+        };
+    </script>
+}
+@section body{
+       @(X.Container()
+            .ID(General.EnumDesc(Params.HomePage))
+            .Loader(X.ComponentLoader()
+                .Url(Url.Action("ChangePassword"))
+                .Mode(LoadMode.Script)
+            )
+    )
+}

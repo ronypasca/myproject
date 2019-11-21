@@ -1,0 +1,162 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model UoMVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + UoMVM.Prop.DimensionID.Name, UoMVM.Prop.DimensionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + UoMVM.Prop.DimensionDesc.Name, UoMVM.Prop.DimensionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseDimension = global_asax.Button(Buttons.ButtonBrowse, "Dimension", "", "../Dimension/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseDimension = global_asax.Button(Buttons.ButtonErase, "Dimension", "", "", true);
+
+    <script>
+        var bPreventGetDimension = false;
+
+        getDimension = function (dimensionID, dimensionDesc, exact) {
+            if (App.DimensionID.isDirty() || App.DimensionDesc.isDirty()) {
+                App.DimensionID.originalValue = App.DimensionID.getValue();
+                App.DimensionDesc.originalValue = App.DimensionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetDimension", "Dimension"))',
+                    params: {
+                        ControlDimensionID: App.DimensionID.id,
+                        ControlDimensionDesc: App.DimensionDesc.id,
+                        FilterDimensionID: dimensionID,
+                        FilterDimensionDesc: dimensionDesc,
+                        Exact: exact
+                    },
+                    success: getDimensionSuccess,
+                    failure: getDimensionFailed
+                });
+            }
+        };
+
+        getDimensionSuccess = function () {
+            if (!App.DimensionID.isDirty() && !App.DimensionDesc.isDirty()) {
+                App.DimensionID.originalValue = "";
+                App.DimensionDesc.originalValue = "";
+            }
+            bPreventGetDimension = false;
+        };
+
+        getDimensionFailed = function () {
+            eraseDimension();
+        };
+
+        dimensionIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDimension = true;
+                getDimension(field.getValue(), "", false);
+            }
+        };
+
+        dimensionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDimension = true;
+                getDimension("", field.getValue(), false);
+            }
+        };
+
+        dimensionIDBlur = function (dimensionID) {
+            console.log(bPreventGetDimension);
+            if (!bPreventGetDimension) {
+                bPreventGetDimension = true;
+                if (dimensionID.trim() == "")
+                    getDimensionFailed();
+                else
+                    getDimension(dimensionID, "", true);
+            }
+            bPreventGetDimension = false;
+        };
+
+        dimensionDescBlur = function (dimensionDesc) {
+            if (!bPreventGetDimension) {
+                bPreventGetDimension = true;
+                if (dimensionDesc.trim() == "")
+                    getDimensionFailed();
+                else
+                    getDimension("", dimensionDesc, true);
+            }
+            bPreventGetDimension = false;
+        };
+
+        eraseDimension = function () {
+            App.DimensionID.clear();
+            App.DimensionDesc.clear();
+            App.DimensionID.originalValue = "";
+            App.DimensionDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PUoMForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FUoM")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.UoMID)
+                .FieldLabel(UoMVM.Prop.UoMID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.UoMDesc)
+                .FieldLabel(UoMVM.Prop.UoMDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.DimensionID)
+                        .FieldLabel(UoMVM.Prop.DimensionDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "dimensionIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "dimensionIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.DimensionDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "dimensionDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "dimensionDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseDimension
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseDimension.Handler("eraseDimension")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

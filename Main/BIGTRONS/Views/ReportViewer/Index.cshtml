@@ -1,0 +1,98 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Models
+@model SReport
+@{
+    ViewBag.Title = "Report";
+    var X = Html.X();
+    var bodyPadding = 10;
+    var labelWidth = 150;
+    var fieldWidth = 380;
+}
+
+@section head{
+    <script>
+        hideMainContainer = function () {
+            App.MainContainer.setHidden(true);
+        };
+
+        showMainContainer = function () {
+            App.MainContainer.setHidden(false);
+        };
+
+        $(window).resize(function () {
+            App.MainContainer.doLayout(true);
+            App.ChildContainer.doLayout(true);
+            App.GrandChildContainer.doLayout(true);
+        });
+    </script>
+}
+@section title{
+    @ViewBag.Title
+}
+@section body{
+
+    @(X.Panel()
+    .ID("PReport")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FPReport")
+        .Padding(bodyPadding)
+        .Items(
+            X.Container()
+                .Layout(LayoutType.HBox)
+                .Items(
+                   X.ComboBoxFor(model => model.ReportID)
+                    .FieldLabel("Report Name")
+                    .LabelWidth(labelWidth)
+                    .Width(fieldWidth)
+                    .DisplayField(General.GetVariableName(() => Model.ReportDesc))
+                    .ValueField(General.GetVariableName(() => Model.ReportViewName))
+                    .Store(
+                        X.StoreForModel()
+                            .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("GetReportList"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                    .AutoLoad(true)
+                    )
+                    .DirectEvents(events =>
+                    {
+                        events.Change.Action = "LoadReport";
+                        events.Change.EventMask.ShowMask = true;
+                        events.Change.ExtraParams.AddRange(new Parameter[]
+                        {
+                            new Parameter()
+                            {
+                                Name = General.GetVariableName(() => Model.ReportViewName),
+                                Value =  "App.ReportID.getValue()",
+                                Mode = ParameterMode.Raw,
+                                Encode = true
+                            }
+                        });
+                    })
+                )
+            )
+        )
+    )
+
+    @(X.Container()
+        .ID(General.EnumDesc(Params.PageContainer))
+        .Loader(X.ComponentLoader()
+            .Mode(LoadMode.Script)
+            .AutoLoad(false)
+            .Url(Url.Action("RentDetails"))
+        )
+    )
+
+    @(X.Container()
+        .ID(General.EnumDesc(Params.HomePage))
+    )
+
+    @(X.Container()
+        .ID(General.EnumDesc(Params.PageOne))
+    )
+}
+

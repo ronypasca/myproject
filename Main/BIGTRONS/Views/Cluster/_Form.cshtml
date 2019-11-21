@@ -1,0 +1,164 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ClusterVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ProjectID.Name, ClusterVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ProjectDesc.Name, ClusterVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    <script>
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+        };
+
+        getProjectFailed = function () {
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PClusterForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FCluster")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ClusterID)
+                .FieldLabel(ClusterVM.Prop.ClusterID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ClusterDesc)
+                .FieldLabel(ClusterVM.Prop.ClusterDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.ProjectID)
+                        .FieldLabel(ClusterVM.Prop.ProjectDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "projectIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "projectIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.ProjectDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "projectDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "projectDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseProject
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseProject.Handler("eraseProject")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

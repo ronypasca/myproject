@@ -1,0 +1,91 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<FPTStatusVM>
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 250;
+
+}
+@(
+    X.GridPanel()
+        .ID("grdFPTStatusVM")
+        .View(
+        Html.X()
+        .GridView()
+        )
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadStatus"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                 .ExtraParams(ep =>
+                        ep.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = FPTStatusVM.Prop.FPTID.Name,
+                                Value = ViewData[FPTStatusVM.Prop.FPTID.Name] == null ? string.Empty : ViewData[FPTStatusVM.Prop.FPTID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                    )
+            )
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(false)
+            //.PageSize(iPageSize)
+            .SorterFor(Model, model => model.CreatedDate, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+        X.Column()
+        .Text("Status ID")
+        .Hidden(true)
+        .DataIndex(Model, model => model.FPTStatusID)
+        .Flex(4),
+        X.DateColumn()
+        .Text("Date Created")
+        .Hidden(true)
+        .DataIndex(Model, model => model.CreatedDate)
+        .Flex(4)
+        .Format(global_asax.DefaultDateTimeFormat),
+        X.DateColumn()
+        .Text("Date")
+        .DataIndex(Model, model => model.StatusDateTimeStamp)
+        .Flex(4)
+        .Format(global_asax.DefaultDateTimeFormat),
+        X.Column()
+        .Text("Desciptions")
+        .DataIndex(Model, model => model.StatusDesc)
+        .Flex(4),
+        X.Column()
+        .Text("Remarks")
+        .DataIndex(Model, model => model.Remarks)
+        .Flex(4),
+        X.Column()
+        .Text("Updated By")
+        .DataIndex(Model, model => model.ModifiedBy)
+        .Flex(4)
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+
+
+
+)

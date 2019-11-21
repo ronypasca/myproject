@@ -1,0 +1,32 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@using com.SML.BIGTRONS.ViewModels;
+@{
+    var X = Html.X();
+    string sPageName = "Add";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonAdd), ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter(MinutesEntryVM.Prop.ListMinutesValues.Name, "App.grdEntryValues.getRowsValues()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(MinutesEntryVM.Prop.ListRecipients.Name, "getListAttendance()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(MinutesEntryVM.Prop.ListNotificationValues.Name, "App.grdNotificationValues.getRowsValues()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, null, true, false, false, Buttons.ButtonSave, oParamList, "beforeSave", "reloadGrid");
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMinutesEntry.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonList, ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null);
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true);
+}
+@(btnSave)
+@(btnCancel)
+@(btnList.Hidden(ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonList)))

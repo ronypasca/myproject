@@ -1,0 +1,223 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<RecipientsVM>
+@{
+    var X = Html.X();
+    string sPageName = "Recipient";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdReipient", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GrdScheduleRecipient", "grdReipient", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseRecipient", "Add", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+        
+    Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "BrowseRecipient", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+    Button.Builder btnPreBuilRec = global_asax.Button(Buttons.ButtonList, "BrowsePreBuild", "Pre-Build Recipients", "../PreBuiltRecipient/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdNegotiationConfigurations()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdNegotiationConfigurations();
+        });
+
+        resizeGrdNegotiationConfigurations = function () {
+            if (App.grdReipient != null)
+                App.grdReipient.setHeight($(window).height() - App.grdReipient.getY() - (App.grdReipient.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeb = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+            if(FromDetail !== 'Detail'){
+                App.ButtonDeleteRecipient.setDisabled(length<1);
+            }
+        };
+
+        deleteSuccess = function () {
+            App.grdReipient.getStore().reload();
+        };
+
+        deleteSelectedRecipients = function(){
+            App.grdReipient.getStore().remove(App.grdReipient.getSelectionModel().getSelection());
+        };
+        GetSelectedBusinessUn = function(){
+            var data = [];
+            data.push(App.BusinessUnitID.value);
+            return data;
+        };
+        GetSelectedBusinessUnit = function (){
+            var node = App.treePanelNegoConfig.getRootNode().childNodes;
+
+            if(App.isFromUpload.getValue()){
+                node =[];
+                node.push(App.treePanelNegoConfigUpload.getRootNode());
+            }
+            var data = [];
+            for(var x in node)
+            {
+                prjNode = node[x];
+                /*GetProjectList*/
+                /*if(prjNode.data.include){ */
+                    for(var bpNode in prjNode.childNodes)
+                    {
+                        if(prjNode.childNodes[bpNode].data.include && prjNode.childNodes[bpNode].data.itemtype=="BudgetPlanID"){
+                            data.push(prjNode.childNodes[bpNode].data.tctype);
+                        }
+                    }
+                    /*data = GetChildListBU(data,node[x].childNodes); */
+                /*}*/
+            };
+            return data;
+        };
+        var GetChildListBU = function(data,node){
+            if(node!=undefined){
+                for(var x in node)
+                {
+                    if(node[x].data.include && node[x].data.itemtype=="BudgetPlan"){
+                        data.push(node[x].data);
+                    }
+                };
+            }
+            return data;
+        };
+        GetListRecipients = function(){
+            var data = [];
+            for(var x in App.grdReipient.store.data.items)
+            {
+                data.push(App.grdReipient.store.data.items[x].data);
+            }
+            return data;
+        };
+        
+       
+
+        GetTCType = function(){
+            ;
+            var ret = App.TCType.getValue();
+            if(ret == null)
+            {
+                ret="";
+            }
+            return ret;
+        };
+        
+       
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdReipient")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeb(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelRecipientList")
+                .Fields(
+            X.ModelField().Name(Model, model => model.OwnerID),
+            X.ModelField().Name(Model, model => model.RecipientDesc),
+            X.ModelField().Name(Model, model => model.RecipientTypeID),
+            X.ModelField().Name(Model, model => model.MailAddress)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(RecipientsVM.Prop.OwnerID.Desc)
+        .DataIndex(Model, model => model.OwnerID)
+        .Flex(1)
+        .Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        ),
+        X.ComponentColumn()
+                .Editor(true)
+                .DataIndex(Model, model => model.RecipientTypeID)
+                .Flex(1)
+                .Text("Type")
+                .Component(Html.X().ComboBox()
+                    .Items(
+                        new ListItem("To", 1),
+                        new ListItem("Cc", 2),
+                        new ListItem("Bcc", 3)
+                    )
+                ),
+        X.Column()
+        .Text("Email").Flex(2)
+        .DataIndex(Model, model => model.MailAddress)
+        .Hidden(false),
+        X.Column()
+        .Text("Name")
+        .DataIndex(Model, model => model.RecipientDesc)
+        .Flex(4)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+            btnDelete.Disabled(true).Handler("deleteSelectedRecipients();"),
+            btnPreBuilRec.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == "Detail")
+
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

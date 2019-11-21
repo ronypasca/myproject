@@ -1,0 +1,295 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sPanelPaddingSpec = "10 0 0 0";
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemID.Name, ItemVersionVM.Prop.ItemID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemDesc.Name, ItemVersionVM.Prop.ItemDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemTypeDesc.Name, ItemVersionVM.Prop.ItemTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemGroupDesc.Name, ItemVersionVM.Prop.ItemGroupDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.Version.Name, ItemVersionVM.Prop.Version.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.VersionDesc.Name, ItemVersionVM.Prop.VersionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterUPA", true.ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItem = global_asax.Button(Buttons.ButtonBrowse, "Item", "", "../Item/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItem = global_asax.Button(Buttons.ButtonErase, "Item", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemID.Name, "CFP" + ItemVersionVM.Prop.ItemID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.ItemDesc.Name, "CFP" + ItemVersionVM.Prop.ItemDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionVM.Prop.Version.Name, "CFP" + ItemVersionVM.Prop.Version.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + ItemVersionVM.Prop.ItemTypeID.Name, "AHS", ParameterMode.Value,true);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItemUPA = global_asax.Button(Buttons.ButtonBrowse, "ItemUPA", "", "../UnitPriceAnalysis/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItemUPA = global_asax.Button(Buttons.ButtonErase, "ItemUPA", "", "", true);
+
+    oParam = new Parameter(General.EnumDesc(Params.Caller), "GetData", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "{ ItemID: App.CFPItemID.getValue(), Version: App.CFPVersion.getValue() }", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnGetData = global_asax.Button(Buttons.ButtonDetail, "ButtonGetData", "Get Data", "Add", true, false, false, null, oParamList);
+
+    <script>
+        var bPreventGetItem = false;
+
+        getItem = function (ItemID, ItemDesc, exact) {
+            if (App.ItemID.isDirty() || App.ItemDesc.isDirty()) {
+                App.ItemID.originalValue = App.ItemID.getValue();
+                App.ItemDesc.originalValue = App.ItemDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItem", "Item"))',
+                    params: {
+                        ControlItemID: App.ItemID.id,
+                        ControlItemDesc: App.ItemDesc.id,
+                        ControlItemGroupDesc: App.ItemGroupDesc.id,
+                        ControlItemTypeDesc: App.ItemTypeDesc.id,
+                        ControlVersionDesc: App.VersionDesc.id,
+                        FilterItemID: ItemID,
+                        FilterItemDesc: ItemDesc,
+                        FilterUPA: true,
+                        Exact: exact
+                    },
+                    success: getItemSuccess,
+                    failure: getItemFailed
+                });
+            }
+        };
+
+        getItemSuccess = function () {
+            if (!App.ItemID.isDirty() && !App.ItemDesc.isDirty()) {
+                App.ItemID.originalValue = "";
+                App.ItemDesc.originalValue = "";
+            }
+            bPreventGetItem = false;
+        };
+
+        getItemFailed = function () {
+            eraseItem();
+        };
+
+        ItemIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItem = true;
+                getItem(field.getValue(), "", false);
+            }
+        };
+
+        ItemDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItem = true;
+                getItem("", field.getValue(), false);
+            }
+        };
+
+        ItemIDBlur = function (ItemID) {
+            console.log(bPreventGetItem);
+            if (!bPreventGetItem) {
+                bPreventGetItem = true;
+                if (ItemID.trim() == "")
+                    getItemFailed();
+                else
+                    getItem(ItemID, "", true);
+            }
+            bPreventGetItem = false;
+        };
+
+        ItemDescBlur = function (ItemDesc) {
+            if (!bPreventGetItem) {
+                bPreventGetItem = true;
+                if (ItemDesc.trim() == "")
+                    getItemFailed();
+                else
+                    getItem("", ItemDesc, true);
+            }
+            bPreventGetItem = false;
+        };
+
+        eraseItem = function () {
+            App.ItemID.clear();
+            App.ItemDesc.clear();
+            App.ItemGroupDesc.clear();
+            App.ItemTypeDesc.clear();
+            App.VersionDesc.clear();
+            App.ItemID.originalValue = "";
+            App.ItemDesc.originalValue = "";
+        };
+    </script>
+
+    <script>
+
+        var formatHours = function (v) {
+            if (v < 1) {
+                return Math.round(v * 60) + " mins";
+            } else if (Math.floor(v) !== v) {
+                var min = v - Math.floor(v);
+                return Math.floor(v) + "h " + Math.round(min * 60) + "m";
+            } else {
+                return v + " hour" + (v === 1 ? "" : "s");
+            }
+        };
+
+        var handler = function (grid, rowIndex, colIndex, actionItem, event, record, row) {
+            showErrorAlert('Editing' + (record.get('done') ? ' completed task' : ''), record.get('task'));
+        };
+
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PItemVersionForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FCopyFromPrevious")
+        .Collapsible(true)
+        .Collapse()
+        .Title("Copy From Previous")
+        .Padding(iBodyPadding)
+        .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+        .Items(
+             X.FieldContainer()
+            .FieldLabel("")
+            .LabelWidth(0)
+            .Width(iFieldWidth)
+            .Layout(LayoutType.Column)
+            .PaddingSpec(sPanelPaddingSpec)
+            .Items(
+                    X.TextField().ID("CFP" + ItemVersionVM.Prop.ItemID.Name)
+                    .FieldLabel(ItemVersionVM.Prop.ItemID.Desc)
+                    //.ReadOnly(isDisableButton || isDisableVersion)
+                    .Listeners(oListeners =>
+                    {
+                        oListeners.SpecialKey.Handler = "ItemIDSpecialKey(item, e);";
+                        oListeners.Blur.Handler = "ItemIDBlur(this.getValue());";
+                    })
+                    .LabelWidth(iLabelWidth)
+                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                X.TextField().ID("CFP" + ItemVersionVM.Prop.ItemDesc.Name)
+                    .FieldLabel("")
+                    //.ReadOnly(isDisableButton || isDisableVersion)
+                    .Listeners(oListeners =>
+                    {
+                        oListeners.SpecialKey.Handler = "ItemDescSpecialKey(item, e);";
+                        oListeners.Blur.Handler = "ItemDescBlur(this.getValue());";
+                    })
+                    .LabelWidth(0)
+                    .Width((iFieldWidth - iLabelWidth) / 2)
+                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                    .RightButtons(
+                            btnBrowseItemUPA
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate)),
+                            btnEraseItemUPA.Handler("eraseItem")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        )
+                    ),
+             X.TextField().ID("CFP" + ItemVersionVM.Prop.Version.Name)
+                .FieldLabel(ItemVersionVM.Prop.Version.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+            )
+        .BottomBar(X.Toolbar().Items(btnGetData).PaddingSpec(sToolbarPaddingSpec)),
+        X.FormPanel()
+        .ID("FItemVersion")
+        .Padding(iBodyPadding)
+        .Collapsible(true)
+        .Title("Unit Price Analysis")
+        .Items(
+
+            X.Hidden().ID("IsCopy").Value(ViewData["IsCopy"].ToString()),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .PaddingSpec(sPanelPaddingSpec)
+                .Items(
+                    X.TextFieldFor(model => model.ItemID)
+                        .FieldLabel(ItemVersionVM.Prop.ItemID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ItemIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ItemIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.ItemDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ItemDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ItemDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseItem
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate)),
+                            btnEraseItem.Handler("eraseItem")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        )
+                ),
+            X.TextFieldFor(model => model.VersionDesc)
+                .FieldLabel(ItemVersionVM.Prop.VersionDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ItemTypeDesc)
+                .FieldLabel(ItemVersionVM.Prop.ItemTypeDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ItemGroupDesc)
+                .FieldLabel(ItemVersionVM.Prop.ItemGroupDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Version)
+                .FieldLabel(ItemVersionVM.Prop.Version.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.Panel().ID("ItemVersionStructure")
+            .MarginSpec("10 0 0 0")
+            .Frame(true)
+            .Title("Structure")
+            .Collapsible(true)
+            .ItemsFromPartial("Structure/_List", Model, ViewData)
+            .Padding(10),
+            X.Panel().ID("ItemVersionSimulation")
+            .MarginSpec("10 0 0 0")
+            .Frame(true)
+            .Title("Simulation")
+            .Collapsible(true)
+            .ItemsFromPartial("Simulation/_Form", Model, ViewData)
+            .Padding(10)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

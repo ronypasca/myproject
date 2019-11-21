@@ -1,0 +1,162 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model DivisionVM
+@{
+   
+    var X = Html.X();
+    string sPageName = "Division";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectDivisionBrowse('" + ViewData["Control" + DivisionVM.Prop.DivisionID.Name]
+        + "', '" + ViewData["Control" + DivisionVM.Prop.DivisionDesc.Name]
+        + "', App.grdDivisionBrowse.getRowsValues({selectedOnly:true})[0]['" + DivisionVM.Prop.DivisionID.Name + "']"
+        + ", App.grdDivisionBrowse.getRowsValues({selectedOnly:true})[0]['" + DivisionVM.Prop.DivisionDesc.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdDivisionBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdDivisionBrowse();
+        });
+
+        resizeGrdDivisionBrowse = function () {
+            if (App.grdDivisionBrowse != null)
+                App.grdDivisionBrowse.setHeight($(window).height() - App.grdDivisionBrowse.getY() - (App.grdDivisionBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionDivisionChange = function (length) {
+            App.ButtonSelectDivision.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, DivisionID, DivisionDesc) {
+            filter.fields[0].items.items[0].setValue(DivisionID);
+            filter.fields[1].items.items[0].setValue(DivisionDesc);
+        };
+
+        selectDivisionBrowse = function (ControlDivisionID, ControlDivisionDesc, DivisionID, DivisionDesc) {
+            if (Ext.getCmp(ControlDivisionID) != undefined) {
+                Ext.getCmp(ControlDivisionID).setValue(DivisionID);
+                Ext.getCmp(ControlDivisionID).originalValue = DivisionID;
+            }
+            if (Ext.getCmp(ControlDivisionDesc) != undefined) {
+                Ext.getCmp(ControlDivisionDesc).setValue(DivisionDesc);
+                Ext.getCmp(ControlDivisionDesc).originalValue = DivisionDesc;
+            }
+            App.WinBrowseDivision.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseDivision")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdDivisionBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionDivisionChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[DivisionVM.Prop.DivisionID.Name].ToString() + "', '" + ViewData[DivisionVM.Prop.DivisionDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "Division"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(ep =>
+                        ep.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = BusinessUnitVM.Prop.BusinessUnitID.Name,
+                                Value = ViewData[BusinessUnitVM.Prop.BusinessUnitID.Name] == null ? string.Empty : ViewData[BusinessUnitVM.Prop.BusinessUnitID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                    )
+            )
+            .AutoLoad(ViewData[DivisionVM.Prop.DivisionID.Name].ToString() == "" && ViewData[DivisionVM.Prop.DivisionDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.DivisionID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(DivisionVM.Prop.DivisionID.Desc)
+            .DataIndex(Model, model => model.DivisionID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(DivisionVM.Prop.DivisionDesc.Desc)
+            .DataIndex(Model, model => model.DivisionDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

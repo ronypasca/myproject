@@ -1,0 +1,151 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model RegionVM
+@{
+    
+    var X = Html.X();
+    string sPageName = "Region";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectRegionBrowse('" + ViewData["Control" + RegionVM.Prop.RegionID.Name]
+        + "', '" + ViewData["Control" + RegionVM.Prop.RegionDesc.Name]
+        + "', App.grdRegionBrowse.getRowsValues({selectedOnly:true})[0]['" + RegionVM.Prop.RegionID.Name + "']"
+        + ", App.grdRegionBrowse.getRowsValues({selectedOnly:true})[0]['" + RegionVM.Prop.RegionDesc.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdRegionBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdRegionBrowse();
+        });
+
+        resizeGrdRegionBrowse = function () {
+            if (App.grdRegionBrowse != null)
+                App.grdRegionBrowse.setHeight($(window).height() - App.grdRegionBrowse.getY() - (App.grdRegionBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionRegionChange = function (length) {
+            App.ButtonSelectRegion.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, regionID, regionDesc) {
+            filter.fields[0].items.items[0].setValue(regionID);
+            filter.fields[1].items.items[0].setValue(regionDesc);
+        };
+
+        selectRegionBrowse = function (ControlRegionID, ControlRegionDesc, RegionID, RegionDesc) {
+            if (Ext.getCmp(ControlRegionID) != undefined) {
+                Ext.getCmp(ControlRegionID).setValue(RegionID);
+                Ext.getCmp(ControlRegionID).originalValue = RegionID;
+            }
+            if (Ext.getCmp(ControlRegionDesc) != undefined) {
+                Ext.getCmp(ControlRegionDesc).setValue(RegionDesc);
+                Ext.getCmp(ControlRegionDesc).originalValue = RegionDesc;
+            }
+            App.WinBrowseRegion.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseRegion")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdRegionBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionRegionChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[RegionVM.Prop.RegionID.Name].ToString() + "', '" + ViewData[RegionVM.Prop.RegionDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "Region"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[RegionVM.Prop.RegionID.Name].ToString() == "" && ViewData[RegionVM.Prop.RegionDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.RegionID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(RegionVM.Prop.RegionID.Desc)
+            .DataIndex(Model, model => model.RegionID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(RegionVM.Prop.RegionDesc.Desc)
+            .DataIndex(Model, model => model.RegionDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

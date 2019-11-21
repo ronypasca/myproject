@@ -1,0 +1,14 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@using com.SML.BIGTRONS.ViewModels
+@{
+    var X = Html.X();
+    string sPageName = "Detail";
+    string Status = ViewData[StatusVM.Prop.StatusID.Name].ToString();
+    //Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonDetail);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonDetail);
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdNegotiationConfigurations.getStore().reload()", null);
+}
+@*@(btnAdd)*@
+@(btnUpdate.Disabled(Status != "4" && Status != "1" && Status != "3"))
+@(btnList)

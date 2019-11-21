@@ -1,0 +1,139 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemParameterVM>
+@{
+    ViewBag.Title = "Parameter";
+    var X = Html.X();
+    int iGridMinHeight = 150;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemParameter()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemParameter();
+        });
+
+        resizeGrdItemParameter = function () {
+            if (App.grdItemParameter != null)
+                App.grdItemParameter.updateLayout();
+                /*App.grdItemParameter.setHeight($(window).height() - App.grdItemParameter.getY() - (App.grdItemParameter.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeItemParameter = function (length) {
+        };
+
+        var editItemParameter = function (editor, e) {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        var beforeEditItemParameter = function (editor, e) {
+            if("@isDisableButton" == "True")
+                return false;
+
+            App.grdItemParameter.setSelection(e.rowIndex);
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdItemParameter")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeItemParameter(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelItemParameter")
+                .Fields(
+            X.ModelField().Name(Model, model => model.ParameterID),
+            X.ModelField().Name(Model, model => model.ParameterDesc),
+            X.ModelField().Name(Model, model => model.Value)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(ItemParameterVM.Prop.ParameterDesc.Desc)
+        .DataIndex(Model, model => model.ParameterDesc)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(ItemParameterVM.Prop.Value.Desc)
+        .DataIndex(Model, model => model.Value)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+        .Editor(
+            X.TextField()
+            .SubmitValue(true)
+            .HideTrigger(true)
+            .ID("ColValue")
+            .AllowBlank(false)
+            )
+            
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true),
+         X.CellEditing()
+             .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editItemParameter")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditItemParameter")
+                .ID("rowEditorItemParameter")
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

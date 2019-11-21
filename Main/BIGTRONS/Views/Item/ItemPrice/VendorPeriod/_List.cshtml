@@ -1,0 +1,560 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemPriceVendorPeriodVM>
+@{
+    ViewBag.Title = "Item Price Vendor Period";
+    var X = Html.X();
+    string sPageName = "HomeItemPriceVendorPeriod";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemPriceVendorPeriodVM.Prop.CurrencyID.Name, ItemPriceVendorPeriodVM.Prop.CurrencyID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemPriceVendorPeriodVM.Prop.CurrencyDesc.Name, ItemPriceVendorPeriodVM.Prop.CurrencyDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCurrency = global_asax.Button(Buttons.ButtonBrowse, "Currency", "", "../Currency/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCurrency = global_asax.Button(Buttons.ButtonErase, "Currency", "", "", true);
+
+    var hdnTextFieldCurrencyID = X.Hidden().ID(ItemPriceVendorPeriodVM.Prop.CurrencyID.Name);
+    var hdnTextFieldCurrencyDesc = X.Hidden().ID(ItemPriceVendorPeriodVM.Prop.CurrencyDesc.Name);
+    var hdnTextFieldListVendorPeriod = X.Hidden().ID(ItemPriceVM.Prop.ListItemPriceVendorPeriodVM.Name);
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, string.Empty, true);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+
+    <script>
+        var sTitleItemPriceVendorPeriod = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemPriceVendorPeriod()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemPriceVendorPeriod();
+        });
+
+        resizeGrdItemPriceVendorPeriod = function () {
+            if (App.grdItemPriceVendorPeriod != null)
+                App.grdItemPriceVendorPeriod.updateLayout();
+        };
+
+        selectionChangeItemPriceVendorPeriod = function (length) {
+            App.ButtonDeleteHomeItemPriceVendorPeriod.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdItemPriceVendorPeriod.getStore().reload();
+        };
+
+        deleteRowItemPriceVendorPeriod = function()
+        {
+            showMsgDeleteConfirmVendorPeriod();
+        };
+
+        showMsgDeleteConfirmVendorPeriod= function(){
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "deleteConfirmVendorPeriod"
+            });
+            return;
+        };
+
+        deleteConfirmVendorPeriod= function(btn){
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("DeleteItemPriceVendorPeriod", "Item"))',
+                    params: {
+                        Selected: App.grdItemPriceVendorPeriod.getRowsValues({ selectedOnly: true })
+                    },
+                    success: function (result) {
+                    },
+                    callback:function(){
+                        /*App.grdItemPriceVendorPeriod.getStore().reload();*/
+                        
+                        App.grdItemPriceVendorPeriod.getStore().remove(App.grdItemPriceVendorPeriod.getSelectionModel().getSelection());
+                        var record = App.grdItemPriceVendor.getRowsValues({selectedOnly:true})[0];
+
+                        recalculateValidTo();
+                    }
+                });
+            }
+        };
+
+        editItemPriceVendorPeriod = function (editor, e) {
+
+            /*Check Start Date*/
+            if(e.field=="ValidFrom"){
+                if(e.record.data.ValidTo!== null){
+                    if(e.record.data.ValidTo < e.record.data.ValidFrom){
+                        e.record.set('ValidFrom','');
+                        return false;
+                    }
+                }
+                else if(duplicateValidFrom()){
+                    e.record.set('ValidFrom','');
+                    return false; 
+                }
+                else if(App.grdItemPriceVendorPeriod.getStore().data.items.length>1)
+                {
+                    var beforeRow = App.grdItemPriceVendorPeriod.getStore().data.items[App.grdItemPriceVendorPeriod.getStore().data.items.length-2];
+                    
+                    if(beforeRow.data.ValidFrom >= e.record.data.ValidFrom){
+                        e.record.set('ValidFrom','');
+                        return false;
+                    } 
+                }
+            
+
+                App.grdItemPriceVendorPeriod.getStore().sort({ property: 'ValidFrom', direction: 'ASC' });
+                recalculateValidTo();
+
+            }
+
+            /*Check End Date*/
+            if(e.field=="ValidTo"){
+                if(e.record.data.ValidFrom!== null){
+                    if(e.record.data.ValidTo < e.record.data.ValidFrom){
+                        e.record.set('ValidTo','');
+                        return false;
+                    }
+                }
+                else if(App.grdItemPriceVendorPeriod.getStore().data.items.length>1)
+                {
+                    var beforeRow = App.grdItemPriceVendorPeriod.getStore().data.items[App.grdItemPriceVendorPeriod.getStore().data.items.length-2];
+                    if(beforeRow.data.ValidFrom > e.record.data.ValidTo){
+                        e.record.set('ValidTo','');
+                        return false;
+                    } 
+                }
+                
+                
+                
+            }
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        beforeEditItemPriceVendorPeriod = function (editor, e) {
+            if("@isDetailButton"== "True")
+                return false;
+            if("@isDisableButton" == "True")
+                if(e.record.get("ItemPriceID") != undefined)
+                if(e.field == "CurrencyDesc")
+                    return false;
+
+            App.grdItemPriceVendorPeriod.getSelectionModel().select(e.record);
+        };
+
+        addItemPriceVendorPeriod = function(){
+            var recordItemPriceVendor = App.grdItemPriceVendor.getRowsValues({selectedOnly:true})[0];
+
+            if(recordItemPriceVendor.VendorID==""){
+                showWarningAlert(sTitleItemPriceVendor, Ext.String.format("@(ItemPriceVendorVM.Prop.VendorID.Desc) @(General.EnumDesc(MessageLib.mustFill))" ) );
+                return false;
+            }
+            if(!duplicateVendorID()){
+                var model = new ModelItemPriceVendorPeriod({
+                    VendorID: recordItemPriceVendor.VendorID,
+                    VendorDesc: recordItemPriceVendor.VendorDesc,
+                    ValidFrom: "",
+                    /*ValidTo: new Date(9999, 11, 31),*/
+                    ValidTo:"",
+                    CurrencyID : "",
+                    CurrencyDesc : "",
+                    Amount: ""
+                });
+                App.grdItemPriceVendorPeriod.store.add(model);
+                loadGridItemPriceVendorPeriod(recordItemPriceVendor.VendorID);
+            }
+        };
+
+        var setCurrencyID = function (rowIndex) {
+            var value = App.CurrencyID.getValue();
+            if (value != null && value != "") {
+                var record = App.grdItemPriceVendorPeriod.store.getAt(rowIndex);
+                record.set('CurrencyID', value);
+                record.commit();
+                App.CurrencyID.setValue("");
+            }
+        };
+
+        var setCurrencyDesc = function (rowIndex) {
+            var value = App.CurrencyDesc.getValue();
+            if (value != null && value != "") {
+                var record = App.grdItemPriceVendorPeriod.store.getAt(rowIndex);
+                record.set('CurrencyDesc', value);
+                record.commit();
+                App.CurrencyDesc.setValue("");
+            }
+        };
+
+
+        viewReady = function (grid, record) {
+            var store = grid.store;
+
+            store.clearFilter();
+
+            App.ListItemPriceVendorPeriodVM.setValue(JSON.stringify(grid.getRowsValues()));
+
+            store.filterBy(function(row, id){
+                return row.get('VendorID') === "-";
+            });
+        };
+
+        recalculateValidTo = function (){
+            var tempValidTo;
+            var tempValidFrom;
+            var tempRecord;
+            var rowID = 0;
+            App.grdItemPriceVendorPeriod.getStore().sort({ property: 'ValidFrom', direction: 'ASC' });
+            var allRecords = App.grdItemPriceVendorPeriod.getStore().data.items;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+                    /*row.set("ValidTo",new Date(9999, 11, 31));
+                    row.commit();*/
+                    if(rowID>0){
+                        
+                        /*var compareValidFrom = dateFromJSON(row.data.ValidFrom.valueOf())  > App.grdItemPriceVendorPeriod.getStore().getAt(rowID-1).data.ValidFrom;
+                        */
+                        var compareValidTo = App.grdItemPriceVendorPeriod.getStore().getAt(rowID-1).data.ValidTo>dateFromJSON(row.data.ValidFrom.valueOf());
+                        
+                        if(compareValidTo)
+                        {
+                            var record = App.grdItemPriceVendorPeriod.getStore().getAt(rowID-1);
+                            tempValidFrom = dateFromJSON(row.data.ValidFrom.valueOf());
+                            tempValidTo = tempValidFrom.setDate(tempValidFrom.getDate() - 1);
+                            record.set("ValidTo",new Date(tempValidTo));
+                            record.commit();
+                        }
+                    }
+                }
+                rowID++;
+            }
+        };
+
+        duplicateVendorID = function(){
+            var store =App.grdItemPriceVendor.getStore();
+            var allRecords = store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+
+                    if (isDuplicatedVendor(store, 'VendorID', row.get("VendorID"), rowIdx)) {
+                        if(row["VendorDesc"]==""||row["VendorDesc"] == undefined) showWarningAlert(sTitleItemPriceVendor, "cannot duplicate vendor!" );
+                        else showWarningAlert(sTitleItemPriceVendor, Ext.String.format("{0} has been exist on the list, cannot duplicate vendor!",row.get("VendorDesc")) );
+
+                        return true;
+                        break;
+                    }
+                }
+                rowIdx++;
+            }
+
+            return false;
+        };
+
+
+        duplicateValidFrom = function(){
+            var store =App.grdItemPriceVendorPeriod.getStore();
+            var allRecords = store.allData.items;
+            var rowIdx=0;
+            for (var rowKey in allRecords) {
+                if (allRecords.hasOwnProperty(rowKey)) {
+                    var row = allRecords[rowKey];
+
+                    if (isDuplicatedValidFrom(store, 'ValidFrom', row.get("ValidFrom"), rowIdx)) {
+                        if(row["ValidFrom"]==""||row["ValidFrom"] == undefined) showWarningAlert(sTitleItemPriceVendor, "cannot duplicate Start!" );
+                        else showWarningAlert(sTitleItemPriceVendorPeriod, Ext.String.format("{0} has been exist on the list!",row.get("ValidFrom")) );
+
+                        return true;
+                        break;
+                    }
+                }
+                rowIdx++;
+            }
+
+            return false;
+        };
+
+        isDuplicatedValidFrom = function (store, colName, value, rowIndex) {
+            var found = false;
+            store.each(function (record, idx) {
+                if ((idx != rowIndex) && record.data.hasOwnProperty(colName))
+                    if (found = (record.data[colName].getTime() == value.getTime()) ? true : false) { return false };
+            });
+            return found;
+        };
+
+        var eraseCurrency = function (rowIndex) {
+            var record = App.grdItemPriceVendorPeriod.store.getAt(rowIndex);
+            record.set("CurrencyID", "");
+            record.set("CurrencyDesc", "");
+            record.commit();
+
+            App.CurrencyID.clear();
+            App.CurrencyDesc.clear();
+        };
+    </script>
+    var grdItemPriceVendorPeriod = X.GridPanel()
+        .ID("grdItemPriceVendorPeriod")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Single)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.ViewReady.Fn = "viewReady";
+            oListener.SelectionChange.Handler = (!isDetailButton ? "selectionChangeItemPriceVendorPeriod(selected.length)" : "");
+        })
+        .Store(
+                X.Store()
+                .AutoLoad(true)
+                .RemoteSort(false)
+                .RemotePaging(true)
+                .RemoteFilter(false)
+                .PageSize(iPageSize)
+                .DataSource(Model)
+                .Model(
+                    X.Model()
+                    .Name("ModelItemPriceVendorPeriod")
+                    .Fields(
+                        X.ModelField().Name(Model, model => model.ItemPriceID),
+                        X.ModelField().Name(Model, model => model.VendorID),
+                        X.ModelField().Name(Model, model => model.VendorDesc),
+                        X.ModelField().Name(Model, model => model.ValidFrom).Type(ModelFieldType.Date),
+                        X.ModelField().Name(Model, model => model.ValidTo).Type(ModelFieldType.Date),
+                        X.ModelField().Name(Model, model => model.CurrencyID),
+                        X.ModelField().Name(Model, model => model.CurrencyDesc),
+                        X.ModelField().Name(Model, model => model.Amount)
+                    )
+                )
+            )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.VendorID.Desc)
+            .DataIndex(Model, model => model.VendorID)
+            .Flex(3)
+            .Hidden(true)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )),
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.VendorDesc.Desc)
+            .DataIndex(Model, model => model.VendorDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )),
+            X.DateColumn()
+            .Text(ItemPriceVendorPeriodVM.Prop.ValidFrom.Desc)
+            .DataIndex(Model, model => model.ValidFrom)
+            .Flex(3)
+            .Format(global_asax.DefaultDateFormat)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueDateRange", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.DateField()
+                    .Flex(1)
+                    .Format(global_asax.DefaultDateFormat)
+                    .HideTrigger(true)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Blur.Handler = "this.triggerEl.hide();";
+                        oListener.Focus.Handler = "this.triggerEl.show();";
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    }),
+                    X.DateField()
+                    .Flex(1)
+                    .Format(global_asax.DefaultDateFormat)
+                    .HideTrigger(true)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Blur.Handler = "this.triggerEl.hide();";
+                        oListener.Focus.Handler = "this.triggerEl.show();";
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                ))
+            .Editor(
+                X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .ID("ColValidForm")
+            ),
+            X.DateColumn()
+            .Text(ItemPriceVendorPeriodVM.Prop.ValidTo.Desc)
+            .DataIndex(Model, model => model.ValidTo)
+            .Flex(3)
+            .Format(global_asax.DefaultDateFormat)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueDateRange", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.DateField()
+                    .Flex(1)
+                    .Format(global_asax.DefaultDateFormat)
+                    .HideTrigger(true)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Blur.Handler = "this.triggerEl.hide();";
+                        oListener.Focus.Handler = "this.triggerEl.show();";
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    }),
+                    X.DateField()
+                    .Flex(1)
+                    .Format(global_asax.DefaultDateFormat)
+                    .HideTrigger(true)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Blur.Handler = "this.triggerEl.hide();";
+                        oListener.Focus.Handler = "this.triggerEl.show();";
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )                
+            )
+            .Editor(
+                X.DateField()
+                    .Format(global_asax.DefaultDateFormat)
+                    .SubmitValue(true)
+                    .ID("ColValidTo")
+            ),
+            X.Column()
+            .Text(ItemPriceVendorPeriodVM.Prop.CurrencyDesc.Desc)
+            .DataIndex(Model, model => model.CurrencyDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                ))
+             .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ReadOnly(true)
+                    .ID("ColCurrency")
+                    .AllowBlank(false)
+                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                    .RightButtons(
+                        btnBrowseCurrency,
+                        btnEraseCurrency.Handler("eraseCurrency(App.grdItemPriceVendorPeriod.store.indexOf(App.grdItemPriceVendorPeriod.getSelectionModel().getSelection()[0]));")
+                    ).AllowBlank(false)
+             ),
+            X.NumberColumn()
+            .Text(ItemPriceVendorPeriodVM.Prop.Amount.Desc)
+            .DataIndex(Model, model => model.Amount)
+            .Flex(3)
+            .Format(global_asax.IntegerNumberFormat)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                ))
+
+            .Format(global_asax.IntegerNumberFormat)
+            .Editor(
+                X.NumberField()
+                .ID("ColAmount")
+                .SubmitValue(true)
+                .HideTrigger(true)
+                .EnforceMaxLength(true)
+                .MinValue(1)
+                .MaxLength(16)
+                .DecimalPrecision(4)
+                .SpinDownEnabled(false)
+                .SpinUpEnabled(false)
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(false),
+            X.CellEditing()
+                .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editItemPriceVendorPeriod")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditItemPriceVendorPeriod")
+                .ID("rowEditorItemPriceVendorPeriod")
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd.Disabled(true)
+                .Handler("addItemPriceVendorPeriod();"),
+                btnDelete.Disabled(true)
+                .Handler("deleteRowItemPriceVendorPeriod()")
+
+
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        );
+}
+@(
+    X.Panel()
+    .ID("pnlGridItemPriceVendorPeriod")
+    .Items(
+        hdnTextFieldCurrencyID.Listeners(ls => ls.Change.Handler = "setCurrencyID(App.grdItemPriceVendorPeriod.store.indexOf(App.grdItemPriceVendorPeriod.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldCurrencyDesc.Listeners(ls => ls.Change.Handler = "setCurrencyDesc(App.grdItemPriceVendorPeriod.store.indexOf(App.grdItemPriceVendorPeriod.getSelectionModel().getSelection()[0]))"),
+        hdnTextFieldListVendorPeriod,
+        grdItemPriceVendorPeriod
+    )
+
+)

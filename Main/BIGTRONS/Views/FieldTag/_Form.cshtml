@@ -1,0 +1,65 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FieldTagReferenceVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+
+    <script>
+
+        BlurFieldTagID = function (field, eOpts) {
+            value = field.getValue();
+
+            value = value.replace().replace(/\s/g, "");
+            value = value.replace(/(\b[a-z](?!\s))/g, function (letter) {
+                return letter.toUpperCase();
+            });
+            console.log(value);
+            field.setValue(value.trim());
+        };
+    </script>
+    
+}
+@(
+    X.Panel()
+    .ID("PFunctionForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FFunction")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.FieldTagID)
+                .FieldLabel(FieldTagReferenceVM.Prop.FieldTagID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Listeners(l=> { l.Blur.Fn = "BlurFieldTagID"; }),
+            X.TextFieldFor(model => model.TagDesc)
+                .FieldLabel(FieldTagReferenceVM.Prop.TagDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+              X.TextFieldFor(model => model.RefTable)
+                .FieldLabel(FieldTagReferenceVM.Prop.RefTable.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+                X.TextFieldFor(model => model.RefIDColumn)
+                .FieldLabel(FieldTagReferenceVM.Prop.RefIDColumn.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

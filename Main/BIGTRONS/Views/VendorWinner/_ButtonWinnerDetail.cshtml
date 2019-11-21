@@ -1,0 +1,10 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+        
+}
+
+@(X.Label().Html("<span class='legendbox' style='background-color:green;'>&nbsp;</span><i> Acceptable</i>").Cls("lblhigherinfo"))
+@(X.Label().Html("<span class='legendbox' style='background-color:blue;' ;>&nbsp;</span><i> Below Standard Cost</i>").Cls("lblhigherinfo"))
+@(X.Label().Html("<span class='legendbox' style='background-color:red;'>&nbsp;</span><i> Higher than Standard Cost</i>").Cls("lblhigherinfo"))

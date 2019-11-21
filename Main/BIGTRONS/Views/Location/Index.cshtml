@@ -1,0 +1,44 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model LocationVM
+@{
+    
+    var X = Html.X();
+
+}
+@section title{
+    @ViewBag.Title
+}
+@section head{
+    <script>
+        $(window).resize(function () {
+            resizeContainer();
+        });
+
+        resizeContainer = function () {
+            App.HomePage.updateLayout(true);
+            App.PageOne.updateLayout(true);
+            App.PageTwo.updateLayout(true);
+        };
+    </script>
+}
+@section body{
+    @(
+        X.Container()
+        .ActiveIndex(0)
+        .Cls("pagecontainer")
+        .ID(General.EnumDesc(Params.PageContainer))
+        .Layout(LayoutType.Card)
+        .Items(
+            X.Container().ID(General.EnumName(Params.HomePage))
+            .Loader(
+                X.ComponentLoader()
+                .Url(Url.Action("List"))
+                .Mode(LoadMode.Script)
+            ),
+            X.Container().ID(General.EnumName(Params.PageOne)),
+            X.Container().ID(General.EnumName(Params.PageTwo))
+        )
+    )
+}

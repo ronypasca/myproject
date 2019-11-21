@@ -1,0 +1,218 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ApprovalDelegationVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    int iGridMinHeight = 250;
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + TaskTypesVM.Prop.TaskGroupID.Name, TaskTypesVM.Prop.TaskGroupID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + TaskTypesVM.Prop.TaskGroupDesc.Name, TaskTypesVM.Prop.TaskGroupDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseTaskGroup = global_asax.Button(Buttons.ButtonBrowse, "TaskGroup", "", "../ApprovalDelegation/" + General.EnumDesc(Buttons.ButtonBrowse)+"TaskGroup", true, false, false, null, oParamList);
+    Button.Builder btnEraseTaskGroup = global_asax.Button(Buttons.ButtonErase, "TaskGroup", "", "", true);
+
+    Button.Builder btnAddDelegationUser = global_asax.Button(Buttons.ButtonAdd, "TaskGroup", "", "", true);
+
+    bool isReadOnly = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate);
+
+    <script>
+    var bPreventGetTaskGroup = false;
+
+    getTaskGroup = function (taskgroupID, taskgroupDesc, exact) {
+        if (App.TaskGroupID.isDirty() || App.TaskGroupDesc.isDirty()) {
+            App.TaskGroupID.originalValue = App.TaskGroupID.getValue();
+            App.TaskGroupDesc.originalValue = App.TaskGroupDesc.getValue();
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetTaskGroup", "TaskGroup"))',
+                params: {
+                    ControlTaskGroupID: App.TaskGroupID.id,
+                    ControlTaskGroupDesc: App.TaskGroupDesc.id,
+                    FilterTaskGroupID: taskgroupID,
+                    FilterTaskGroupDesc: taskgroupDesc,
+                    Exact: exact
+                },
+                success: getTaskGroupSuccess,
+                failure: getTaskGroupFailed
+            });
+        }
+        else
+            console.log("not dirty");
+    };
+
+    getTaskGroupSuccess = function () {
+        if (!App.TaskGroupID.isDirty() && !App.TaskGroupDesc.isDirty()) {
+            App.TaskGroupID.originalValue = "";
+            App.TaskGroupDesc.originalValue = "";
+        }
+        bPreventGetTaskGroup = false;
+    };
+
+    getTaskGroupFailed = function () {
+        eraseTaskGroup();
+    };
+
+    taskgroupIDSpecialKey = function (field, event) {
+    if (event.getKey() == event.ENTER) {
+    bPreventGetTaskGroup = true;
+    getTaskGroup(field.getValue(), "", false);
+    }
+    };
+
+    taskgroupDescSpecialKey = function (field, event) {
+    if (event.getKey() == event.ENTER) {
+    bPreventGetTaskGroup = true;
+    getTaskGroup("", field.getValue(), false);
+    }
+    };
+
+    taskgroupIDBlur = function (taskgroupID) {
+    console.log(bPreventGetTaskGroup);
+    if (!bPreventGetTaskGroup) {
+        bPreventGetTaskGroup = true;
+        if (taskgroupID.trim() == "")
+            getTaskGroupFailed();
+        else
+            getTaskGroup(taskgroupID, "", true);
+    }
+    bPreventGetTaskGroup = false;
+    };
+
+    taskgroupDescBlur = function (taskgroupDesc) {
+        if (!bPreventGetTaskGroup) {
+            bPreventGetTaskGroup = true;
+            if (taskgroupDesc.trim() == "")
+                getTaskGroupFailed();
+            else
+                getTaskGroup("", taskgroupDesc, true);
+        }
+        bPreventGetTaskGroup = false;
+    };
+
+    eraseTaskGroup = function () {
+        App.TaskGroupID.clear();
+        App.TaskGroupDesc.clear();
+        App.TaskGroupID.originalValue = "";
+        App.TaskGroupDesc.originalValue = "";
+    };
+
+    selectStartDate = function (e, value) {
+        if (value > App.PeriodEnd.value && App.PeriodEnd.value != null)
+            App.PeriodStart.setValue(null);
+    };
+
+    selectEndDate = function (e, value) {
+        if (value < App.PeriodStart.value && App.PeriodStart.value != null)
+            App.PeriodEnd.setValue(null);
+    };
+
+
+    </script>
+
+}
+@(
+        X.Panel()
+        .ID("PApprovalDelegationForm")
+        .Frame(true)
+        .Items(
+            X.FormPanel()
+            .ID("FApprovalDelegation")
+            .Padding(iBodyPadding)
+            .Items(
+                X.TextFieldFor(model => model.ApprovalDelegateID).Hidden(true),
+                X.TextFieldFor(model => model.UserID).Hidden(true),
+                X.TextFieldFor(model => model.OwnerName)
+                    .FieldLabel(ApprovalDelegationVM.Prop.OwnerName.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.FieldContainer()
+                    .FieldLabel("")
+                    .LabelWidth(0)
+                    .Width(iFieldWidth)
+                    .Layout(LayoutType.Column)
+                    .Items(
+                        X.TextFieldFor(model => model.TaskGroupID)
+                            .FieldLabel(ApprovalDelegationVM.Prop.TaskGroupDesc.Desc)
+                            .ReadOnly(isReadOnly)
+                            .Listeners(oListeners => {
+                                oListeners.SpecialKey.Handler = "taskgroupIDSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "taskgroupIDBlur(this.getValue());";
+                            })
+                            .LabelWidth(iLabelWidth)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                        X.TextFieldFor(model => model.TaskGroupDesc)
+                            .FieldLabel("")
+                            .ReadOnly(isReadOnly)
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.SpecialKey.Handler = "taskgroupDescSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "taskgroupDescBlur(this.getValue());";
+                            })
+                            .LabelWidth(0)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                            .RightButtons(
+                                btnBrowseTaskGroup
+                                .Disabled(isReadOnly),
+                                btnEraseTaskGroup.Handler("eraseTaskGroup")
+                                .Disabled(isReadOnly)
+                            )
+                    ),
+            X.DateFieldFor(model => model.PeriodStart)
+                .Format("d MMM yyyy")
+                .FieldLabel(ApprovalDelegationVM.Prop.PeriodStart.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .Listeners(l => l.Select.Fn = "selectStartDate")
+                .LabelWidth(iLabelWidth)
+                .MinDate(DateTime.Now)
+                .Width(iFieldWidth),
+            X.DateFieldFor(model => model.PeriodEnd)
+                .Format("d MMM yyyy")
+                .FieldLabel(ApprovalDelegationVM.Prop.PeriodEnd.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .Listeners(l => l.Select.Fn = "selectEndDate")
+                .LabelWidth(iLabelWidth)
+                .MinDate(DateTime.Now)
+                .Width(iFieldWidth),
+             X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .PaddingSpec("50 0 0 0")
+                .Width(1200)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.FormPanel()
+                        .ID("panelDelegateUser_")
+                        .Title("Delegation User List")
+                        .Collapsible(false)
+                        .Width(600)
+                        .ItemsFromPartial("ListDelegationUser/_List", Model.lstApprovalDelegationUser, ViewData)
+                        .Padding(iBodyPadding)
+                    , X.FormPanel()
+                        .ID("panelTaskType_")
+                        .Title("Task Type")
+                        .Collapsible(false)
+                        .Width(600)
+                        .ItemsFromPartial("ListTaskType/_List", new List<TaskTypesVM>(), ViewData)
+                        .Padding(iBodyPadding)
+                )
+            )
+            .TopBar(
+                X.Toolbar()
+                .PaddingSpec(sToolbarPaddingSpec)
+                .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+            )
+        )
+
+)

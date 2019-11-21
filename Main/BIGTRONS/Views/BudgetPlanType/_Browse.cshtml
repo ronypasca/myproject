@@ -1,0 +1,151 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanTypeVM
+@{
+    ViewBag.Title = "BudgetPlanType";
+    var X = Html.X();
+    string sPageName = "BudgetPlanType";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectBudgetPlanTypeBrowse('" + ViewData["Control" + BudgetPlanTypeVM.Prop.BudgetPlanTypeID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTypeVM.Prop.BudgetPlanTypeDesc.Name]
+        + "', App.grdBudgetPlanTypeBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTypeVM.Prop.BudgetPlanTypeID.Name + "']"
+        + ", App.grdBudgetPlanTypeBrowse.getRowsValues({selectedOnly:true})[0]['" + BudgetPlanTypeVM.Prop.BudgetPlanTypeDesc.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlanTypeBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdBudgetPlanTypeBrowse();
+        });
+
+        resizeGrdBudgetPlanTypeBrowse = function () {
+            if (App.grdBudgetPlanTypeBrowse != null)
+                App.grdBudgetPlanTypeBrowse.setHeight($(window).height() - App.grdBudgetPlanTypeBrowse.getY() - (App.grdBudgetPlanTypeBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionBudgetPlanTypeChange = function (length) {
+            App.ButtonSelectBudgetPlanType.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, budgetplantypeID, budgetplantypeDesc) {
+            filter.fields[0].items.items[0].setValue(budgetplantypeID);
+            filter.fields[1].items.items[0].setValue(budgetplantypeDesc);
+        };
+
+        selectBudgetPlanTypeBrowse = function (ControlBudgetPlanTypeID, ControlBudgetPlanTypeDesc, BudgetPlanTypeID, BudgetPlanTypeDesc) {
+            if (Ext.getCmp(ControlBudgetPlanTypeID) != undefined) {
+                Ext.getCmp(ControlBudgetPlanTypeID).setValue(BudgetPlanTypeID);
+                Ext.getCmp(ControlBudgetPlanTypeID).originalValue = BudgetPlanTypeID;
+            }
+            if (Ext.getCmp(ControlBudgetPlanTypeDesc) != undefined) {
+                Ext.getCmp(ControlBudgetPlanTypeDesc).setValue(BudgetPlanTypeDesc);
+                Ext.getCmp(ControlBudgetPlanTypeDesc).originalValue = BudgetPlanTypeDesc;
+            }
+            App.WinBrowseBudgetPlanType.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseBudgetPlanType")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdBudgetPlanTypeBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionBudgetPlanTypeChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[BudgetPlanTypeVM.Prop.BudgetPlanTypeID.Name].ToString() + "', '" + ViewData[BudgetPlanTypeVM.Prop.BudgetPlanTypeDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "BudgetPlanType"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[BudgetPlanTypeVM.Prop.BudgetPlanTypeID.Name].ToString() == "" && ViewData[BudgetPlanTypeVM.Prop.BudgetPlanTypeDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.BudgetPlanTypeID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(BudgetPlanTypeVM.Prop.BudgetPlanTypeID.Desc)
+            .DataIndex(Model, model => model.BudgetPlanTypeID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTypeVM.Prop.BudgetPlanTypeDesc.Desc)
+            .DataIndex(Model, model => model.BudgetPlanTypeDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

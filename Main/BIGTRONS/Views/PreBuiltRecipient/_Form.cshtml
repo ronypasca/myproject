@@ -1,0 +1,252 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model PreBuiltRecipientTemplateVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPanelPaddingSpec = "10 0 0 0";
+    List<Parameter> oParamList;
+    Parameter oParam;
+    //Button Function
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, FunctionsVM.Prop.FunctionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    //oParam = new Parameter("Filter" + FPTVM.Prop.FPTID.Name, "App.FPTID.value", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    Button.Builder btnBrowseFunctions = global_asax.Button(Buttons.ButtonBrowse, "Function", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseFunctions = global_asax.Button(Buttons.ButtonErase, "Functions", "", "", true);
+
+    <script>
+        var bPreventGetFunctions = false;
+
+        getFunctions = function (FunctionID, FunctionDesc, exact) {
+            if (App.FunctionID.isDirty() || App.FunctionDesc.isDirty()) {
+                App.FunctionID.originalValue = App.FunctionID.getValue();
+                App.FunctionDesc.originalValue = App.FunctionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetFunctions", "Functions"))',
+                    params: {
+                        ControlFunctionID: App.FunctionID.id,
+                        ControlFunctionDesc: App.FunctionDesc.id,
+                        FilterFunctionID: FunctionID,
+                        FilterFunctionDesc: FunctionDesc,
+                        Exact: exact
+                    },
+                    success: getFunctionsSuccess,
+                    failure: getFunctionsFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getFunctionsSuccess = function () {
+            if (!App.FunctionID.isDirty() && !App.FunctionDesc.isDirty()) {
+                App.FunctionID.originalValue = "";
+                App.FunctionDesc.originalValue = "";
+            }
+            bPreventGetFunctions = false;
+            
+
+        };
+
+        getFunctionsFailed = function () {
+            App.FunctionID.clear();
+            App.FunctionDesc.clear();
+            App.FunctionID.originalValue = "";
+            App.FunctionDesc.originalValue = "";
+        };
+
+        FunctionIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFunctions = true;
+                getFunctions(field.getValue(), "", false);
+            }
+        };
+
+        FunctionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFunctions = true;
+                getFunctions("", field.getValue(), false);
+            }
+        };
+
+        FunctionIDBlur = function (FunctionID) {
+            console.log(bPreventGetFunctions);
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionID.trim() == "")
+                    getFunctionsFailed();
+                else
+                    getFunctions(FunctionID, "", true);
+            }
+            bPreventGetFunctions = false;
+        };
+
+        FunctionDescBlur = function (FunctionDesc) {
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionDesc.trim() == "")
+                    getFunctionsFailed();
+                else
+                    getFunctions("", FunctionDesc, true);
+            }
+            bPreventGetFunctions = false;
+        };
+        FunctionsChange = function () {
+            
+        };
+        FunctionIDChange = function (field, e, eOpts) {
+            FunctionID = field.getValue();
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionID.trim() == "")
+                    getFunctionsFailed();
+                else {
+
+                    if (FunctionID != field.originalValue) {
+                        
+                    }
+                }
+            }
+            bPreventGetFunctions = false;
+        };
+
+        FunctionDescChange = function (field, e, eOpts) {
+            FunctionDesc = field.getValue();
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionDesc.trim() == "")
+                    getFunctionsFailed();
+                else {
+
+                    if (FunctionDesc != field.originalValue) {
+                        
+                    }
+                }
+            }
+            bPreventGetFunctions = false;
+        };
+
+        eraseFunctions = function () {
+            App.FunctionID.clear();
+            App.FunctionDescription.clear();
+            App.FunctionID.originalValue = "";
+            App.FunctionDescription.originalValue = "";
+        };
+
+        eraseTemplate = function () {
+            App.NotificationTemplateID.value.clear();
+            App.NotificationTemplateDesc.clear();
+            App.NotificationTemplateID.value.originalValue = "";
+            App.NotificationTemplateDesc.originalValue = "";
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+        eraseFPT = function () {
+            App.FPTID.clear();
+            App.FPTDescription.clear();
+            App.FPTID.originalValue = "";
+            App.FPTDescription.originalValue = "";
+        };
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+        };
+
+    </script>
+
+}
+@(
+    X.Panel()
+    .ID("PNotificationTemplateForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FNotificationTemplate")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.PreBuildRecTemplateID)
+                .FieldLabel(PreBuiltRecipientTemplateVM.Prop.PreBuildRecTemplateID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PreBuildDesc)
+                .FieldLabel(PreBuiltRecipientTemplateVM.Prop.PreBuildDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 2 items
+                            .Items(
+                                X.TextFieldFor(model => model.FunctionID)
+                                .FieldLabel("Functions")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FunctionIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FunctionIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "FunctionIDChange";
+                                })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FunctionDesc)
+                                    .FieldLabel("")
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    //.ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "FunctionDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "FunctionDescBlur(this.getValue());";
+                                        oListeners.Change.Fn = "FunctionDescChange";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseFunctions
+                                        //.Disabled(true),
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseFunctions.Handler("eraseFunctions")
+                                        //.Disabled(true)
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                            ),
+            X.CheckboxFor(model => model.IsPIC)
+                .FieldLabel(PreBuiltRecipientTemplateVM.Prop.IsPIC.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+             X.Panel()
+                .ID("pnlPreBuiltRecipient")
+                .Title("Recipient")
+                .Collapsible(true)
+                .ItemsFromPartial("Recipient/_List", Model.LstRecipient, ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

@@ -1,0 +1,307 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model NegotiationConfigurationsVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdNegotiationConfigurations.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdNegotiationConfigurations.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdNegotiationConfigurations.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteSuccess()");
+    Button.Builder btnVerify = global_asax.Button(Buttons.ButtonVerify, sPageName, null, string.Empty, true);
+    Button.Builder btnUnverify = global_asax.Button(Buttons.ButtonUnverify, sPageName, null, string.Empty, true);
+
+
+    //Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, "", null, "");
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdNegotiationConfigurations()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdNegotiationConfigurations();
+        });
+
+        resizeGrdNegotiationConfigurations = function () {
+            if (App.grdNegotiationConfigurations != null)
+                App.grdNegotiationConfigurations.setHeight($(window).height() - App.grdNegotiationConfigurations.getY() - (App.grdNegotiationConfigurations.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangea = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonVerifyHome.setDisabled(length != 1);          
+            if(length==1){
+                var Status = App.grdNegotiationConfigurations.getSelection()[0].data.StatusID;
+                @*Only can update if Draft(4),Reject(3) or Revise(1)*@
+                App.ButtonVerifyHome.setDisabled(Status!=4 && Status !=1 && Status !=3); 
+                App.ButtonUpdateHome.setDisabled(Status!=4 && Status !=1 && Status !=3);
+            };
+        };
+
+        deleteSuccess = function () {
+            App.grdNegotiationConfigurations.getStore().reload();
+        };
+
+        showMsgConfirmVerify= function(){
+            debugger;
+            Ext.Msg.show({
+                message: "You're going to verify current Configuration.</br>Do you want to continue?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+        verifyConfirm= function(btn){
+            if (btn == "yes") {
+                /* */
+                Ext.getBody().mask('Loading');
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Verify", "NegotiationConfigurations"))',
+                    params: {
+                        Selected: App.grdNegotiationConfigurations.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        App.grdNegotiationConfigurations.getStore().reload();
+                        Ext.getBody().unmask();
+                    }
+                });
+            }
+        };
+      
+        @*showMsgConfirmUnverify= function(){
+            Ext.Msg.show({
+                message: "You're going to Un-verify current Configuration.</br>"+
+                         "Do you want to continue?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "unverifyConfirm"
+            });
+            return;
+        };
+
+        unverifyConfirm= function(btn){
+            if (btn == "yes") {
+               
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("UnVerify", "NegotiationConfigurations"))',
+                    params: {
+                        Selected: App.grdNegotiationConfigurations.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        App.grdNegotiationConfigurations.getStore().reload();
+                    }
+                });
+            }
+        };*@
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdNegotiationConfigurations")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangea(selected.length)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.NegotiationConfigID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.NegotiationConfigID.Desc)
+        .DataIndex(Model, model => model.NegotiationConfigID)
+        .Flex(1).Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.FPTID.Desc)
+        .DataIndex(Model, model => model.FPTID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.FPTDesc.Desc)
+        .DataIndex(Model, model => model.FPTDesc)
+        .Flex(4)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.StatusDesc.Desc)
+        .DataIndex(Model, model => model.StatusDesc)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.FPTStatusID.Desc)
+        .DataIndex(Model, model => model.FPTStatusID)
+        .Hidden(true)
+        ,
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.FPTStatusDesc.Desc)
+        .DataIndex(Model, model => model.FPTStatusDesc)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+          
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.TaskID.Desc)
+        .DataIndex(Model, model => model.TaskID)
+        .Flex(3)
+        .Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.CurrentApprovalLvl.Desc)
+        .DataIndex(Model, model => model.CurrentApprovalLvl)
+        .Hidden(true)
+        ,
+        X.Column()
+        .Text(NegotiationConfigurationsVM.Prop.ParameterValue.Desc)
+        .DataIndex(Model, model => model.ParameterValue)
+        .Flex(3)
+        .Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd,
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnVerify.Disabled(true).Handler("showMsgConfirmVerify()")
+            //,btnUnverify.Disabled(true).Handler("showMsgConfirmUnverify()")//,
+                                                                          //btnDelete.Disabled(true),
+                                                                          //btnExport.Handler("exportGrid(App.grdNegotiationConfigurations, false, true, 'NegotiationConfigurations', 'xls', 'NegotiationConfigurations');")
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

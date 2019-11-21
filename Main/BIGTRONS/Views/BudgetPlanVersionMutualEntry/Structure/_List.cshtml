@@ -1,0 +1,389 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.Controllers
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanVersionEntryVM
+@{
+    ViewBag.Title = "Budget Plan Version Entry - Budget Plan Structure";
+    var X = Html.X();
+    string sPageName = "HomeBudgetPlanVersionStructure";
+    string sToolbarPaddingSpec = "10 10 10 0";
+    int iTreeMinHeight = 200;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnCollapseExpandAll = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlanVersionStructure()", 1);
+
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+        });
+
+        var resizeGrdBudgetPlanVersionStructure = function () {
+            if (App.treePanelBudgetVersionStructure != null){
+                var iHeight = $(window).height() - (App.treePanelBudgetVersionStructure.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelBudgetVersionStructure.setHeight(iHeight);
+            }
+        };
+
+        var selectionChangeBudgetPlanVersionStructure = function (view, record, eOpts) {
+            App.ButtonAddHomeBudgetPlanVersionStructure.setDisabled(view.getSelection().length != 1);
+            App.ButtonReverseHomeBudgetPlanVersionStructure.setDisabled(false);
+            App.ButtonUpdateHomeBudgetPlanVersionStructure.setDisabled(true);
+            App.ButtonDeleteHomeBudgetPlanVersionStructure.setDisabled(true);
+            console.log(record);
+            if(record[0]!=null && record[0] != undefined)
+                if(record[0].data.isboi){
+                    App.ButtonDeleteHomeBudgetPlanVersionStructure.setDisabled(false);
+                }else{
+                    App.ButtonUpdateHomeBudgetPlanVersionStructure.setDisabled(false);
+                }
+        };
+
+        var BoldingData= function(vl, metaData, record, rowIndex, colIndex, store, view)
+        {
+            var ret=vl;
+            if (record.data.bold) {
+                ret = '<span style="font-weight:bold">'+ vl +'</span>';
+            };
+
+            return ret;
+        };
+
+        var BoldingDataNumber= function(vl, metaData, record, rowIndex, colIndex, store, view)
+        {
+            
+            try {
+                /*vl = (vl.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g,"$1,");*/
+                vl = (vl.toFixed(0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            } catch(e) {
+
+            }
+
+            var ret=vl;
+            if (record.data.bold) {
+                ret = '<span style="font-weight:bold">'+ vl +'</span>';
+            };
+
+            return ret;
+        };
+
+        var editBudgetPlanVersionStructure = function (editor, e) {
+            debugger;
+            if (e.field != "info") {
+                var material = ((e.record.get == "undefined" || e.record.get("materialamount") == null) ? 0 : e.record.get("materialamount"));
+                var wage = ((e.record.get == "undefined" || e.record.get("wageamount") == null) ? 0 : e.record.get("wageamount"));
+                var misc = ((e.record.get == "undefined" || e.record.get("miscamount") == null) ? 0 : e.record.get("miscamount"));
+                var volume = ((e.record.get == "undefined" || e.record.get("volume") == null) ? 0 : e.record.get("volume"));
+
+                var totalunitprice=material+wage+misc;
+                var total=totalunitprice*volume;
+
+                
+                if (totalunitprice==0) {
+                    e.record.set("totalunitprice","");
+                }else
+                    e.record.set("totalunitprice",totalunitprice);
+                if (total==0) {
+                    e.record.set("total",null);
+                }else
+                    e.record.set("total",total);
+
+                var node=e.record.parentNode;
+                while (node!=null) {
+                    var _total=0;
+                    for (var i = 0; i < node.childNodes.length; i++) {
+                        _total+=node.childNodes[i].get("total");
+                    }
+                    if (_total==0) {
+                        node.set("total",null);
+                    }else
+                        node.set("total",_total);
+
+                    
+                    App.treePanelBudgetVersionStructure.store.getNodeById(node.id).commit();
+
+                    node=node.parentNode;
+
+                }
+
+                var Rootnode = App.treePanelBudgetVersionStructure.store.getNodeById("root");
+                var valueGrandTotal=0;
+                for (var i = 0; i < Rootnode.childNodes.length - 2; i++) {
+                    valueGrandTotal=valueGrandTotal+Rootnode.childNodes[i].data.total;
+                }
+                
+                /*
+                App.treePanelBudgetVersionStructure.store.getNodeById("GrandTotal").set("total",valueGrandTotal);
+                App.treePanelBudgetVersionStructure.store.getNodeById("FeePercentage").set("total",valueGrandTotal*App.FeePercentage.value/100);
+                App.treePanelBudgetVersionStructure.store.getNodeById("Total").set("total",valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal);
+                App.treePanelBudgetVersionStructure.store.getNodeById("Rounding").set("total",Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000);
+                App.treePanelBudgetVersionStructure.store.getNodeById("PPN10").set("total",Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*100);
+                App.treePanelBudgetVersionStructure.store.getNodeById("GrandTotalChild").set("total",(Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*100)+(Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000));
+                App.treePanelBudgetVersionStructure.store.getNodeById("Luas").set("total",App.Area.value);
+                App.treePanelBudgetVersionStructure.store.getNodeById("HargaDasar1").set("total",valueGrandTotal/App.Area.value);
+                App.treePanelBudgetVersionStructure.store.getNodeById("HargaDasar2").set("total",(valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/App.Area.value);
+                App.treePanelBudgetVersionStructure.store.getNodeById("HargaDasar3").set("total",((Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*100)+(Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000))/App.Area.value);
+                    */
+
+            }else {
+                e.record.commit();
+            }
+        };
+
+        var beforeEditBudgetPlanVersionStructure = function (editor, e) {
+            debugger;
+            if ("@isDisableButton" == "True") {
+                return false;
+            }
+            if (e.record.data.additional) {
+                return false;
+            }
+            return e.record.data.leaf;
+        };
+
+        var handleCollapseExpandAll = function(btn){
+            var btnCollapseID = '@General.EnumName(Buttons.ButtonCollapse)@sPageName';
+            var btnExpandID = '@General.EnumDesc(Buttons.ButtonExpand)@sPageName';
+
+            if(btn.id== btnCollapseID ){
+                btn.setId(btnExpandID);
+                btn.setText('@General.EnumDesc(Buttons.ButtonExpand)');
+                App.treePanelBudgetVersionStructure.collapseAll();
+            }else{
+                btn.setId(btnCollapseID);
+                btn.setText('@General.EnumDesc(Buttons.ButtonCollapse)');
+                App.treePanelBudgetVersionStructure.expandAll();
+            }
+            return;
+        };
+
+        var viewReady = function (grid, eOpts) {
+            var data =new Array();
+
+            var nodes = getDeepAllChildNodes(App.treePanelBudgetVersionStructure.getRootNode());
+            for (var i = 0; i < nodes.length; i++) {
+                if(nodes[i].data.id != 'root')
+                if(nodes[i].data.hasOwnProperty('info')){
+                    data.push(nodes[i].data);
+                    if(nodes[i].data.vendorid != App.VendorID.getValue()){
+                        nodes[i].remove();
+                    }
+                }
+            }
+
+
+        };
+
+        var getDeepAllChildNodes = function(node){
+            var allNodes = new Array();
+            if(node==null || node==undefined){
+                return [];
+            }
+
+            if(!node.hasChildNodes()){
+                return node;
+            }else{
+                allNodes.push(node);
+                node.eachChild(function(Mynode){allNodes = allNodes.concat(getDeepAllChildNodes(Mynode));});
+            }
+            return allNodes;
+        };
+
+    </script>
+}
+@(
+
+        X.TreePanel()
+        .ID("treePanelBudgetVersionStructure")
+        .Padding(iBodyPadding)
+        .MinHeight(iTreeMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+        )
+        .RowLines(true)
+        .ColumnLines(true)
+        .UseArrows(true)
+        .RootVisible(false)
+        .Expand(true)
+        .SortableColumns(false)
+        .FolderSort(false)
+        .AutoScroll(true)
+        .Fields(
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.ItemDesc.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.BudgetPlanID.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.BudgetPlanVersion.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.BudgetPlanVersionStructureID.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Specification.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Info.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.UoMDesc.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Volume.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.MaterialAmount.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.WageAmount.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Total.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.TotalUnitPrice.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.MiscAmount.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Sequence.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.VendorID.Name.ToLower()),
+            X.ModelField().Name("bold")
+        )
+        .ColumnModel(
+            X.Column().DataIndex(BudgetPlanVersionEntryVM.Prop.VendorID.Name.ToLower()).Hidden(true),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.Sequence.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Sequence.Name.ToLower())
+                .Flex(2),
+            X.TreeColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.ItemDesc.Desc)
+                .Flex(3)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.ItemDesc.Name.ToLower())
+                .Renderer("BoldingData"),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.Specification.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Specification.Name.ToLower())
+                .Flex(2),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.Info.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Info.Name.ToLower())
+                .Flex(2)
+                .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("ColInfo")
+                    .AllowBlank(false)
+                ),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.UoMDesc.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.UoMDesc.Name.ToLower())
+                .Flex(1),
+            X.NumberColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.Volume.Desc)
+                .Align(ColumnAlign.End)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Volume.Name.ToLower())
+                .Format(global_asax.DefaultNumberFormat)
+                .Editor(
+                    X.NumberField()
+                        .ID("ColVolume")
+                        .SubmitValue(true)
+                        .HideTrigger(true)
+                        .EnforceMaxLength(true)
+                        .MinValue(1)
+                        .MaxLength(4)
+                        .DecimalPrecision(4)
+                        .SpinDownEnabled(false)
+                        .SpinUpEnabled(false)
+                    )
+                .Flex(1),
+            X.Column()
+                .Text("Unit Price")
+                .Flex(2)
+                .Columns(
+                    X.NumberColumn()
+                    .Text(BudgetPlanVersionEntryVM.Prop.MaterialAmount.Desc)
+                    .Align(ColumnAlign.End)
+                    .DataIndex(BudgetPlanVersionEntryVM.Prop.MaterialAmount.Name.ToLower())
+                    .Format(global_asax.IntegerNumberFormat)
+                    .Editor(
+                             X.NumberField()
+                                 .ID("ColMaterial")
+                                 .SubmitValue(true)
+                                 .HideTrigger(true)
+                                 .EnforceMaxLength(true)
+                                 .MinValue(1)
+                                 .MaxLength(16)
+                                 .DecimalPrecision(4)
+                                 .SpinDownEnabled(false)
+                                 .SpinUpEnabled(false)
+                        ),
+                    X.NumberColumn()
+                        .Text(BudgetPlanVersionEntryVM.Prop.WageAmount.Desc)
+                        .Align(ColumnAlign.End)
+                        .DataIndex(BudgetPlanVersionEntryVM.Prop.WageAmount.Name.ToLower())
+                        .Format(global_asax.IntegerNumberFormat)
+                        .Editor(
+                             X.NumberField()
+                                 .ID("ColWage")
+                                 .SubmitValue(true)
+                                 .HideTrigger(true)
+                                 .EnforceMaxLength(true)
+                                 .MinValue(1)
+                                 .MaxLength(16)
+                                 .DecimalPrecision(4)
+                                 .SpinDownEnabled(false)
+                                 .SpinUpEnabled(false)
+                        ),
+                    X.NumberColumn()
+                        .Text(BudgetPlanVersionEntryVM.Prop.MiscAmount.Desc)
+                        .Align(ColumnAlign.End)
+                        .DataIndex(BudgetPlanVersionEntryVM.Prop.MiscAmount.Name.ToLower())
+                        .Format(global_asax.IntegerNumberFormat)
+                        .Editor(
+                             X.NumberField()
+                                 .ID("ColMisc")
+                                 .SubmitValue(true)
+                                 .HideTrigger(true)
+                                 .EnforceMaxLength(true)
+                                 .MinValue(1)
+                                 .MaxLength(16)
+                                 .DecimalPrecision(4)
+                                 .SpinDownEnabled(false)
+                                 .SpinUpEnabled(false)
+                        )
+                ),
+            X.NumberColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.TotalUnitPrice.Desc)
+                .Align(ColumnAlign.End)
+                .Layout(LayoutType.HBox)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.TotalUnitPrice.Name.ToLower())
+                .Format(global_asax.IntegerNumberFormat)
+                .Flex(2),
+            X.NumberColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.Total.Desc)
+                .Align(ColumnAlign.End)
+                .Layout(LayoutType.HBox)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Total.Name.ToLower())
+                .Format(global_asax.IntegerNumberFormat)
+                .Flex(2)
+                .Renderer("BoldingDataNumber")
+        )
+      .Listeners(listener =>
+      {
+          //listener.AfterRender.Fn = "afterRenderTree";
+          //listener.BeforeLoad.Handler = "loadTreePanel()";
+          listener.ViewReady.Fn = "viewReady";
+          //listener.AfterItemExpand.Fn = "afterItemExpand";
+          //listener.SelectionChange.Fn = (!isDisableButton ? "selectionChangeBudgetPlanVersionStructure" : "");
+
+      })
+    .Root(
+         (Node)Model.ListBudgetPlanVersionStructureVM
+         )
+    .Plugins(
+         X.CellEditing()
+             .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editBudgetPlanVersionStructure")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditBudgetPlanVersionStructure")
+                .ID("rowEditorBudgetPlanVersionStructure")
+    )
+    .TopBar(
+       X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnCollapseExpandAll.Handler("handleCollapseExpandAll")
+        )
+    )
+)

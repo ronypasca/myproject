@@ -1,0 +1,41 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ActionVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    
+}
+@(
+    X.Panel()
+    .ID("PActionForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FAction")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ActionID)
+                .FieldLabel(ActionVM.Prop.ActionID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .MaxLength(3),
+            X.TextFieldFor(model => model.ActionDesc)
+                .FieldLabel(ActionVM.Prop.ActionDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+            
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

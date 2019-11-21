@@ -1,0 +1,16 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Detail";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("FPTID", "App.FPTID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, "AddStatus", true, false, false, Buttons.ButtonDetail, oParamList);
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdFPT.getStore().reload()", null);
+}
+@(btnAdd)
+@(btnList)

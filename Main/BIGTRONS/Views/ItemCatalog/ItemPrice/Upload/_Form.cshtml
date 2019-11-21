@@ -1,0 +1,158 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    var isHasUnitPriceAnalysis = Model.HasUnitPriceAnalysis;
+    List<Parameter> oParamList;
+    Parameter oParam;
+    
+    <script>
+        changeFile = function () {
+            debugger;
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };
+
+        successGetFileUpload = function (data) {
+            App.grdItemPriceFromFileUpload.getStore().loadData(data.result.dataItemPrice);
+            App.grdItemDetailFromFileUpload.getStore().loadData(data.result.dataItemDetails);
+        };
+
+        failedGetFileUpload = function (errorMessage) {
+            App.grdItemPriceFromFileUpload.getStore().removeAll();
+            Ext.Msg.notify("Error", errorMessage);
+        };
+
+        getAllData = function () {
+            result = [];
+            Ext.Array.each(App.grdItemPriceFromFileUpload.store.getAllRange(), function (rec) {
+                result.push(rec.data);
+            });
+            return result;
+        };
+
+        getAllDataItem = function () {
+            result = [];
+            Ext.Array.each(App.grdItemFromFileUpload.store.getAllRange(), function (rec) {
+                result.push(rec.data);
+            });
+            return result;
+        };
+
+        getAllDataItemDetail = function () {
+            result = [];
+            Ext.Array.each(App.grdItemDetailFromFileUpload.store.getAllRange(), function (rec) {
+                result.push(rec.data);
+            });
+            return result;
+        };
+        beforeSave = function () {
+            Ext.Msg.show({
+                message: "You're going to update data of Items from uploaded file.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+
+        verifyConfirm = function (btn) {
+            if (btn == "yes") {
+                /* */
+                Ext.getBody().mask('Loading');
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("SaveUpload", "ItemCatalog"))',
+                    params: {
+                        ListItemPriceVM: getAllData(),
+                        ListItemDetailVM: getAllDataItemDetail()
+                    },
+                    callback: function () {
+                        Ext.getBody().unmask();
+                        App.grdItemPriceFromFileUpload.getStore().removeAll();
+                        App.grdItemDetailFromFileUpload.getStore().removeAll();
+                    }
+                });
+            }
+        };
+
+        successSave = function () {
+            Ext.getBody().unmask();
+            App.grdItemFromFileUpload.getStore().removeAll();
+            App.grdItemPriceFromFileUpload.getStore().removeAll();
+        };
+
+        failureSave = function () {
+
+            Ext.getBody().unmask();
+        };
+    </script>
+}
+
+<form id="formFileUpload" enctype="multipart/form-data">
+    @(
+    X.Panel()
+    .ID("PItemPriceUploadForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItemPriceUploadForm")
+        .Padding(iBodyPadding)
+        .Items(
+             X.FileUploadField()
+                .ID(ItemPriceVM.Prop.FileUpload.Name)
+                .FieldLabel(ItemPriceVM.Prop.FileUpload.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Listeners(d=>d.Change.Fn ="changeFile")
+                .Accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"),
+             X.Button()
+                .ID("btnGetData")
+                .Text("Get Data")
+                .Width(iLabelWidth)
+                .DirectEvents(events =>
+                {
+                    events.Click.Action = "ReadFileUpload";
+                    events.Click.EventMask.ShowMask = true;
+                    events.Click.Success = "successGetFileUpload(result)";
+                    events.Click.Failure = "failedGetFileUpload(result.errorMessage);";
+                }).Hidden(true)
+        ).TopBar(
+                X.Toolbar()
+                .PaddingSpec(sToolbarPaddingSpec)
+                .ItemsFromPartial("ItemPrice/Upload/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+                )
+        ,
+        X.TabPanel()
+        .Items(
+            X.Panel()
+                .Title("Price")
+                .ID("pnlItemPriceUploadList")
+                .TabMenuHidden(true)
+                .ItemsFromPartial("ItemPrice/Upload/_List", new List<ItemPriceUploadVM>(), ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+            ,
+         X.Panel()
+                .TabMenuHidden(true)
+                .Title("Specifications")
+                .Items(
+                    X.Panel()
+                      .ID("pnlItemDetailUploadList")
+                       .TabMenuHidden(true)
+                        .ItemsFromPartial("ItemPrice/Upload/_ListItemDetail", new List<ItemDetailUploadVM>(), ViewData)
+                        .PaddingSpec(sPanelPaddingSpec)
+
+                    )
+    )
+
+
+        )
+
+    )
+
+</form>

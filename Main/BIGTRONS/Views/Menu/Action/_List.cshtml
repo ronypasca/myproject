@@ -1,0 +1,146 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<MenuActionVM>
+@{
+    ViewBag.Title = "Menu Action";
+    var X = Html.X();
+    int iGridMinHeight = 150;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdMenuAction()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdMenuAction();
+        });
+
+        resizeGrdMenuAction = function () {
+            if (App.grdMenuAction != null)
+                App.grdMenuAction.updateLayout();
+            /*App.grdMenuAction.setHeight($(window).height() - App.grdMenuAction.getY() - (App.grdMenuAction.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeMenuAction = function (grid,record) {
+            App.grdMenuAction.getSelectionModel().select(record);
+        };
+
+        var editMenuAction = function (editor, e) {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        afterRenderMenuAction = function(grid){
+            var me = this;
+            grid.store.on('load', function(){
+                var data = me.getStore().data.items;
+                var recs = [];
+                Ext.each(data, function(item, index){
+                    if (item.data.Checked) {
+                        recs.push(item);
+                    }
+                });
+                me.getSelectionModel().select(recs);
+            })
+        };
+
+        viewReadyMenuAction= function(grid){
+            grid.getStore().load();
+        };
+
+
+        beforeSelectMenuAction = function (grid, record, index, eOpts) {
+            console.log(App.grdMenuAction.getSelectionModel());
+            if("@isDisableButton" == "True"){
+                if(!record.get("Checked") && record.get("ActionDesc")!=""){
+                    grid.getStore().load();
+                }
+                
+            }
+        };
+
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdMenuAction")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.CheckboxSelectionModel()
+        .Mode(SelectionMode.Simple)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        //oListener.SelectionChange.Fn = "selectionChangeMenuAction";
+        oListener.AfterRender.Fn = "afterRenderMenuAction";
+        oListener.ViewReady.Fn = "viewReadyMenuAction";
+        //oListener.BeforeSelect.Fn = "beforeSelectMenuAction";
+    })
+    .Store(
+           X.Store()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadMenuAction"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .Parameters(oParam =>
+                oParam.Add(new StoreParameter(MenuActionVM.Prop.MenuID.Name, "App.MenuID.getValue()", ParameterMode.Raw))
+            )
+            .AutoLoad(false)
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .SorterFor(Model, model => model.ActionID, Ext.Net.SortDirection.ASC)
+            .Model(
+                X.Model()
+                .Name("ModelMenuAction")
+                .Fields(
+                    X.ModelField().Name(Model, model => model.ActionID),
+                    X.ModelField().Name(Model, model => model.ActionDesc),
+                    X.ModelField().Name(Model, model => model.Checked)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(MenuActionVM.Prop.ActionDesc.Desc)
+        .DataIndex(Model, model => model.ActionDesc)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

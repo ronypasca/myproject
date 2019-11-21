@@ -1,0 +1,26 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@using com.SML.BIGTRONS.ViewModels;
+@{
+    var X = Html.X();
+    string sPageName = "Add";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, null, null, null, false, false, false, null);
+    
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, null, null,
+        null,
+        //ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonList);
+
+}
+@(X.Button()
+    .ID(General.EnumName(Buttons.ButtonSave) + "MenuObject")
+    .Icon(Icon.Disk)
+    .Text(General.EnumDesc(Buttons.ButtonSave)).Handler("menuObjectFormSave('" + General.EnumDesc(Buttons.ButtonAdd) + "');"))
+@(X.Button()
+    .ID(General.EnumName(Buttons.ButtonCancel) + "MenuObject")
+    .Icon(Icon.Cancel)
+    .Text(General.EnumDesc(Buttons.ButtonCancel)).Handler("menuObjectFormClose();"))

@@ -1,0 +1,239 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model NotificationTemplateVM
+@{
+	var X = Html.X();
+	var iBodyPadding = 10;
+	var sToolbarPaddingSpec = "0 10 10 0";
+	var iLabelWidth = 175;
+	var iFieldWidth = 420;
+	var iFieldWidthEditor = 900;
+	var iFieldHeightEditor = 300;
+	var sPanelPaddingSpec = "10 0 0 0";
+
+	<script>
+
+		var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+		afterRenderTagField=function(el){
+			var json = @Html.Raw(Json.Encode(Model.Tags));
+			el.setValue(json);
+
+		};
+
+		Array.prototype.remove = function(value) {
+			var idx = this.indexOf(value);
+			if (idx != -1) {
+				return this.splice(idx, 1); 
+			}
+			return false;
+		};
+
+		afterRender = function(){
+			var instances = CKEDITOR.instances;
+			for(name in instances)
+			{
+				CKEDITOR.instances[name].destroy(true);
+			}
+
+			CKEDITOR.addCss( 'span > .cke_placeholder { background-color: #ffeec2; }' );
+			CKEDITOR.config.enterMode = 2; /* disabled <p> completely */
+			CKEDITOR.config.enterMode = CKEDITOR.ENTER_BR; /* pressing the ENTER KEY input <br/>*/
+			CKEDITOR.config.shiftEnterMode = CKEDITOR.ENTER_P; /*pressing the SHIFT + ENTER KEYS input <p>*/
+			CKEDITOR.config.autoParagraph = false; /* stops automatic insertion of <p> on focus*/
+			CKEDITOR.replace( '@MinutesTemplateVM.Prop.Contents.Name', {
+			    toolbar : [
+						
+						{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat' ] },
+						{ name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock' ] },
+						{ name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] },
+						{ name: 'insert', items: [ 'Image', 'Table', 'HorizontalRule', 'PageBreak' ] },
+						'/',
+						{ name: 'styles', items: [ 'Styles', 'Format', 'Font', 'FontSize' ] },
+						{ name: 'colors', items: [ 'TextColor', 'BGColor' ] },
+						{ name: 'tools', items: [ 'Maximize'] },
+						{ name: 'document', items: [ 'Source', 'Preview'] }
+						/*{ name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] },*/
+			    ],
+				height: 400,
+				extraPlugins: 'tableresize,autocomplete,textmatch,wysiwygarea,link,placeholder',
+				removeDialogTabs: 'image:advanced;link:advanced;link:target',
+				on: {
+					instanceReady: function( evt ) {
+
+						var editor = evt.editor;
+
+						editor.on( 'doubleclick', function( ev ) {
+							var element = ev.data.element;
+							debugger;
+							if (!Ext.isEmpty(element))
+								if ( element.hasClass( 'cke_placeholder' ) ) {
+									evt.cancel();
+								}
+						}, null, null, -1 );
+
+
+						editor.on('key', function(event) {
+							var kc = event.data.keyCode,
+									csa = ~(CKEDITOR.CTRL | CKEDITOR.SHIFT | CKEDITOR.ALT),
+									classname;
+
+							
+							var element = editor.getSelection().getStartElement();
+							if ( (kc==13 && (kc & csa)==13)){
+								debugger;
+								if(!Ext.isEmpty(element))
+									if ( element.hasClass( 'cke_widget_placeholder' ) ) {
+										evt.cancel();
+									}
+							}
+
+							if ( kc==8 || kc==46 ){ /*del,backspace*/
+								
+								if(!Ext.isEmpty(element))
+									if ( element.hasClass( 'cke_widget_placeholder' ) ) {
+										arrTags = App.ListFieldTagReferenceVM.getValue();
+										console.log(element.getText().replace("[[","").replace("]]",""));
+										arrTags.remove(element.getText().replace("[[","").replace("]]",""));
+										App.ListFieldTagReferenceVM.setValue(arrTags);
+									}  
+			
+							}
+						}, null, null, -1 );
+
+						var itemTemplate = '<li data-id="{id}">' +
+								'<div><strong class="item-title">{name}</strong></div>' +
+								'<div><i>{description}</i></div>' +
+							'</li>',
+							outputTemplate = '[[{name}]]<span>&nbsp;</span>';
+
+						var autocomplete = new CKEDITOR.plugins.autocomplete( evt.editor, {
+							textTestCallback: textTestCallback,
+							dataCallback: dataCallback,
+							itemTemplate: itemTemplate,
+							outputTemplate: outputTemplate
+						} );
+
+						/* Override default getHtmlToInsert to enable rich content output.*/
+						autocomplete.getHtmlToInsert = function( item ) {
+							arrTags = App.ListFieldTagReferenceVM.getValue();
+							arrTags.push(item.name);
+							App.ListFieldTagReferenceVM.setValue(arrTags);
+							return this.outputTemplate.output( item );
+						};
+
+					},
+
+					loaded:function(evt){
+						resizeContainer();
+
+					}
+				}
+			} );
+		};
+
+
+		function textTestCallback( range ) {
+			if ( !range.collapsed ) {
+				return null;
+			}
+
+			return CKEDITOR.plugins.textMatch.match( range, matchCallback );
+		}
+
+		function matchCallback( text, offset ) {
+			var pattern = /\[{2}([A-z]|\])*$/,
+				match = text.slice( 0, offset )
+				.match( pattern );
+
+			if ( !match ) {
+				return null;
+			}
+
+			return {
+				start: match.index,
+				end: offset
+			};
+		}
+
+		function dataCallback( matchInfo, callback ) {
+			tags = new Array();
+			$.getJSON('/MinutesTemplate/GetFieldTags', function (data) {
+				result=data.data;
+				
+				$.each(result,function(i,v){
+					tags.push({id:i ,name : v.FieldTagID, description: v.TagDesc});
+				});
+
+				var data = tags.filter( function( item ) {
+					var itemName = '[[' + item.name.toLowerCase() + ']]';
+					return itemName.indexOf( matchInfo.query.toLowerCase() ) == 0;
+				} );
+
+				callback( data );
+			});
+			
+		}
+
+	</script>
+
+}
+@(
+	X.Panel()
+	.ID("PNotificationTemplateForm")
+	.Frame(true)
+	.Items(
+		X.FormPanel()
+		.ID("FNotificationTemplate")
+		.Padding(iBodyPadding)
+		.Items(
+			X.TextFieldFor(model => model.NotificationTemplateID)
+				.FieldLabel(NotificationTemplateVM.Prop.NotificationTemplateID.Desc)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+				.LabelWidth(iLabelWidth)
+				.Width(iFieldWidth),
+			X.TextFieldFor(model => model.NotificationTemplateDesc)
+				.FieldLabel(NotificationTemplateVM.Prop.NotificationTemplateDesc.Desc)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+				.LabelWidth(iLabelWidth)
+				.Width(iFieldWidth),
+			X.TagField()
+			 .FieldLabel(NotificationTemplateVM.Prop.ListFieldTagReferenceVM.Desc)
+			 .Name(NotificationTemplateVM.Prop.ListFieldTagReferenceVM.Name)
+			 .ID(NotificationTemplateVM.Prop.ListFieldTagReferenceVM.Name)
+			 .Width(iFieldWidth)
+			 .LabelWidth(iLabelWidth)
+			 .HideSelected(true)
+			 .QueryMode(DataLoadMode.Local)
+			 .DisplayField(FieldTagReferenceVM.Prop.FieldTagID.Name)
+			 .ValueField(FieldTagReferenceVM.Prop.FieldTagID.Name)
+			 .Listeners(d=>d.AfterRender.Fn="afterRenderTagField")
+			 .Hidden(true)
+			 .Store(X.StoreForModel()
+					.Proxy(
+						X.AjaxProxy()
+						.Url(Url.Action("GetFieldTags"))
+						.Reader(X.JsonReader().RootProperty("data"))
+					)
+					),
+				X.TextArea().Name(NotificationTemplateVM.Prop.Contents.Name)
+				.FieldLabel(NotificationTemplateVM.Prop.Contents.Desc)
+				.Value(Model.Contents)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+					.LabelWidth(iLabelWidth)
+					.Width(iFieldWidthEditor).Listeners(d => d.AfterRender.Fn = "afterRender")
+				,
+			 X.Panel()
+				.ID("pnlFunction")
+				.Title("Functions")
+				.Collapsible(true)
+				.ItemsFromPartial("Functions/_List", new List<FunctionsVM>(), ViewData)
+				.PaddingSpec(sPanelPaddingSpec)
+		)
+		.TopBar(
+			X.Toolbar()
+			.PaddingSpec(sToolbarPaddingSpec)
+			.ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+		)
+	)
+)

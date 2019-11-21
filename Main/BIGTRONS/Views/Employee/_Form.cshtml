@@ -1,0 +1,85 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model EmployeeVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    
+
+}
+@(
+    X.Panel()
+    .ID("PEmployeeForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FEmployee")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.EmployeeID)
+                .FieldLabel(EmployeeVM.Prop.EmployeeID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.EmployeeName)
+                .FieldLabel(EmployeeVM.Prop.EmployeeName.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.CompanyDesc)
+                .FieldLabel(EmployeeVM.Prop.CompanyDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PersonnelAreaDesc)
+                .FieldLabel(EmployeeVM.Prop.PersonnelAreaDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PersonnelSubareaDesc)
+                .FieldLabel(EmployeeVM.Prop.PersonnelSubareaDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.OrgBusinessUnitDesc)
+                .FieldLabel(EmployeeVM.Prop.OrgBusinessUnitDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.OrgDivisionDesc)
+                .FieldLabel(EmployeeVM.Prop.OrgDivisionDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.OrgDepartmentDesc)
+                .FieldLabel(EmployeeVM.Prop.OrgDepartmentDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.OrgSectionDesc)
+                .FieldLabel(EmployeeVM.Prop.OrgSectionDesc.Desc)
+                 .ReadOnly(true)
+               .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PositionDesc)
+                .FieldLabel(EmployeeVM.Prop.PositionDesc.Desc)
+                 .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Email)
+                .FieldLabel(EmployeeVM.Prop.Email.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

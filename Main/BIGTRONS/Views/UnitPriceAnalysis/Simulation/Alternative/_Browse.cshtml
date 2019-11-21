@@ -1,0 +1,150 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemVersionVM>
+@{
+    ViewBag.Title = "List of Items";
+    var X = Html.X();
+    string sPageName = "UnitPriceAnalysis";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iGridMaxHeight = 420;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    string sHandler = "selectAlternativeBrowse('" + ViewData["ControlTreePanel"]
+        + "', '" + ViewData["ValueNodeID"]
+        + "', App.grdAlternativeBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemID.Name + "']"
+        + ", App.grdAlternativeBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemDesc.Name + "']"
+        + ", App.grdAlternativeBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.Version.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemVersionBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdItemVersionBrowse();
+        });
+
+        resizeGrdItemVersionBrowse = function () {
+            if (App.grdAlternativeBrowse != null)
+                App.grdAlternativeBrowse.setHeight($(window).height() - App.grdAlternativeBrowse.getY() - (App.grdAlternativeBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionAlternativeChange = function (length) {
+            App.ButtonSelectUnitPriceAnalysis.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ItemID, ItemDesc) {
+            filter.fields[0].items.items[0].setValue(ItemID);
+            filter.fields[1].items.items[0].setValue(ItemDesc);
+        };
+
+        selectAlternativeBrowse = function (ControlTreePanel, NodeID, ItemID, ItemDesc, Version) {
+
+            if (Ext.getCmp(ControlTreePanel) != undefined) {
+
+                var Node = Ext.getCmp(ControlTreePanel).store.getNodeById(NodeID);
+                for (var i = 0; i < ItemIDItemVersionChildIDWithFormula.length; i++) {
+                    App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[i]).set("formuladesc", String(App.treeSimulation.store.getNodeById(ItemIDItemVersionChildIDWithFormula[i]).data.formuladesc).replace(Node.itemid + "-" + Node.sequencedesc, ItemID + "-" + Node.sequencedesc));
+                }
+
+                Node.data.itemid = ItemID;
+                Node.data.version = Version;
+                Node.data.itemprice = 0;
+                Node.data.desc = ItemDesc;
+
+                Ext.getCmp(ControlTreePanel).store.getNodeById(NodeID).parentNode.replaceChild(Node, Ext.getCmp(ControlTreePanel).store.getNodeById(NodeID));
+
+                RecountAmount();
+
+            }
+
+            App.WinBrowseItemVersion.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseItemVersion")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdAlternativeBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .MaxHeight(iGridMaxHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionAlternativeChange(selected.length)";
+            //oListener.ViewReady.Handler = "doFilter(this.filterHeader, '"
+            //+ ViewData[ItemVersionVM.Prop.ItemID.Name].ToString() + "', '"
+            //+ ViewData[ItemVersionVM.Prop.ItemDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1; oListener.RowDblClick.Handler = sHandler; oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel(true)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemID.Desc)
+            .DataIndex(Model, model => model.ItemID)
+            .Flex(3)
+            .Filterable(true)
+            .Items(
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemDesc.Desc)
+            .DataIndex(Model, model => model.ItemDesc)
+            .Flex(4)
+            .Filterable(true)
+            .Items(
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.Version.Desc)
+            .Filterable(true)
+            .DataIndex(Model, model => model.Version)
+            .Flex(3)
+            .Items(
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemTypeID.Desc)
+            .Filterable(true)
+            .DataIndex(Model, model => model.ItemTypeID)
+            .Flex(3)
+            .Items(
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

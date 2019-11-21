@@ -1,0 +1,164 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model VendorSubcategoryVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + VendorSubcategoryVM.Prop.VendorCategoryID.Name, VendorSubcategoryVM.Prop.VendorCategoryID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + VendorSubcategoryVM.Prop.VendorCategoryDesc.Name, VendorSubcategoryVM.Prop.VendorCategoryDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseVendorCategory = global_asax.Button(Buttons.ButtonBrowse, "VendorCategory", "", "../VendorCategory/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseVendorCategory = global_asax.Button(Buttons.ButtonErase, "VendorCategory", "", "", true);
+
+    <script>
+        var bPreventGetVendorCategory = false;
+
+        getVendorCategory = function (VendorCategoryID, VendorCategoryDesc, exact) {
+            if (App.VendorCategoryID.isDirty() || App.VendorCategoryDesc.isDirty()) {
+                App.VendorCategoryID.originalValue = App.VendorCategoryID.getValue();
+                App.VendorCategoryDesc.originalValue = App.VendorCategoryDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetVendorCategory", "VendorCategory"))',
+                    params: {
+                        ControlVendorCategoryID: App.VendorCategoryID.id,
+                        ControlVendorCategoryDesc: App.VendorCategoryDesc.id,
+                        FilterVendorCategoryID: VendorCategoryID,
+                        FilterVendorCategoryDesc: VendorCategoryDesc,
+                        Exact: exact
+                    },
+                    success: getVendorCategorySuccess,
+                    failure: getVendorCategoryFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getVendorCategorySuccess = function () {
+            if (!App.VendorCategoryID.isDirty() && !App.VendorCategoryDesc.isDirty()) {
+                App.VendorCategoryID.originalValue = "";
+                App.VendorCategoryDesc.originalValue = "";
+            }
+            bPreventGetVendorCategory = false;
+        };
+
+        getVendorCategoryFailed = function () {
+            eraseVendorCategory();
+        };
+
+        VendorCategoryIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetVendorCategory = true;
+                getVendorCategory(field.getValue(), "", false);
+            }
+        };
+
+        VendorCategoryDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetVendorCategory = true;
+                getVendorCategory("", field.getValue(), false);
+            }
+        };
+
+        VendorCategoryIDBlur = function (VendorCategoryID) {
+            console.log(bPreventGetVendorCategory);
+            if (!bPreventGetVendorCategory) {
+                bPreventGetVendorCategory = true;
+                if (VendorCategoryID.trim() == "")
+                    getVendorCategoryFailed();
+                else
+                    getVendorCategory(VendorCategoryID, "", true);
+            }
+            bPreventGetVendorCategory = false;
+        };
+
+        VendorCategoryDescBlur = function (VendorCategoryDesc) {
+            if (!bPreventGetVendorCategory) {
+                bPreventGetVendorCategory = true;
+                if (VendorCategoryDesc.trim() == "")
+                    getVendorCategoryFailed();
+                else
+                    getVendorCategory("", VendorCategoryDesc, true);
+            }
+            bPreventGetVendorCategory = false;
+        };
+
+        eraseVendorCategory = function () {
+            App.VendorCategoryID.clear();
+            App.VendorCategoryDesc.clear();
+            App.VendorCategoryID.originalValue = "";
+            App.VendorCategoryDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PVendorSubcategoryForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FVendorSubcategory")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.VendorSubcategoryID)
+                .FieldLabel(VendorSubcategoryVM.Prop.VendorSubcategoryID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.VendorSubcategoryDesc)
+                .FieldLabel(VendorSubcategoryVM.Prop.VendorSubcategoryDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.VendorCategoryID)
+                        .FieldLabel(VendorSubcategoryVM.Prop.VendorCategoryDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "VendorCategoryIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "VendorCategoryIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.VendorCategoryDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "VendorCategoryDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "VendorCategoryDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseVendorCategory
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseVendorCategory.Handler("eraseVendorCategory")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

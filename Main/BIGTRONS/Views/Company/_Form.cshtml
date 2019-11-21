@@ -1,0 +1,179 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model CompanyVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + CompanyVM.Prop.CountryID.Name, CompanyVM.Prop.CountryID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + CompanyVM.Prop.CountryDesc.Name, CompanyVM.Prop.CountryDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCountry = global_asax.Button(Buttons.ButtonBrowse, "Country", "", "../Country/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCountry = global_asax.Button(Buttons.ButtonErase, "Country", "", "", true);
+
+    <script>
+        var bPreventGetCountry = false;
+
+        getCountry = function (countryID, countryDesc, exact) {
+            if (App.CountryID.isDirty() || App.CountryDesc.isDirty()) {
+                App.CountryID.originalValue = App.CountryID.getValue();
+                App.CountryDesc.originalValue = App.CountryDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCountry", "Country"))',
+                    params: {
+                        ControlCountryID: App.CountryID.id,
+                        ControlCountryDesc: App.CountryDesc.id,
+                        FilterCountryID: countryID,
+                        FilterCountryDesc: countryDesc,
+                        Exact: exact
+                    },
+                    success: getCountrySuccess,
+                    failure: getCountryFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getCountrySuccess = function () {
+            if (!App.CountryID.isDirty() && !App.CountryDesc.isDirty()) {
+                App.CountryID.originalValue = "";
+                App.CountryDesc.originalValue = "";
+            }
+            bPreventGetCountry = false;
+        };
+
+        getCountryFailed = function () {
+            eraseCountry();
+        };
+
+        countryIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCountry = true;
+                getCountry(field.getValue(), "", false);
+            }
+        };
+
+        countryDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCountry = true;
+                getCountry("", field.getValue(), false);
+            }
+        };
+
+        countryIDBlur = function (countryID) {
+            console.log(bPreventGetCountry);
+            if (!bPreventGetCountry) {
+                bPreventGetCountry = true;
+                if (countryID.trim() == "")
+                    getCountryFailed();
+                else
+                    getCountry(countryID, "", true);
+            }
+            bPreventGetCountry = false;
+        };
+
+        countryDescBlur = function (countryDesc) {
+            if (!bPreventGetCountry) {
+                bPreventGetCountry = true;
+                if (countryDesc.trim() == "")
+                    getCountryFailed();
+                else
+                    getCountry("", countryDesc, true);
+            }
+            bPreventGetCountry = false;
+        };
+
+        eraseCountry = function () {
+            App.CountryID.clear();
+            App.CountryDesc.clear();
+            App.CountryID.originalValue = "";
+            App.CountryDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PCompanyForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FCompany")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.CompanyID)
+                .FieldLabel(CompanyVM.Prop.CompanyID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.CompanyDesc)
+                .FieldLabel(CompanyVM.Prop.CompanyDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.CountryID)
+                        .FieldLabel(CompanyVM.Prop.CountryDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "countryIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "countryIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.CountryDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "countryDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "countryDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseCountry
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseCountry.Handler("eraseCountry")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.TextFieldFor(model => model.City)
+                .FieldLabel(CompanyVM.Prop.City.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Street)
+                .FieldLabel(CompanyVM.Prop.Street.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Postal)
+                .FieldLabel(CompanyVM.Prop.Postal.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

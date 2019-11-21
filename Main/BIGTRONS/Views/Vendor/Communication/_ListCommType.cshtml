@@ -1,0 +1,486 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<VendorCommunicationsVM>
+@{
+    ViewBag.Title = "Vendor Communication";
+    var X = Html.X();
+    string sPageName = "VendorCommunication";
+    int iGridMinHeight = 350;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdCommType", "grdPICComm", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlGridComm", "grdPICComm", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCommType = global_asax.Button(Buttons.ButtonBrowse, "BrowseCOMType", "", "../Vendor/BrowseCOMType", true, false, false, null, oParamList, null, null);
+    Button.Builder btnEraseCommType = global_asax.Button(Buttons.ButtonErase, "BrowseCOMType", "", "", true);
+
+    var hdnTextFieldCommTypeID = X.Hidden().ID(VendorCommunicationsVM.Prop.CommunicationTypeID.Name);
+    var hdnTextFieldCommTypeDesc = X.Hidden().ID(VendorCommunicationsVM.Prop.CommTypeDesc.Name);
+    var hdnTextFieldListVendorCommunication = X.Hidden().ID(VendorPICsVM.Prop.ListVendorCommunication.Name);
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, string.Empty, true);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+    
+    <script>
+            var sTitleCommType = @Html.Raw(Json.Encode(ViewBag.Title));
+            $(document).ready(function () {
+                setTimeout("resizeGrdPICComm()", 1);
+            });
+
+            $(window).resize(function () {
+                resizeContainer();
+                resizeGrdPICComm();
+            });
+
+            var resizeGrdPICComm = function ()
+            {
+                if (App.grdPICComm != null)
+                    App.grdPICComm.setHeight($(window).height() - App.grdPICComm.getY() - (App.grdPICComm.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+            };
+
+            var selectionChange= function (length)
+            {
+                App.ButtonDeleteVendorCommunication.setDisabled(length < 1);
+                App.ButtonAddVendorCommunication.setDisabled(length < 1);
+            };
+        
+            deleteSuccess = function ()
+            {
+                App.grdPICComm.getStore().reload();
+            };
+
+            deleteRowCommType = function()
+            {
+                showMsgDeleteConfirmVendorPIC();
+            };
+
+            showMsgDeleteConfirmVendorPIC= function()
+            {
+                Ext.Msg.show({
+                    message: "Are you sure want to delete selected record(s)?",
+                    buttons:Ext.MessageBox.YESNO,
+                    fn: "deleteConfirmVendorPIC"
+                });
+                return;
+            };
+
+            deleteConfirmVendorPIC= function(btn){
+                if (btn == "yes") {
+                    Ext.net.DirectMethod.request({
+                        url: '@(Url.Action("DeleteVendorCommunications", "Vendor"))',
+                        params: {
+                            Selected: App.grdPICComm.getRowsValues({ selectedOnly: true })
+                        },
+                        success: function (result)
+                        {
+                        },
+                        callback:function()
+                        {
+                            App.grdPICComm.getStore().remove(App.grdPICComm.getSelectionModel().getSelection());
+                            var record = App.grdVendorPIC.getRowsValues({selectedOnly:true})[0];
+                        }
+                    });
+                }
+            };
+
+            var editComm = function (editor, e)
+            {
+
+                if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                    e.record.commit();
+                }
+            };
+
+            beforeEditComm = function (editor, e)
+            {
+                if("@isDetailButton"== "True")
+                    return false;
+
+                App.grdPICComm.getSelectionModel().select(e.record);
+            };
+
+            addItemCommType = function()
+            {
+                var recordPIC = App.grdVendorPIC.getRowsValues({selectedOnly:true})[0];
+
+                if(recordPIC.VendorPICID=="")
+                {
+                    return false;
+                }
+                if(!duplicateVendorPICID())
+                {
+                    var model = new ModelCommType({
+                        VendorPICID: recordPIC.VendorPICID,
+                        CommunicationTypeID:""
+                    });
+                    App.grdPICComm.store.add(model);
+                    loadGridVendorPIC(recordPIC.VendorPICID);
+                    App.grdPICComm.editingPlugin.startEditByPosition({ row: App.grdPICComm.getStore().data.length-1, column: 0 });
+                    setCheckAllRecord(App.grdPICComm.store.data.items[App.grdPICComm.getStore().data.length-1],App.grdPICComm.getStore().data.length-1);
+                }
+            };
+
+            var setCommunicationTypeID = function (rowIndex)
+            {
+                var value = App.CommunicationTypeID.getValue();
+                if (value != null && value != "")
+                {
+                    var record = App.grdPICComm.store.getAt(rowIndex);
+                    record.set('CommunicationTypeID', value);
+                    record.commit();
+                    App.CommunicationTypeID.setValue("");
+                }
+            };
+
+            var setCommTypeDesc = function (rowIndex)
+            {
+                var value = App.CommTypeDesc.getValue();
+                if (value != null && value != "")
+                {
+                    var record = App.grdPICComm.store.getAt(rowIndex);
+                    record.set('CommTypeDesc', value);
+                    record.commit();
+                    App.CommTypeDesc.setValue("");
+                }
+            };
+
+            viewReady = function (grid, record)
+            {
+                var store = grid.store;
+                store.clearFilter();
+
+                store.filterBy(function(row, id){
+                    return row.get('VendorPICID') === "-";
+                });
+            };
+
+            var eraseCommType = function (rowIndex) {
+                var record = App.grdPICComm.store.getAt(rowIndex);
+                record.set("CommunicationTypeID", "");
+                record.set("CommTypeDesc", "");
+                record.commit();
+
+                App.CommunicationTypeID.clear();
+                App.CommTypeDesc.clear();
+            };
+
+            duplicateVendorPICID = function()
+            {
+                var store =App.grdVendorPIC.getStore();
+                var allRecords = store.data.items;
+                var rowIdx=0;
+                for (var rowKey in allRecords)
+                {
+                    if (allRecords.hasOwnProperty(rowKey))
+                    {
+                        var row = allRecords[rowKey];
+
+                        if (isDuplicatedVendor(store, 'VendorPICID', row.get("VendorPICID"), rowIdx))
+                        {
+                            if(row["CommDesc"]==""||row["CommDesc"] == undefined) showWarningAlert(sTitleCommType, "cannot duplicate PIC!" );
+                            else showWarningAlert(sTitleCommType, Ext.String.format("{0} has been exist on the list, cannot duplicate PIC!",row.get("CommDesc")) );
+
+                            return true;
+                            break;
+                        }
+                    }
+                    rowIdx++;
+                }
+
+                return false;
+            };
+
+            var deleteComm = function (result) 
+            {
+                var _result = JSON.parse(result.responseText).result;
+                if (_result == "" || _result == undefined){
+                    App.grdPICComm.getStore().remove(App.grdPICComm.getSelectionModel().getSelection());
+                }
+
+            };
+
+            deleteRows = function()
+            {
+                App.grdPICComm.getStore().remove(App.grdPICComm.getSelectionModel().getSelection());
+                App.grdPICComm.getStore().reload();
+            };
+
+            var loadGridCommType = function (VendorCommID_) 
+            {
+                var store = App.grdPICComm.store;
+                store.clearFilter();
+                if(VendorCommID_!=null){
+                    store.filterBy(function(row, id){
+                        return row.get('VendorCommID') === VendorCommID_;
+                    });
+                }else
+                {
+                    store.filterBy(function(row, id){
+                        return row.get('VendorCommID') === "";
+                    });
+                }
+
+            };
+
+            isDuplicatedVendor = function (store, colName, value, rowIndex) 
+            {
+                var found = false;
+                store.each(function (record, idx) {
+                    if ((idx != rowIndex) && record.data.hasOwnProperty(colName))
+                        if (found = (record.data[colName].trim().toLowerCase() == value.trim().toLowerCase()) ? true : false) { return false };
+                });
+                return found;
+            };
+
+            var applyFilter = function (field) 
+            {
+                var store = App.grdPICComm.getStore();
+                store.filterBy(getRecordFilter());
+            };
+        
+            var getRecordFilter = function () 
+            {
+                var f = [];
+
+                f.push({
+                    filter: function (record) {
+                        return filterString(App.CommTypeDescFilter.getValue() || "", "CommTypeDesc", record);
+                    }
+                });
+
+                var len = f.length;
+
+                return function (record) {
+                    for (var i = 0; i < len; i++) 
+                    {
+                        if (!f[i].filter(record)) 
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+            };
+
+            onSelect = function(getElement, getData)
+            {
+                var record = App.grdPICComm.store.getByInternalId(App.grdPICComm.getSelection()[0].internalId);
+                record.set('CommunicationTypeID', getData[0].data.CommunicationTypeID);
+                record.commit();
+            };
+                
+            beforeCheckChange =function(checkcolumn, rowIndex, record, checked, eOpts){
+                if(!checked)
+                    return false;
+            };
+
+            checkChangeDefault=function(checkcolumn, rowIndex, record, checked, eOpts){
+
+                if(checked)
+                {
+                    setCheckAllRecord(record,rowIndex);
+                }
+            };
+
+            setCheckAllRecord=function(record,rowIndex){
+                allRecordPIC = App.grdPICComm.store.data.items;
+                var rowIdx=0;
+                for (var rowKey in allRecordPIC) {
+                    if (allRecordPIC.hasOwnProperty(rowKey)) {
+                        var row = allRecordPIC[rowKey];
+                        if (rowIdx!= rowIndex) {
+                            row.set("IsDefault", false);
+                            row.commit();
+                        }
+                    }
+                    rowIdx++;
+                }
+                record.set("IsDefault", true);
+                record.commit();
+            };
+            
+
+    </script>
+
+    var grdPICComm = X.GridPanel()
+        .ID("grdPICComm")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.ViewReady.Fn = "viewReady";
+        oListener.SelectionChange.Handler = (!isDisableButton ? "selectionChange(selected.length)" : "");
+    })
+
+       .Store(
+               X.Store()
+               .AutoLoad(true)
+               .RemoteSort(false)
+               .RemotePaging(false)
+               .RemoteFilter(false)
+               .PageSize(iPageSize)
+               .DataSource(Model)
+               .Model(
+                   X.Model()
+                   .Name("ModelCommType")
+                   .Fields(
+                        X.ModelField().Name(Model, model => model.CommunicationTypeID),
+                        X.ModelField().Name(Model, model => model.VendorCommID),
+                        X.ModelField().Name(Model, model => model.VendorPICID),
+                        X.ModelField().Name(Model, model => model.CommDesc),
+                        X.ModelField().Name(Model, model => model.CommTypeDesc),
+                        X.ModelField().Name(Model, model => model.ListCommunicationTypes),
+                        X.ModelField().Name(Model, model => model.IsDefault).Type(ModelFieldType.Boolean)
+                   )
+               )
+                .SorterFor(Model, model => model.VendorCommID, Ext.Net.SortDirection.ASC)
+           )
+            .ColumnModel(
+
+             X.Column().DataIndex(Model, model => model.ListCommunicationTypes).Hidden(true),
+
+            X.Column()
+            .Text(VendorCommunicationsVM.Prop.VendorPICID.Desc)
+            .DataIndex(Model, model => model.VendorPICID)
+            .Flex(3)
+            .Hidden(true)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )),
+            
+            X.Column()
+            .Text("Communication Type Desc")
+            .DataIndex(Model, model => model.CommTypeDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                ))
+
+            .Editor(
+                    X.ComboBox()
+                    .ID("CommTypeDescFilter")
+                    .TriggerAction(TriggerAction.All)
+                    .QueryMode(DataLoadMode.Local)
+                    .Editable(false)
+                    .DisplayField("CommTypeDesc")
+                    .ValueField("CommTypeDesc")
+                    .Store(
+                        X.StoreForModel()
+                        .Proxy(X.AjaxProxy()
+                            .Url(Url.Action("/ReadBrowseCommunicationType", "Vendor"))
+                            .Reader(X.JsonReader().RootProperty("data"))
+                        )
+                        .AutoLoad(true)
+                    )
+                    .AllowBlank(false)
+                    .Listeners(d => d.Select.Fn = "onSelect")
+            )
+            .Sortable(false)
+                 ,
+            X.Column()
+                .Text(VendorCommunicationsVM.Prop.CommDesc.Desc)
+                .DataIndex(Model, model => model.CommDesc)
+                .Flex(2)
+                .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("CollCommDesc")
+                    .AllowBlank(false)
+
+                ),
+             X.CheckColumn()
+                .Text(VendorCommunicationsVM.Prop.IsDefault.Desc)
+                .DataIndex(Model, model => model.IsDefault)
+                .Flex(3)
+                .Items(
+                        X.ComboBox()
+                        .DisplayField(ConfigBoolVM.Prop.Description.Name)
+                        .ValueField(ConfigBoolVM.Prop.ID.Name)
+                        .Store(
+                                X.StoreForModel()
+                                .Proxy(X.AjaxProxy()
+                                    .Url(Url.Action("../Config/GetBoolList"))
+                                    .Reader(X.JsonReader().RootProperty("data"))
+                                )
+                                .AutoLoad(true)
+                         )
+                )
+                .Editable(true)
+                .Listeners(ls => { ls.CheckChange.Fn = "checkChangeDefault"; ls.BeforeCheckChange.Fn = "beforeCheckChange"; })
+                
+            ,
+            X.Column()
+                .Text(VendorCommunicationsVM.Prop.CommunicationTypeID.Desc)
+                .DataIndex(Model, model => model.CommunicationTypeID)
+                .Flex(2)
+                .Hidden(true)
+       )
+        .Plugins(
+
+            X.FilterHeader()
+            .Remote(false),
+            X.CellEditing()
+                .ClicksToEdit(1)
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditComm")
+                .ID("rowEditorItemPriceVendorPeriod")
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd.Disabled(true).Handler("addItemCommType();"),
+                btnDelete.Disabled(true).Handler("deleteRowCommType()")
+            )
+        )
+       .BottomBar(
+           X.PagingToolbar()
+           .DisplayInfo(true)
+           .BaseCls("paging")
+           .DisplayMsg("Displaying {0} - {1} of {2}")
+           .EmptyMsg("No records to display")
+       );
+}
+@(
+    X.Panel()
+    .ID("pnlGrdPICComm")
+    .Items(
+            grdPICComm
+        )
+)

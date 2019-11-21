@@ -1,0 +1,166 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model VendorSubcategoryVM
+@{
+    
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdVendorSubcategory.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdVendorSubcategory.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdVendorSubcategory.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteSuccess()");
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdVendorSubcategory()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdVendorSubcategory();
+        });
+
+        resizeGrdVendorSubcategory = function () {
+            if (App.grdVendorSubcategory != null)
+                App.grdVendorSubcategory.setHeight($(window).height() - App.grdVendorSubcategory.getY() - (App.grdVendorSubcategory.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdVendorSubcategory.getStore().reload();
+        };
+
+        reloadGrid = function () {
+            App.grdVendorSubcategory.store.load();
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdVendorSubcategory")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.VendorSubcategoryID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(VendorSubcategoryVM.Prop.VendorSubcategoryID.Desc)
+        .DataIndex(Model, model => model.VendorSubcategoryID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(VendorSubcategoryVM.Prop.VendorSubcategoryDesc.Desc)
+        .DataIndex(Model, model => model.VendorSubcategoryDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(VendorSubcategoryVM.Prop.VendorCategoryDesc.Desc)
+        .DataIndex(Model, model => model.VendorCategoryDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd,
+            btnDetail.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnDelete.Disabled(true)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

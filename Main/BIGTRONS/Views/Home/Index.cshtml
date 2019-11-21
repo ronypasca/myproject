@@ -1,0 +1,38 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@model string
+@{
+    Layout = HttpContext.Current.User.Identity.IsAuthenticated ? "~/Views/Shared/_DefaultLayout.cshtml" : "~/Views/Shared/_LoginLayout.cshtml";
+    
+    var X = Html.X();
+}
+@section title{
+    @ViewBag.Title
+}
+@section head{
+    @{
+        <script>
+            firstRun = function () {
+                var oModel = @Html.Raw(Json.Encode(Model));
+                var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+                if (oModel != undefined && oModel != "")
+                    showError(sTitle, oModel);
+            };
+
+            $(function() {
+                $(document).ready(function() {
+                    setTimeout("firstRun()", 1);
+                });
+            });
+        </script>
+    }
+}
+@section body{
+    @(X.Container()
+        .ID(General.EnumDesc(Params.Home))
+        .Loader(X.ComponentLoader()
+            .Url(Url.Action("Home"))
+            .Mode(LoadMode.Script)
+        )
+    )
+}

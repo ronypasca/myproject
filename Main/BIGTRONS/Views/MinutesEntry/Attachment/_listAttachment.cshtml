@@ -1,0 +1,278 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<NotificationAttachmentVM>
+@{
+    var X = Html.X();
+    string sPageName = "Attachment_";
+    int iGridMinHeight = 450;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdAttachmentVal", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("GrdScheduleRecipient", "grdAttachmentVal", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BAdd", "Add", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "btnDeleteAttachment", null, string.Empty, true);
+    Button.Builder btnEmail = global_asax.Button(Buttons.ButtonAssign, "Mail", null, string.Empty, true);
+
+    oParamList = new List<Parameter>();
+    //Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "BrowseRecipient", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdAttachmnt()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdAttachmnt();
+        });
+
+        resizeGrdAttachmnt = function () {
+            if (App.grdAttachmentVal != null)
+                App.grdAttachmentVal.setHeight($(window).height() - App.grdAttachmentVal.getY() - (App.grdAttachmentVal.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangebs = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+            if(FromDetail !== 'Detail'){
+                App.ButtonDeletebtnDeleteAttachment.setDisabled(length==0);               
+                
+            }
+        };
+        var fileselected = function (item, file,a,b,c,d) {
+            /* Example of cancelling a file
+            if (file.name == 'image.jpg') {
+                Ext.Msg.alert('Error', 'You cannot upload the file named "image.jpg"');
+                return false;
+            }*/
+            @*Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReadAttachment", "Scheduling"))',
+                params: {},
+                success: function (result) {
+                    var data = result.data;
+
+                },
+                failure: function () { }
+            });*@
+            App.grdAttachmentVal.store.add(new ModelAttachmentList({
+                Filename: file.name,
+                ContentType: file.id,
+                MailNotificationID: "1"
+            }));
+
+
+        };
+        deleteAttachment = function(){
+            App.grdAttachmentVal.getStore().remove(App.grdAttachmentVal.getSelectionModel().getSelection());
+        };
+        changeFile = function () {
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };
+        completeUpload = function(a)
+        {
+
+        };
+        testMailSend = function()
+        {
+            @*SendMailTest*@
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("SendMailTest", "Scheduling"))',
+                params: {base64str:App.grdAttachmentVal.getSelection()[0].data.RawData},
+                success: function (result) {
+                    @*var data = result.data;*@
+                },
+                failure: function () { }
+            });
+
+        };
+        successGetFileUpload = function(result)
+        {
+            App.grdAttachmentVal.store.add(new ModelAttachmentList({
+                Filename: result.Filename,
+                ContentType: result.ContentType,
+                RawData: result.RawData,
+                MailNotificationID: ""
+            }));
+        };
+        var updateRecord = function (id, field, value) {
+
+        };
+        addFormField = function(){
+            App.FPjskk.add({
+                xtype: "filefield",
+                fieldLabel: "Attachment"
+            });
+        };
+        GetListAttachment = function(){
+            var data = [];
+            for(var x in App.grdAttachmentVal.store.data.items)
+            {
+                data.push(App.grdAttachmentVal.store.data.items[x].data);
+            }
+            return data;
+        };
+    </script>
+}
+@(
+            X.GridPanel()
+            .ID("grdAttachmentVal")
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+            )
+            .Listeners(oListener =>
+            {
+                oListener.SelectionChange.Handler = "selectionChangebs(selected.length)";
+            })
+            .Store(
+                    X.Store()
+                    .AutoLoad(true)
+                    .RemoteSort(false)
+                    .RemotePaging(true)
+                    .RemoteFilter(true)
+                    .PageSize(iPageSize)
+                    .DataSource(Model)
+                    .Model(
+                        X.Model()
+                        .Name("ModelAttachmentList")
+                        .Fields(
+                    X.ModelField().Name(Model, model => model.MailNotificationID),
+                    X.ModelField().Name(Model, model => model.Filename),
+                    X.ModelField().Name(Model, model => model.ContentType),
+                    X.ModelField().Name(Model, model => model.RawData)
+                        )
+                    )
+                )
+            .ColumnModel(
+                X.Column()
+                .Text(NotificationAttachmentVM.Prop.MailNotificationID.Desc)
+                .DataIndex(Model, model => model.MailNotificationID)
+                .Flex(1)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                    )
+                )
+                .Hidden(true),
+                X.Column()
+                .Text(NotificationAttachmentVM.Prop.ContentType.Desc)
+                .DataIndex(Model, model => model.ContentType)
+                .Flex(1)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                    )
+                ),
+                X.Column()
+                .Text(NotificationAttachmentVM.Prop.Filename.Desc)
+                .DataIndex(Model, model => model.Filename)
+                .Flex(4)
+                .Items(
+                    X.Container()
+                    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                    .Layout(LayoutType.HBox)
+                    .Items(
+                        X.TextField()
+                        .Flex(1)
+                    )
+                ),
+                X.Column()
+                .Text(NotificationAttachmentVM.Prop.RawData.Desc)
+                .DataIndex(Model, model => model.RawData)
+                .Hidden(true)
+
+            )
+            .Plugins(
+                X.FilterHeader()
+                .Remote(true)
+
+            )
+
+            .TopBar(
+                X.Toolbar()
+                .PaddingSpec(sToolbarPaddingSpec)
+                .Items(
+                    X.Panel()
+                    .ID("PIjsk")
+                    .Frame(true)
+                    .Items(
+                        X.FormPanel()
+                        .ID("FPjskk")
+                        .Padding(iBodyPadding)
+                        .Items(
+                             X.FileUploadField()
+                                .ID(ItemPriceVM.Prop.FileUpload.Name)
+                                .FieldLabel(ItemPriceVM.Prop.FileUpload.Desc)
+                                .Listeners(d => d.Change.Fn = "changeFile").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString()=="Detail")
+                            , X.Button()
+                                .ID("btnGetData")
+                                .Text("Get Data")
+                                .DirectEvents(events =>
+                                {
+                                    events.Click.Action = "ReadAttachment";
+                                    events.Click.EventMask.ShowMask = true;
+                                    events.Click.Success = "successGetFileUpload(result.data)";
+                                    //events.Click.Failure = "failedGetFileUpload(result.errorMessage);";
+                                }).Hidden(true)
+                )
+              ),
+              btnDelete.Handler("deleteAttachment()").Disabled(true),
+              btnEmail.Handler("testMailSend()")
+
+
+
+        // ,
+
+
+        //X.MultiUpload()
+        //.ID("MultiUploads")
+        //.FileUploadLimit(100)
+        //.FileTypes("*.*")
+        //.DirectEvents(s => s.UploadComplete.Action = "ReadAttachment")
+        // .Listeners(oListener =>
+        // {
+
+        //     oListener.FileSelected.Fn = "fileselected";
+        //     oListener.UploadStart.Handler = "updateRecord(file, 'status', 'Sending');";
+        // })
+
+
+
+
+
+
+
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+        .HideRefresh(true)
+    )
+)

@@ -1,0 +1,323 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model EventModelCollection
+@{
+
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+    string datecurrent = ViewData["Datenow"]!= null? ViewData["Datenow"].ToString():"";
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdParameter.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrd()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrd();
+        });
+
+        resizeGrd = function () {
+            if (App.grdCalendar != null)
+                App.grdCalendar.setHeight($(window).height() - App.grdCalendar.getY() - (App.grdCalendar.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        reloadGrid = function () {
+            App.grdCalendar.store.load();
+        };
+        setStartDate = function (a,b,c)
+        {
+            var tgl = '@datecurrent';
+            App.grdCalendar.setTitle(tgl);
+        };
+
+        clickEvent = function (a,data,c)
+        {
+            App.Subject.setValue(data.data.Title);
+            App.StartDate.setValue(data.data.StartDate);
+            App.EndDate.setValue(data.data.EndDate);
+            App.Weblink.setValue(data.data.Url);
+            App.Location.setValue(data.data.Location);
+            App.Notes.setValue(data.data.Notes);
+
+            /*TODO*/
+            App.EventWindow1.show();
+        };
+        GetFunctionList = function(){
+            var data = [];
+            var ky = App.fieldset1.items.items;
+            for(var x in ky)
+            {
+                if(App.fieldset1.items.items[x].checked){
+                    data.push(App.fieldset1.items.items[x].id);
+                }
+            }
+            return data;
+        };
+        ReminderClick = function(a,b,c,d){  
+            if(d.parentNode.data.text != 'Root'){
+                App.Subject.setValue(d.data.reminder);
+                App.StartDate.setValue(d.data.start);
+                App.EndDate.setValue(d.data.end);
+                App.Weblink.setValue(d.data.weblink);
+                App.Location.setValue(d.data.location);
+                App.Notes.setValue(d.data.notes);
+                App.EventWindow1.show();
+            }
+        };
+        reloadEventCalendar = function(){
+
+            var lstFunction = JSON.stringify(GetFunctionList());
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadEventCalendar", "MySchedule"))',
+                params: {
+                    ListFunction: lstFunction
+                },
+                success: function (result) {
+                    var data = result.data;
+                    App.CalendarPanel1.eventStore.removeAll();
+                    App.CalendarPanel1.eventStore.loadData(data)
+                },
+                failure: function () { }
+            });
+        };
+
+    </script>
+    <style>
+        .app-center {
+                font-size    : 13px;
+                text-align   : center !important;
+                padding-left : 178px;
+                font-family  : helvetica, arial, sans-serif;
+                color        : #455C6F;
+            }
+        .ext-color-4 {
+            color: #657cc3 !important;
+        }
+        .ext-color-5 {
+            color: #f2b91f !important;
+        }
+        .ext-color-6 {
+            color: #523e7c !important;
+        }
+        .ext-color-7 {
+            color: #f15710 !important;
+        }
+        .ext-color-8 {
+            color: #95212c !important;
+        }
+        .ext-color-9 {
+            color: #26292c !important;
+        }
+        .ext-color-10 {
+            color: #00cc99 !important;
+        }
+        .ext-color-4-ad {              
+           background-color: #657cc3 !important;
+        }
+        .ext-color-5-ad {
+             background-color: #f2b91f !important;
+        }
+        .ext-color-6-ad {
+             background-color: #523e7c !important;
+        }
+        .ext-color-7-ad {
+             background-color: #f15710 !important;
+        }
+        .ext-color-8-ad {
+            background-color: #95212c !important;
+        }
+        .ext-color-9-ad {
+            background-color: #26292c !important;
+        }
+        .ext-color-10-ad {
+             background-color: #00cc99 !important;
+        }
+        .rz-cld {
+             background-color: #ffffff !important;
+        }
+        .reminder-cls {
+            background-color: #f5f5f5 !important;
+        }
+        .rmndBack {
+            background: #f5f5f5 !important;
+        }
+        .hideico {
+           /* width: 0 !important;*/
+        }
+    </style>
+}
+@(
+            X.Panel()
+            .ID("grdCalendar")
+            .Title("...")
+            .Layout("border")
+            .Region(Region.Center)
+            .BodyCls("rz-cld")
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .Scrollable(ScrollableOption.Vertical)
+            .Listeners(l => l.BeforeRender.Fn = "setStartDate")
+            .Items(
+                X.Panel()
+                                .Region(Region.West)
+                                .Border(false)
+                                .Cls("app-west")
+                                .Scrollable(ScrollableOption.Vertical)
+                                .Items(
+                                    X.DatePicker()
+                                        .ID("DatePicker1")
+                                        .Cls("ext-cal-nav-picker")
+                                        .PaddingSpec("0 20 0 0")
+                                        .Listeners(events =>
+                                        {
+                                           
+                                        }),
+                                    X.Container()
+                                    .Layout(LayoutType.HBox)
+                                    .MarginSpec("0 0 10")
+                                    .Width(213)
+                                    .Loader(
+                                        X.ComponentLoader()
+                                        .AutoLoad(true)
+                                        .Url(Url.Action("GetCheckBox"))
+                                        .Mode(LoadMode.Component)
+                                    )
+                                )
+                                .TopBar(Html.X().Toolbar()
+                                    .Items(
+                                    )
+                                )
+
+                    ,
+                 X.CalendarPanel()
+                                .ID("CalendarPanel1")
+                                .Region(Region.Center)
+                                .ActiveIndex(2)
+                                .Border(false)
+                                .Height(700)
+                                .EventStore(Html.X().EventStore()
+                                    .ID("EventStore1")
+                                    .Events(events => events.AddRange(Model))
+                                    .CustomConfig(cc => cc.Add(new { submitDataUrl = Url.Action("SubmitData") }))
+                                )
+                                .CalendarStore(Html.X().CalendarStore()
+                                    .ID("CalendarStore1")
+                                    .Calendars(
+                                    )
+                                )
+                                .MonthView(Html.X().MonthView()
+                                    .ShowHeader(true)
+                                    .ShowWeekLinks(true)
+                                    .ShowWeekNumbers(true)
+                                    .EnableFx(false)
+                                )
+                                .WeekView(Html.X().WeekView()
+                                    .CustomConfig(cc => cc.Add(new { enableFx = false }))
+                                )
+                                .DayView(Html.X().DayView()
+                                    .CustomConfig(cc => cc.Add(new { enableFx = false }))
+                                )
+                                .Listeners(events =>
+                                {
+                                    events.EventClick.Fn = "clickEvent";
+                                })
+                                ,
+                    X.Panel()
+                                .Width(213)
+                                .Region(Region.East)
+                                .Border(false)
+                                .Cls("reminder-cls")
+                                .Collapsible(true)
+                                .Title("Reminder")
+                                .Loader(
+                                        X.ComponentLoader()
+                                        .AutoLoad(true)
+                                        .Url(Url.Action("GetReminder"))
+                                        .Params(new { ListScheduleID = JSON.Serialize(ViewData["ListSchedule"]) })
+                                .Mode(LoadMode.Component)
+                            )
+                        )
+
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+        )
+    )
+    )
+    
+)
+@{
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+}
+@(Html.X().Window()
+        .ID("EventWindow1")
+        .Hidden(true)
+        .Modal(true)
+        .Width(500)
+        .Height(400)
+        .Title("Detail")
+        .Icon(Icon.CalendarEdit)
+        .AutoScroll(true)
+        .Items(X.Panel()
+    .ID("PParametehrForm")
+    .Items(
+        X.FormPanel()
+        .ID("FPharameter")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextArea()
+            .ID(SchedulesVM.Prop.Subject.Name)
+                .FieldLabel(SchedulesVM.Prop.Subject.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextField()
+                .ID(SchedulesVM.Prop.StartDate.Name)
+                .FieldLabel(SchedulesVM.Prop.StartDate.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .ReadOnly(true),
+            X.TextField()
+                .ID(SchedulesVM.Prop.EndDate.Name)
+                .FieldLabel(SchedulesVM.Prop.EndDate.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .ReadOnly(true),
+            X.TextField()
+                .ID(SchedulesVM.Prop.Location.Name)
+                .FieldLabel(SchedulesVM.Prop.Location.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .ReadOnly(true),
+            X.TextField()
+                .ID(SchedulesVM.Prop.Weblink.Name)
+                .FieldLabel(SchedulesVM.Prop.Weblink.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .ReadOnly(true),
+            X.TextArea()
+                .ID(SchedulesVM.Prop.Notes.Name)
+                .FieldLabel(SchedulesVM.Prop.Notes.Desc)
+                .LabelWidth(iLabelWidth)
+                .ReadOnly(true)
+                .Width(iFieldWidth)
+        )
+    ))
+)

@@ -1,0 +1,904 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    //Button SBU
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + BusinessUnitVM.Prop.BusinessUnitID.Name, BusinessUnitVM.Prop.BusinessUnitID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BusinessUnitVM.Prop.BusinessUnitDesc.Name, BusinessUnitVM.Prop.BusinessUnitDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBusinessUnit = global_asax.Button(Buttons.ButtonBrowse, "BusinessUnit", "", "../BusinessUnit/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBusinessUnit = global_asax.Button(Buttons.ButtonErase, "BusinessUnit", "", "", true);
+
+    //Button Division
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + DivisionVM.Prop.DivisionID.Name, DivisionVM.Prop.DivisionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + DivisionVM.Prop.DivisionDesc.Name, DivisionVM.Prop.DivisionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + BusinessUnitVM.Prop.BusinessUnitID.Name, "App.BusinessUnitID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseDivision = global_asax.Button(Buttons.ButtonBrowse, "Division", "", "../Division/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseDivision = global_asax.Button(Buttons.ButtonErase, "Division", "", "", true);
+
+    //Button Project
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + ProjectVM.Prop.DivisionID.Name, "App.DivisionID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    //Button Cluster
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + ClusterVM.Prop.ProjectID.Name, "App.ProjectID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCluster = global_asax.Button(Buttons.ButtonBrowse, "Cluster", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    //BusinessUnit
+    <script>
+        var bPreventGetBusinessUnit = false;
+
+        getBusinessUnit = function (BusinessUnitID, BusinessUnitDesc, exact) {
+            if (App.BusinessUnitID.isDirty() || App.BusinessUnitDesc.isDirty()) {
+                App.BusinessUnitID.originalValue = App.BusinessUnitID.getValue();
+                App.BusinessUnitDesc.originalValue = App.BusinessUnitDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBusinessUnit", "BusinessUnit"))',
+                    params: {
+                        ControlBusinessUnitID: App.BusinessUnitID.id,
+                        ControlBusinessUnitDesc: App.BusinessUnitDesc.id,
+                        FilterBusinessUnitID: BusinessUnitID,
+                        FilterBusinessUnitDesc: BusinessUnitDesc,
+                        Exact: exact
+                    },
+                    success: getBusinessUnitSuccess,
+                    failure: getBusinessUnitFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getBusinessUnitSuccess = function () {
+            if (!App.BusinessUnitID.isDirty() && !App.BusinessUnitDesc.isDirty()) {
+                App.BusinessUnitID.originalValue = "";
+                App.BusinessUnitDesc.originalValue = "";
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        getBusinessUnitFailed = function () {
+            eraseBusinessUnit();
+        };
+
+        BusinessUnitIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBusinessUnit = true;
+                getBusinessUnit(field.getValue(), "", false);
+            }
+        };
+
+        BusinessUnitDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBusinessUnit = true;
+                getBusinessUnit("", field.getValue(), false);
+            }
+        };
+
+        BusinessUnitIDBlur = function (BusinessUnitID) {
+            console.log(bPreventGetBusinessUnit);
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitID.trim() == "")
+                    getBusinessUnitFailed();
+                else
+                    getBusinessUnit(BusinessUnitID, "", true);
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        BusinessUnitDescBlur = function (BusinessUnitDesc) {
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitDesc.trim() == "")
+                    getBusinessUnitFailed();
+                else
+                    getBusinessUnit("", BusinessUnitDesc, true);
+            }
+            bPreventGetBusinessUnit = false;
+        };
+        businessUnitIDChange = function (field, e, eOpts) {
+            BusinessUnitID = field.getValue();
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitID.trim() == "")
+                    getBusinessUnitFailed();
+                else {
+
+                    if (BusinessUnitID != field.originalValue) {
+                        eraseDivision();
+                    }
+                }
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        businessUnitDescChange = function (field, e, eOpts) {
+            BusinessUnitDesc = field.getValue();
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitDesc.trim() == "")
+                    getBusinessUnitFailed();
+                else {
+
+                    if (BusinessUnitDesc != field.originalValue) {
+                        eraseDivision();
+                    }
+                }
+            }
+            bPreventGetBusinessUnit = false;
+        };
+        eraseBusinessUnit = function () {
+            App.BusinessUnitID.clear();
+            App.BusinessUnitDesc.clear();
+            App.BusinessUnitID.originalValue = "";
+            App.BusinessUnitDesc.originalValue = "";
+        };
+
+
+        loadBudgetPlanByVersion = function ( combo, record, eOpts) {
+            console.log(record[0].data.BudgetPlanID);
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("Detail", "BudgetPlan"))',
+                params: {
+                    Caller : "ComboBoxVersion",
+                    Selected: App.grdBudgetPlan.getRowsValues({ selectedOnly: true })[0],
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanVersion.Name": record[0].data.BudgetPlanVersion,
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanID.Name": App.BudgetPlanID.getValue()
+                    }
+            });
+        };
+    </script>
+    //Division
+    <script>
+        var bPreventGetDivision = false;
+
+        getDivision = function (DivisionID, DivisionDesc, exact) {
+            if (App.DivisionID.isDirty() || App.DivisionDesc.isDirty()) {
+                App.DivisionID.originalValue = App.DivisionID.getValue();
+                App.DivisionDesc.originalValue = App.DivisionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetDivision", "Division"))',
+                    params: {
+                        ControlDivisionID: App.DivisionID.id,
+                        ControlDivisionDesc: App.DivisionDesc.id,
+                        FilterDivisionID: DivisionID,
+                        FilterDivisionDesc: DivisionDesc,
+                        Exact: exact
+                    },
+                    success: getDivisionSuccess,
+                    failure: getDivisionFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getDivisionSuccess = function () {
+            if (!App.DivisionID.isDirty() && !App.DivisionDesc.isDirty()) {
+                App.DivisionID.originalValue = "";
+                App.DivisionDesc.originalValue = "";
+            }
+            bPreventGetDivision = false;
+            eraseProject();
+            eraseCluster();
+        };
+
+        getDivisionFailed = function () {
+            App.DivisionID.clear();
+            App.DivisionDesc.clear();
+            App.DivisionID.originalValue = "";
+            App.DivisionDesc.originalValue = "";
+        };
+
+        DivisionIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDivision = true;
+                getDivision(field.getValue(), "", false);
+            }
+        };
+
+        DivisionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDivision = true;
+                getDivision("", field.getValue(), false);
+            }
+        };
+
+        DivisionIDBlur = function (DivisionID) {
+            console.log(bPreventGetDivision);
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (DivisionID.trim() == "")
+                    getDivisionFailed();
+                else
+                    getDivision(DivisionID, "", true);
+            }
+            bPreventGetDivision = false;
+        };
+
+        DivisionDescBlur = function (DivisionDesc) {
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (DivisionDesc.trim() == "")
+                    getDivisionFailed();
+                else
+                    getDivision("", DivisionDesc, true);
+            }
+            bPreventGetDivision = false;
+        };
+        DivisionChange = function () {
+            eraseProject();
+        };
+        divisionIDChange = function (field, e, eOpts) {
+            DivisionID = field.getValue();
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (DivisionID.trim() == "")
+                    getDivisionFailed();
+                else {
+
+                    if (DivisionID != field.originalValue) {
+                        eraseProject();
+                    }
+                }
+            }
+            bPreventGetDivision = false;
+        };
+
+        divisionDescChange = function (field, e, eOpts) {
+            DivisionDesc = field.getValue();
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (DivisionDesc.trim() == "")
+                    getDivisionFailed();
+                else {
+
+                    if (DivisionDesc != field.originalValue) {
+                        debugger;
+                        eraseProject();
+                    }
+                }
+            }
+            bPreventGetDivision = false;
+        };
+        eraseDivision = function () {
+            App.DivisionID.clear();
+            App.DivisionDesc.clear();
+            App.DivisionID.originalValue = "";
+            App.DivisionDesc.originalValue = "";
+        };
+    </script>
+    //Project
+    <script>
+        var bPreventGetProject = false;
+
+        getProject = function (ProjectID, ProjectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        FilterProjectID: ProjectID,
+                        FilterProjectDesc: ProjectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+            eraseCluster();
+        };
+
+        getProjectFailed = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+
+        ProjectIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        ProjectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        ProjectIDBlur = function (ProjectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (ProjectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(ProjectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        ProjectDescBlur = function (ProjectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (ProjectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", ProjectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+        ProjectChange = function () {
+            eraseCluster();
+        };
+        projectIDChange = function (field, e, eOpts) {
+
+            ProjectID = field.getValue();
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (ProjectID.trim() == "")
+                    getProjectFailed();
+                else {
+
+                    if (ProjectID != field.originalValue) {
+                        eraseCluster();
+                    }
+                }
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescChange = function (field, e, eOpts) {
+
+            ProjectDesc = field.getValue();
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (ProjectDesc.trim() == "")
+                    getProjectFailed();
+                else {
+
+                    if (ProjectDesc != field.originalValue) {
+                        eraseCluster();
+                    }
+                }
+            }
+            bPreventGetProject = false;
+        };
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+    </script>
+    //Cluster
+    <script>
+        var bPreventGetCluster = false;
+
+        getCluster = function (ClusterID, ClusterDesc, exact) {
+            if (App.ClusterID.isDirty() || App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = App.ClusterID.getValue();
+                App.ClusterDesc.originalValue = App.ClusterDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCluster", "Cluster"))',
+                    params: {
+                        ControlClusterID: App.ClusterID.id,
+                        ControlClusterDesc: App.ClusterDesc.id,
+                        FilterClusterID: ClusterID,
+                        FilterClusterDesc: ClusterDesc,
+                        Exact: exact
+                    },
+                    success: getClusterSuccess,
+                    failure: getClusterFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getClusterSuccess = function () {
+            if (!App.ClusterID.isDirty() && !App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = "";
+                App.ClusterDesc.originalValue = "";
+            }
+            bPreventGetCluster = false;
+        };
+
+        getClusterFailed = function () {
+            eraseCluster();
+        };
+
+        ClusterIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster(field.getValue(), "", false);
+            }
+        };
+
+        ClusterDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster("", field.getValue(), false);
+            }
+        };
+
+        ClusterIDBlur = function (ClusterID) {
+            console.log(bPreventGetCluster);
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (ClusterID.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster(ClusterID, "", true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        ClusterDescBlur = function (ClusterDesc) {
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (ClusterDesc.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster("", ClusterDesc, true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+        };
+    </script>
+
+    <script>
+        var CBChange = function () {
+            if (App.DocumentComplete.checked) {
+                App.PNLDeviation.hide();
+            }
+            else {
+                App.PNLDeviation.show();
+            }
+        }
+    </script>
+
+
+    var cbxFTPAdditional1 = X.ComboBoxFor(model => model.AdditionalInfo1)
+           .FieldLabel(FPTVM.Prop.AdditionalInfo1.Desc)
+           .Editable(false)
+           .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+           .LabelWidth(iLabelWidth)
+           .Width(iFieldWidth)
+           .DisplayField(FPTVM.Prop.AdditionalInfo1Desc.Name)
+           .ValueField(FPTVM.Prop.AdditionalInfo1.Name)
+           .EmptyValue("")
+               .Store(
+                   X.Store()
+                   .AutoLoad(true)
+                   .Proxy(X.AjaxProxy()
+                       .Url(Url.Action("../FPT/GetAdditionalInfo"))
+                       .Reader(X.JsonReader()
+                       .RootProperty("data")
+                       )
+
+                   )
+                   .SorterFor(Model, model => model.AdditionalInfo1, Ext.Net.SortDirection.ASC)
+               //.Parameters(ps =>
+               //{
+
+               //    ps.Add(new StoreParameter(BudgetPlanVM.Prop.BudgetPlanID.Name, "App.BudgetPlanID.getValue()", ParameterMode.Raw));
+               //}
+               //)
+               .Model(Html.X().Model()
+                   .Name("ModelBudgetPlanVersion")
+                   .Fields(
+                       X.ModelField(Model, model => model.AdditionalInfo1).Mapping(Model.AdditionalInfo1.ToString())
+                       )
+                   )
+               )
+               //.Listeners(ls =>
+               // {
+               //     ls.Select.Fn = "loadBudgetPlanByVersion";
+               // })
+
+               ;
+
+}
+
+@(
+    //Start PFPTForm
+    X.Panel().ID("PFPTForm").Frame(true)
+        //Start PFPTForm items
+        .Items(
+        //Start FFPT
+        X.FormPanel().ID("FFPT").Padding(iBodyPadding)
+            //Start FFPT Items
+            .Items(
+                X.Container()
+                .Layout(LayoutType.Column)
+                .Items(
+                    //start pnlFPTLeft
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlFPTLeft")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    //start pnlFPTLeft item
+                    .Items(
+                            X.TextFieldFor(model => model.FPTID)
+                            .FieldLabel(FPTVM.Prop.FPTID.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                            X.TextFieldFor(model => model.Descriptions)
+                            .FieldLabel(FPTVM.Prop.Descriptions.Desc)
+                            .ReadOnly(isDisableButton)
+                            //.ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                            //Start FieldContainer 1
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 1 items
+                            .Items(
+                                X.TextFieldFor(model => model.BusinessUnitID)
+                                .FieldLabel("SBU")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "BusinessUnitIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "BusinessUnitIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.BusinessUnitDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "BusinessUnitDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "BusinessUnitDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseBusinessUnit
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseBusinessUnit.Handler("eraseBusinessUnit")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                            )
+                            //END FieldContainer 1 items
+                            //End FieldContainer 1
+                            ,
+
+                            //Start FieldContainer 2
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 2 items
+                            .Items(
+                                X.TextFieldFor(model => model.DivisionID)
+                                .FieldLabel("Division")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "DivisionIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "DivisionIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "divisionIDChange";
+                                })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.DivisionDesc)
+                                    .FieldLabel("")
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    //.ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "DivisionDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "DivisionDescBlur(this.getValue());";
+                                        oListeners.Change.Fn = "divisionDescChange";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseDivision
+                                        //.Disabled(true),
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseDivision.Handler("eraseDivision")
+                                    //.Disabled(true)
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                            )
+                            //End FieldContainer 2 items
+                            //End FieldContainer 2
+                            ,
+
+                            //Start FieldContainer 3
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 3 items
+                            .Items(
+                                X.TextFieldFor(model => model.ProjectID)
+                                .FieldLabel("Project")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "ProjectIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "ProjectIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "projectIDChange";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.ProjectDesc)
+                                .FieldLabel("")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "ProjectDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "ProjectDescBlur(this.getValue());";
+                                    oListeners.Change.Fn = "projectDescChange";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseProject
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseProject.Handler("eraseProject")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ))
+                                //End FieldContainer 3 items
+                                //End FieldContainer 3
+                                ,
+
+                            //Start FieldContainer 4
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 4 items
+                            .Items(
+                                X.HiddenFor(model => model.IsSync),
+                                X.TextFieldFor(model => model.ClusterID)
+                                .FieldLabel("Cluster")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "ClusterIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "ClusterIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.ClusterDesc)
+                                .FieldLabel("")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "ClusterDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "ClusterDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                        btnBrowseCluster
+                                        //.Disabled(true),
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseCluster.Handler("eraseCluster")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ))
+                                //End FieldContainer 4 items
+                                //End FieldContainer 4
+                                ,
+
+                                X.Label("FPT Availability"),
+                                X.CheckboxFor(model => model.DocumentComplete)
+                                .ID(FPTVM.Prop.DocumentComplete.Name)
+                                .FieldLabel(FPTVM.Prop.DocumentComplete.Desc)
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(iLabelWidth)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.Change.Handler = "CBChange();";
+                                })
+                                .Width(iFieldWidth),
+                                //Start PNLDeviation
+                                X.Panel()
+                                .ID("PNLDeviation")
+                                .Hidden(Model.DocumentComplete)
+                                .Items(
+                                    X.Label("Deviation Memo"),
+                                    X.TextFieldFor(model => model.FPTDeviationsVM.RefNumber)
+                                    .FieldLabel(FPTDeviationsVM.Prop.RefNumber.Desc)
+                                    .ReadOnly(isDisableButton)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.DateFieldFor(model => model.FPTDeviationsVM.RefDate)
+                                    .ReadOnly(isDisableButton)
+                                    .FieldLabel(FPTDeviationsVM.Prop.RefDate.Desc)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.FPTDeviationsVM.RefTitle)
+                                    .FieldLabel(FPTDeviationsVM.Prop.RefTitle.Desc)
+                                    .ReadOnly(isDisableButton)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.HiddenFor(model => model.FPTDeviationsVM.FPTDeviationID)
+                                )
+                                //END PNLDeviation
+
+                                )
+                    //end pnlFPTLeft item
+                    //end pnlFPTLeft
+                    ,
+                    //start pnlFPTRight
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlFPTRight")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    //start pnlFPTRight item
+                    .Items(
+                        X.Label("FPT Additional Info"),
+
+                        X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.DateFieldFor(model => model.FPTScheduleStart)
+                                .FieldLabel("Schedule Start")
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FPTScheduleStartManual)
+                                .FieldLabel("")
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                            ),
+                        X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.DateFieldFor(model => model.FPTScheduleEnd)
+                                .FieldLabel("Schedule End")
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FPTScheduleEndManual)
+                                .FieldLabel("")
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                            ),
+                        X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.TextFieldFor(model => model.Duration)
+                                .FieldLabel("Duration")
+                                .ReadOnly(true)
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.DurationManual)
+                                .FieldLabel("")
+                                .ReadOnly(isDisableButton)
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                            ),
+                        X.TextFieldFor(model => model.MaintenancePeriod)
+                        .FieldLabel("Maintenance Period")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.Guarantee)
+                        .FieldLabel("Guarantee")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.ContractType)
+                        .FieldLabel("Contract Type")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextAreaFor(model => model.PaymentMethod)
+                        .FieldLabel("Payment Method")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        , cbxFTPAdditional1
+                    )
+                    //end pnlFPTRight item
+                    //end pnlFPTRight
+                    ))
+            //END FFPT Items
+            .TopBar(X.Toolbar().PaddingSpec(sToolbarPaddingSpec).ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData))
+        )
+//END PFPTForm item
+//END PFPTForm
+)

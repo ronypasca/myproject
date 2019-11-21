@@ -1,0 +1,441 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionChildVM
+@{
+    ViewBag.Title = "Unit Price Analysis";
+    var X = Html.X();
+    string sPageName = "UnitPriceAnalysis";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    string sHandler = "selectItemVersionChildBrowse('" + ViewData["Control" + ItemVersionChildVM.Prop.ItemID.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.ItemDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.Version.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.VersionDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.ItemTypeDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.ItemGroupDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.ItemTypeID.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.UoMDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionChildVM.Prop.UoMID.Name]
+        + "', App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.ItemID.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.ItemDesc.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.Version.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.VersionDesc.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.ItemTypeDesc.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.ItemGroupDesc.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.ItemTypeID.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.UoMDesc.Name + "']"
+        + ", App.GrdItemVersionChildBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionChildVM.Prop.UoMID.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemVersionChildBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdItemVersionChildBrowse();
+        });
+
+        resizeGrdItemVersionChildBrowse = function () {
+            if (App.GrdItemVersionChildBrowse != null)
+                App.GrdItemVersionChildBrowse.setHeight($(window).height() - App.GrdItemVersionChildBrowse.getY() - (App.GrdItemVersionChildBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionItemVersionChildChange = function (length) {
+            App.ButtonSelectUnitPriceAnalysis.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ItemID, ItemDesc) {
+            filter.fields[0].items.items[0].setValue(ItemID);
+            filter.fields[1].items.items[0].setValue(ItemDesc);
+        };
+
+        updateNodeSuccess = function (response) {        
+            nodeID=App.treePanelBudgetVersionStructure.getSelectedNodes()[0].nodeID;
+            node = App.treePanelBudgetVersionStructure.store.getNodeById(nodeID);
+            nodeParent = node.parentNode;
+            for (var i = 0; i < nodeParent.childNodes.length; i++) {
+                if (nodeParent.data.itemid == response.data.itemid && nodeParent.data.version == response.data.version) {
+                    console.log(response.data);
+                    Ext.Msg.alert("Budget Plan - Update Structure", "Cirular detected!");
+                    return;
+                }
+            }
+            parent.sequence = 0;
+            nodeParent.replaceChild(response.data, node);
+            parent.reSequence(App.treePanelBudgetVersionStructure.store.getRootNode());
+
+            parent.recalculatePrice(nodeParent);
+        };
+
+        updateNodeFailure = function (response) {
+            Ext.Msg.alert("Budget Plan - Load Child", response);
+        };
+
+        selectItemVersionChildBrowse = function (ControlItemID, ControlItemDesc, ControlVersion, ControlVersionDesc,
+            ControlItemTypeDesc, ControlItemGroupDesc, ControlItemTypeID, ControlUoMDesc, ControlTreePanel, ControlGrd, ItemID, ItemDesc, Version, VersionDesc,
+            ItemTypeDesc, ItemGroupDesc, ItemTypeID, UoMDesc) {
+
+            if (Ext.getCmp(ControlItemID) != undefined) {
+                Ext.getCmp(ControlItemID).setValue(ItemID);
+                Ext.getCmp(ControlItemID).originalValue = ItemID;
+            }
+            if (Ext.getCmp(ControlItemDesc) != undefined) {
+                Ext.getCmp(ControlItemDesc).setValue(ItemDesc);
+                Ext.getCmp(ControlItemDesc).originalValue = ItemDesc;
+            }
+            if (Ext.getCmp(ControlVersion) != undefined) {
+                Ext.getCmp(ControlVersion).setValue(Version);
+                Ext.getCmp(ControlVersion).originalValue = Version;
+            }
+            if (Ext.getCmp(ControlVersionDesc) != undefined) {
+                Ext.getCmp(ControlVersionDesc).setValue(VersionDesc);
+                Ext.getCmp(ControlVersionDesc).originalValue = VersionDesc;
+            }
+            if (Ext.getCmp(ControlItemTypeDesc) != undefined) {
+                Ext.getCmp(ControlItemTypeDesc).setValue(ItemTypeDesc);
+                Ext.getCmp(ControlItemTypeDesc).originalValue = ItemTypeDesc;
+            }
+            if (Ext.getCmp(ControlItemGroupDesc) != undefined) {
+                Ext.getCmp(ControlItemGroupDesc).setValue(ItemGroupDesc);
+                Ext.getCmp(ControlItemGroupDesc).originalValue = ItemGroupDesc;
+            }
+            if (Ext.getCmp(ControlItemTypeID) != undefined) {
+                Ext.getCmp(ControlItemTypeID).setValue(ItemTypeID);
+                Ext.getCmp(ControlItemTypeID).originalValue = ItemTypeID;
+                checkBehaviorFormula(ItemTypeID);
+            }
+            if (Ext.getCmp(ControlUoMDesc) != undefined) {
+                Ext.getCmp(ControlUoMDesc).setValue(UoMDesc);
+                Ext.getCmp(ControlUoMDesc).originalValue = UoMDesc;
+                checkBehaviorFormula(ItemTypeID);
+            }
+
+            objItemPrice = { RegionID: App.RegionID.getValue(), ProjectID: App.ProjectID.getValue(), ClusterID: App.ClusterID.getValue(), UnitTypeID: App.UnitTypeID.getValue() };
+
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("UpdateNodeTemplateStructure", "BudgetPlan"))',
+                params: {
+                    Selected: App.GrdItemVersionChildBrowse.getRowsValues({ selectedOnly: true })[0],
+                    jsonItemPrice :  JSON.stringify(objItemPrice)
+                },
+                success: updateNodeSuccess,
+                failure: updateNodeFailure
+            });
+            
+
+            
+
+            App.WinBrowseItemVersionChild.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseItemVersionChild")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .ConstrainHeader(true)
+    .Layout(LayoutType.Fit)
+    .Items(
+        X.GridPanel()
+        .ID("GrdItemVersionChildBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionItemVersionChildChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '"
+            + ViewData[ItemVersionVM.Prop.ItemID.Name].ToString() + "', '"
+            + ViewData[ItemVersionVM.Prop.ItemDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1; oListener.RowDblClick.Handler = sHandler; oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowseChildUnion", "UnitPriceAnalysis"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(exParam =>
+                        exParam.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = ItemVersionChildVM.Prop.ItemVersionChildID.Name,
+                                Value = ViewData[ItemVersionChildVM.Prop.ItemVersionChildID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemVersionChildVM.Prop.ParentItemID.Name,
+                                Value = ViewData[ItemVersionChildVM.Prop.ParentItemID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemVersionChildVM.Prop.ParentItemTypeID.Name,
+                                Value = ViewData[ItemVersionChildVM.Prop.ParentItemTypeID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemVersionChildVM.Prop.ParentSequence.Name,
+                                Value = ViewData[ItemVersionChildVM.Prop.ParentSequence.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = ItemVersionChildVM.Prop.ParentVersion.Name,
+                                Value = ViewData[ItemVersionChildVM.Prop.ParentVersion.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = "ItemPriceVM",
+                                Value = ViewData["ItemPriceVM"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+
+                        })
+                    )
+            )
+            .AutoLoad(ViewData[ItemVersionVM.Prop.ItemID.Name].ToString() == "" && ViewData[ItemVersionVM.Prop.ItemDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ItemID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.ItemID.Desc)
+            .DataIndex(Model, model => model.ChildItemID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.ItemDesc.Desc)
+            .DataIndex(Model, model => model.ChildItemDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.ChildVersion.Desc)
+            .DataIndex(Model, model => model.ChildVersion)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Hidden(true)
+            .Text(ItemVersionChildVM.Prop.VersionDesc.Desc)
+            .DataIndex(Model, model => model.VersionDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                    )
+                    ),
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.UoMDesc.Desc)
+            .DataIndex(Model, model => model.UoMDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.ItemTypeID.Desc)
+            .DataIndex(Model, model => model.ItemTypeID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionChildVM.Prop.ItemVersionChildID.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.ItemVersionChildID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ParentItemID.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.ParentItemID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ParentVersion.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.ParentVersion)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ParentSequence.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.ParentSequence)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.ParentItemTypeID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

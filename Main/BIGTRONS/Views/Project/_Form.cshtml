@@ -1,0 +1,425 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ProjectVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.CompanyID.Name, ProjectVM.Prop.CompanyID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.CompanyDesc.Name, ProjectVM.Prop.CompanyDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCompany = global_asax.Button(Buttons.ButtonBrowse, "Company", "", "../Company/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCompany = global_asax.Button(Buttons.ButtonErase, "Company", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + DivisionVM.Prop.DivisionID.Name, DivisionVM.Prop.DivisionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + DivisionVM.Prop.DivisionDesc.Name, DivisionVM.Prop.DivisionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseDivision = global_asax.Button(Buttons.ButtonBrowse, "Division", "", "../Division/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseDivision = global_asax.Button(Buttons.ButtonErase, "Division", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + LocationVM.Prop.LocationID.Name, LocationVM.Prop.LocationID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + LocationVM.Prop.LocationDesc.Name, LocationVM.Prop.LocationDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseLocation = global_asax.Button(Buttons.ButtonBrowse, "Location", "", "../Location/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseLocation = global_asax.Button(Buttons.ButtonErase, "Location", "", "", true);
+
+    <script>
+        var bPreventGetCompany = false;
+
+        getCompany = function (companyID, companyDesc, exact) {
+            if (App.CompanyID.isDirty() || App.CompanyDesc.isDirty()) {
+                App.CompanyID.originalValue = App.CompanyID.getValue();
+                App.CompanyDesc.originalValue = App.CompanyDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCompany", "Company"))',
+                    params: {
+                        ControlCompanyID: App.CompanyID.id,
+                        ControlCompanyDesc: App.CompanyDesc.id,
+                        FilterCompanyID: companyID,
+                        FilterCompanyDesc: companyDesc,
+                        Exact: exact
+                    },
+                    success: getCompanySuccess,
+                    failure: getCompanyFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getCompanySuccess = function () {
+            if (!App.CompanyID.isDirty() && !App.CompanyDesc.isDirty()) {
+                App.CompanyID.originalValue = "";
+                App.CompanyDesc.originalValue = "";
+            }
+            bPreventGetCompany = false;
+        };
+
+        getCompanyFailed = function () {
+            eraseCompany();
+        };
+
+        companyIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCompany = true;
+                getCompany(field.getValue(), "", false);
+            }
+        };
+
+        companyDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCompany = true;
+                getCompany("", field.getValue(), false);
+            }
+        };
+
+        companyIDBlur = function (companyID) {
+            console.log(bPreventGetCompany);
+            if (!bPreventGetCompany) {
+                bPreventGetCompany = true;
+                if (companyID.trim() == "")
+                    getCompanyFailed();
+                else
+                    getCompany(companyID, "", true);
+            }
+            bPreventGetCompany = false;
+        };
+
+        companyDescBlur = function (companyDesc) {
+            if (!bPreventGetCompany) {
+                bPreventGetCompany = true;
+                if (companyDesc.trim() == "")
+                    getCompanyFailed();
+                else
+                    getCompany("", companyDesc, true);
+            }
+            bPreventGetCompany = false;
+        };
+
+        eraseCompany = function () {
+            App.CompanyID.clear();
+            App.CompanyDesc.clear();
+            App.CompanyID.originalValue = "";
+            App.CompanyDesc.originalValue = "";
+        };
+    </script>
+    <script>
+        var bPreventGetDivision = false;
+
+        getDivision = function (divisionID, divisionDesc, exact) {
+            if (App.DivisionID.isDirty() || App.DivisionDesc.isDirty()) {
+                App.DivisionID.originalValue = App.DivisionID.getValue();
+                App.DivisionDesc.originalValue = App.DivisionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetDivision", "Division"))',
+                    params: {
+                        ControlDivisionID: App.DivisionID.id,
+                        ControlDivisionDesc: App.DivisionDesc.id,
+                        FilterDivisionID: divisionID,
+                        FilterDivisionDesc: divisionDesc,
+                        Exact: exact
+                    },
+                    success: getDivisionSuccess,
+                    failure: getDivisionFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getDivisionSuccess = function () {
+            if (!App.DivisionID.isDirty() && !App.DivisionDesc.isDirty()) {
+                App.DivisionID.originalValue = "";
+                App.DivisionDesc.originalValue = "";
+            }
+            bPreventGetDivision = false;
+        };
+
+        getDivisionFailed = function () {
+            eraseDivision();
+        };
+
+        divisionIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDivision = true;
+                getDivision(field.getValue(), "", false);
+            }
+        };
+
+        divisionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetDivision = true;
+                getDivision("", field.getValue(), false);
+            }
+        };
+
+        divisionIDBlur = function (divisionID) {
+            console.log(bPreventGetDivision);
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (divisionID.trim() == "")
+                    getDivisionFailed();
+                else
+                    getDivision(divisionID, "", true);
+            }
+            bPreventGetDivision = false;
+        };
+
+        divisionDescBlur = function (divisionDesc) {
+            if (!bPreventGetDivision) {
+                bPreventGetDivision = true;
+                if (divisionDesc.trim() == "")
+                    getDivisionFailed();
+                else
+                    getDivision("", divisionDesc, true);
+            }
+            bPreventGetDivision = false;
+        };
+
+        eraseDivision = function () {
+            App.DivisionID.clear();
+            App.DivisionDesc.clear();
+            App.DivisionID.originalValue = "";
+            App.DivisionDesc.originalValue = "";
+        };
+    </script>
+    <script>
+        var bPreventGetLocation = false;
+
+        getLocation = function (locationID, locationDesc, exact) {
+            if (App.LocationID.isDirty() || App.LocationDesc.isDirty()) {
+                App.LocationID.originalValue = App.LocationID.getValue();
+                App.LocationDesc.originalValue = App.LocationDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetLocation", "Location"))',
+                    params: {
+                        ControlLocationID: App.LocationID.id,
+                        ControlLocationDesc: App.LocationDesc.id,
+                        FilterLocationID: locationID,
+                        FilterLocationDesc: locationDesc,
+                        Exact: exact
+                    },
+                    success: getLocationSuccess,
+                    failure: getLocationFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getLocationSuccess = function () {
+            if (!App.LocationID.isDirty() && !App.LocationDesc.isDirty()) {
+                App.LocationID.originalValue = "";
+                App.LocationDesc.originalValue = "";
+            }
+            bPreventGetLocation = false;
+        };
+
+        getLocationFailed = function () {
+            eraseLocation();
+        };
+
+        locationIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetLocation = true;
+                getLocation(field.getValue(), "", false);
+            }
+        };
+
+        locationDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetLocation = true;
+                getLocation("", field.getValue(), false);
+            }
+        };
+
+        locationIDBlur = function (locationID) {
+            console.log(bPreventGetLocation);
+            if (!bPreventGetLocation) {
+                bPreventGetLocation = true;
+                if (locationID.trim() == "")
+                    getLocationFailed();
+                else
+                    getLocation(locationID, "", true);
+            }
+            bPreventGetLocation = false;
+        };
+
+        locationDescBlur = function (locationDesc) {
+            if (!bPreventGetLocation) {
+                bPreventGetLocation = true;
+                if (locationDesc.trim() == "")
+                    getLocationFailed();
+                else
+                    getLocation("", locationDesc, true);
+            }
+            bPreventGetLocation = false;
+        };
+
+        eraseLocation = function () {
+            App.LocationID.clear();
+            App.LocationDesc.clear();
+            App.LocationID.originalValue = "";
+            App.LocationDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PProjectForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FProject")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ProjectID)
+                .FieldLabel(ProjectVM.Prop.ProjectID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ProjectDesc)
+                .FieldLabel(ProjectVM.Prop.ProjectDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.CompanyID)
+                        .FieldLabel(ProjectVM.Prop.CompanyDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "companyIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "companyIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.CompanyDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "companyDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "companyDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseCompany
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseCompany.Handler("eraseCompany")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.DivisionID)
+                        .FieldLabel(ProjectVM.Prop.DivisionDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "divisionIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "divisionIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.DivisionDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "divisionDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "divisionDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseDivision
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseDivision.Handler("eraseDivision")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.LocationID)
+                        .FieldLabel(ProjectVM.Prop.LocationDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "locationIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "locationIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.LocationDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "locationDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "locationDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseLocation
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseLocation.Handler("eraseLocation")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.TextFieldFor(model => model.City)
+                .FieldLabel(ProjectVM.Prop.City.Desc)
+               .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Street)
+                .FieldLabel(ProjectVM.Prop.Street.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Postal)
+                .FieldLabel(ProjectVM.Prop.Postal.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+           )
+           .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

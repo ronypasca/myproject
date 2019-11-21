@@ -1,0 +1,843 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model SchedulesVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + NegotiationConfigurationsVM.Prop.FPTID.Name, FPTVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FPTVM.Prop.Descriptions.Name, SchedulesVM.Prop.FPTDescription.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, "FunctionDescription", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateID.Name, NotificationTemplateVM.Prop.NotificationTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterTemplate" + FunctionsVM.Prop.FunctionID.Name, "App.FunctionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("OldValueFPTID", "App.FPTID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseFPTID = global_asax.Button(Buttons.ButtonBrowse, "FPTID", "", "../FPT/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnBrowseFunction = global_asax.Button(Buttons.ButtonBrowse, "Functions", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse) , true, false, false, null, oParamList);
+    Button.Builder brnBrowseTemplate = global_asax.Button(Buttons.ButtonBrowse, "brwsTemplate", "", "../NotifTemplate/" + General.EnumDesc(Buttons.ButtonBrowse) , true, false, false, null, oParamList);
+    Button.Builder btnEraseFunction = global_asax.Button(Buttons.ButtonErase, "Function", "", "", true);
+    Button.Builder btnEraseNotifTemplate = global_asax.Button(Buttons.ButtonErase, "NotifTemplate", "", "", true);
+    Button.Builder btnEraseFPT = global_asax.Button(Buttons.ButtonErase, "EraseFPT", "", "", true);
+
+    Button.Builder btnEraseFPTID = global_asax.Button(Buttons.ButtonErase, "FPTID", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProjectID = global_asax.Button(Buttons.ButtonBrowse, "ProjectID", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseClusterID = global_asax.Button(Buttons.ButtonBrowse, "ClusterID", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    oParam = new Parameter(General.EnumDesc(Params.Caller), "GetData", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "{ ScheduleID: App.CFPScheduleID.getValue(), Subject: App.CFPSubject.getValue() }", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnGetData = global_asax.Button(Buttons.ButtonDetail, "ButtonGetData", "Get Data", "Add", true, false, false, null, oParamList);
+
+    //Schedule
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + SchedulesVM.Prop.ScheduleID.Name,"CFP"+ MinutesEntryVM.Prop.ScheduleID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + SchedulesVM.Prop.Subject.Name, "CFP" + MinutesEntryVM.Prop.Subject.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseSchedule = global_asax.Button(Buttons.ButtonBrowse, "Schedule", "", "../Scheduling/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseSchedule = global_asax.Button(Buttons.ButtonErase, "Schedule", "", "", true);
+
+    <script>
+        renderisAllDay = function (value) {
+            App.IsAllDay.setBoxLabel(value == true ? "Yes" : "No"); };
+
+        renderisbatchmail = function (value) {
+            App.IsBatchMail.setBoxLabel(value == true ? "Yes" : "No");
+        };
+
+        renderKeepTask = function (value) {
+            App.IsKeepTask.setBoxLabel(value == true ? "Yes" : "No");
+        };
+
+        var SetTimeConfigStart = function (a, b, c, d) {
+            App.StartDateHour.setValue(b);
+        };
+        var SetTimeConfigEnd = function (a, b, c, d) {
+            App.EndDateHour.setValue(b);
+        };
+        changeFile = function () {
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };        
+        showMsgConfirmHoliday = function () {
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("CheckHoliday", "Scheduling"))',
+                params: {
+                    startDate: App.StartDate.value,
+                    endDate: App.EndDate.value
+                },
+                success: function (result) {
+                    debugger;
+                    if (result === 'true') {
+                        Ext.Msg.show({
+                            message: "Your selected date is holiday.</br>Do you want to continue?",
+                            buttons: Ext.MessageBox.YESNO,
+                            fn: "verifyConfirmHoliday"
+                        });                   
+                    } else
+                        Ext.getCmp(App.ButtonSave.id).fireEvent('click');
+                },
+                failure: function () {
+                    Ext.Msg.show({
+                        message: "Error while get holiday"                        
+                    });
+                }
+            });           
+            return;
+        };
+        verifyConfirmHoliday = function (btn) {
+            if (btn == "yes") {
+                Ext.getCmp(App.ButtonSave.id).fireEvent('click');
+            }
+        };
+        testAdd = function () {
+            FormPanel1.add({
+                xtype: 'container',
+                layout: 'hbox', anchor: '90%',
+                cls: 'cntnr-pad',
+                items: [{
+                    xtype: 'fileuploadfield',
+                    flex: 1, cls: 'flupd-height'
+                },
+                    {
+                        xtype: 'button',
+                        text: 'Remove', listeners: {
+                            click: {
+                                fn: function (btn) {
+                                    var ct = btn.ownerCt,
+                                   formPanel = ct.ownerCt;
+                                    formPanel.remove(ct);
+                                }
+                            }
+                        }
+                    }],
+            });
+
+            FormPanel1.addAndDoLayout({
+                xtype: 'container',
+                layout: 'hbox',
+                anchor: '90%',
+                items: [{
+                    xtype: 'textfield',
+                    fieldLabel: 'Description'
+                }]
+            });
+        };
+
+        function ajaxFunctionID() {
+            var ajaxProp = {
+                url: '@(Url.Action("GetFunction", "Scheduling"))',
+                params: {
+                    ControlFunctionID: App.FunctionID.id,
+                    FilterFunctionID: App.FunctionID.getValue()
+                }
+            };
+            return ajaxProp;
+        };
+        function relatedParamFunctionID() {
+            return ['FunctionID', 'FunctionDesc'];
+        };
+
+        var SimpleRZFieldKeyBlur = {
+            bPreventGetTable: false,
+            funcSpecialKey: function (field, event, ajaxProperties, relatedFieldParam) {
+                IDSpecialKey = function (field, event) {
+                    if (event.getKey() == event.ENTER) {
+                        SimpleRZFieldKeyBlur.bPreventGetTable = true;
+                        SimpleRZFieldKeyBlur.getTable(false, field, ajaxProperties, relatedFieldParam);
+                    }
+                };
+            },
+            getTable : function (exact, idFieldName_, ajaxProperties_, relatedFieldParam_) {
+                var idFieldName = idFieldName_.id;
+                var IDisDirty = eval('App.' + idFieldName + '.isDirty()');
+                if (IDisDirty) {
+                    eval('App.' + idFieldName + '.originalValue = App.' + idFieldName + '.getValue()');
+                    var ajaxProperties = eval(ajaxProperties_);
+                    var relatedFieldParam = eval(relatedFieldParam_);
+                    ajaxProperties['params']['Exact'] = exact;
+                    var relatedParamIsNotDirty = function () {
+                        var ret = false;
+                        for (var fieldParam = 0; fieldParam < relatedFieldParam.length; fieldParam++) {
+                            ret = eval('!App.' + relatedFieldParam[0] + 'isDirty()');
+                            if (!ret)
+                                break;
+                        }
+                        return ret;
+                    };
+                    ajaxProperties['success'] = function () {
+                        if (relatedParamIsNotDirty) {
+                            for (var fieldParam = 0; fieldParam < relatedFieldParam.length; fieldParam++) {
+                                eval('App.' + relatedFieldParam[0] + '.originalValue = ""');
+                            };
+                        };
+                        SimpleRZFieldKeyBlur.bPreventGetTable = false;
+                    };
+                    ajaxProperties['failure'] = function () {
+                        for (var fieldParam = 0; fieldParam < relatedFieldParam.length; fieldParam++) {
+                            eval('App.' + relatedFieldParam[0] + '.clear()');
+                            eval('App.' + relatedFieldParam[0] + '.originalValue = ""');
+                        };
+                    };
+                    Ext.net.DirectMethod.request(ajaxProperties);
+                }
+                else
+                    console.log('Not Dirty');
+            },
+            funcBlur: function (field, ajaxProperties, relatedFieldParam_) {
+                debugger;
+                if (!SimpleRZFieldKeyBlur.bPreventGetTable) {
+                    SimpleRZFieldKeyBlur.bPreventGetTable = true;
+                    if (field.getValue().trim() == "") {
+                        var relatedFieldParam = eval(relatedFieldParam_);
+                        for (var fieldParam = 0; fieldParam < relatedFieldParam.length; fieldParam++) {
+                            eval('App.' + relatedFieldParam[0] + '.clear()');
+                            eval('App.' + relatedFieldParam[0] + '.originalValue = ""');
+                        };
+                    }
+                    else {
+                        SimpleRZFieldKeyBlur.getTable(true, field, ajaxProperties, relatedFieldParam_);
+                    }
+                }
+                SimpleRZFieldKeyBlur.bPreventGetTable = false;
+            }
+        };
+
+
+
+
+        reloadParameterValues = function (notiftemplateiid) {
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadParameter", "Scheduling"))',
+                params: {
+                    MailNotificationID: App.MailNotificationID.value,
+                    TemplateID: notiftemplateiid
+                },
+                success: function (result) {
+                    var data = result.data;
+                    App.grdNotificationValues.store.removeAll();
+                    for (var n = 0; n < data.length; n++) {
+                        var s = data[n];
+                        App.grdNotificationValues.store.add(new ModelNotificationValues({
+                            NotificationValueID: "",
+                            MailNotificationID: "",
+                            TagDesc: s.TagDesc,
+                            FieldTagID: s.FieldTagID,
+                            Value: ""
+                        }));
+                    };
+                },
+                failure: function () { }
+            });
+
+        };
+        showMsgConfirmReload = function (FunctionID) {
+            if (App.grdTO.store.allData.items.length > 0 || App.grdCC.store.allData.items.length > 0 || App.grdBCC.store.allData.items.length > 0) {
+                Ext.Msg.show({
+                    title:"Confirmation",
+                    message: "Function changes will reload Participant List.",
+                    buttons: Ext.MessageBox.YESNO,
+                    fn: function (btn) {
+                        if (btn == "yes") {
+                            reloadFunction(FunctionID);
+                        }
+                        else {
+                            App.FunctionID.clear();
+                            App.FunctionDescription.clear();
+                            Ext.Msg.close();
+                        }
+                    }
+                });
+                return;
+            } else {
+                reloadFunction(FunctionID);
+            }
+        };
+
+
+        reloadFunction = function (functionID) {
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadFunction", "Scheduling"))',
+                params: {
+                    FunctionID: functionID
+                },
+                success: function (result) {
+                    var data = result.data;
+                    if (App.grdTO.store.data.items.length > 0)
+                        App.grdTO.getStore().remove(App.grdTO.store.data.items);
+
+                    for (var n = 0; n < data.length; n++) {
+                        var s = data[n];
+                        App.grdTO.store.add(new ModelRecipientList({
+                            OwnerID: s.UserID,
+                            RecipientDesc: s.FirstName,
+                            RecipientTypeID: 1,
+                            MailAddress: s.Email
+                        }));
+                    }
+                },
+                failure: function () { }
+            });
+
+        };
+
+        eraseFunctions = function () {
+            App.FunctionID.clear();
+            App.FunctionDescription.clear();
+            App.FunctionID.originalValue = "";
+            App.FunctionDescription.originalValue = "";
+        };
+
+        eraseTemplate = function () {
+            App.NotificationTemplateID.value.clear();
+            App.NotificationTemplateDesc.clear();
+            App.NotificationTemplateID.value.originalValue = "";
+            App.NotificationTemplateDesc.originalValue = "";
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+        };
+        eraseFPT = function () {
+            App.FPTID.clear();
+            App.FPTDescription.clear();
+            App.FPTID.originalValue = "";
+            App.FPTDescription.originalValue = "";
+        };
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+        };
+
+        /*Schedule*/
+        var bPreventGetSchedule = false;
+
+        getSchedule = function (pscheduleID, pscheduleDesc, exact) {
+            if (App.CFPScheduleID.isDirty() || App.CFPSubject.isDirty()) {
+                App.CFPScheduleID.originalValue = App.CFPScheduleID.getValue();
+                App.CFPSubject.originalValue = App.CFPSubject.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetSchedule", "Schedule"))',
+                    params: {
+                        ControlScheduleID: App.ScheduleID.id,
+                        ControlScheduleDesc: App.CFPSubject.id,
+                        FilterScheduleID: pscheduleID,
+                        FilterScheduleDesc: pscheduleDesc,
+                        Exact: exact
+                    },
+                    success: getScheduleSuccess,
+                    failure: getScheduleFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getScheduleSuccess = function () {
+            if (!App.ScheduleID.isDirty() && !App.ScheduleDesc.isDirty()) {
+                App.ScheduleID.originalValue = "";
+                App.ScheduleDesc.originalValue = "";
+            }
+            bPreventGetSchedule = false;
+        };
+
+        getScheduleFailed = function () {
+            eraseSchedule();
+        };
+
+        ScheduleIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetSchedule = true;
+                getSchedule(field.getValue(), "", false);
+            }
+        };
+
+        ScheduleDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetSchedule = true;
+                getSchedule("", field.getValue(), false);
+            }
+        };
+
+        ScheduleIDBlur = function (pscheduleID) {
+            console.log(bPreventGetSchedule);
+            if (!bPreventGetSchedule) {
+                bPreventGetSchedule = true;
+                if (pscheduleID.trim() == "")
+                    getScheduleFailed();
+                else
+                    getSchedule(pscheduleID, "", true);
+            }
+            bPreventGetSchedule = false;
+        };
+
+        ScheduleDescBlur = function (pscheduleDesc) {
+
+            App.Subject.setValue(pscheduleDesc);
+            if (!bPreventGetSchedule) {
+                bPreventGetSchedule = true;
+                if (pscheduleDesc.trim() == "") {
+                    getScheduleFailed();
+                    App.Subject.setValue("");
+                } else
+                    getSchedule("", pscheduleDesc, true);
+            }
+            bPreventGetSchedule = false;
+        };
+
+        eraseSchedule = function () {
+            App.CFPScheduleID.clear();
+            App.CFPSubject.clear();
+            App.CFPScheduleID.originalValue = "";
+            App.CFPSubject.originalValue = "";
+        };
+
+        /*end schedule*/
+    </script>
+}
+@(
+
+        X.Panel()
+        .ID("PSchedulesForm")
+        .Frame(true)
+        .Items(
+            X.FormPanel()
+        .ID("FCopyFromPrevious")
+        .Collapsible(true)
+        .Collapse()
+        .Title("Copy From Previous")
+        .Padding(iBodyPadding)
+        .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+        .Items(
+             X.FieldContainer()
+                    .FieldLabel("")
+                    .LabelWidth(0)
+                    .Width(iFieldWidth)
+                    .Layout(LayoutType.Column)
+
+                    .PaddingSpec(sPanelPaddingSpec)
+                    //Start FieldContainer 2 items
+                    .Items(
+                        X.TextField().ID("CFP" + SchedulesVM.Prop.ScheduleID.Name)
+                        .FieldLabel(SchedulesVM.Prop.ScheduleID.Desc)
+                        //.ReadOnly(true)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "ScheduleIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "ScheduleIDBlur(this.getValue());";
+                        })
+                            .LabelWidth(iLabelWidth)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                        X.TextField().ID("CFP" + SchedulesVM.Prop.Subject.Name)
+                            .FieldLabel("")
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                            //.ReadOnly(true)
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.SpecialKey.Handler = "ScheduleDescSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "ScheduleDescBlur(this.getValue());";
+                            })
+                            .LabelWidth(0)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                            .RightButtons(
+                                btnBrowseSchedule
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseSchedule.Handler("eraseSchedule")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                            )
+                    )
+            )
+        .BottomBar(X.Toolbar().Items(btnGetData).PaddingSpec(sToolbarPaddingSpec)),
+            X.FormPanel()
+            .ID("FSchedules")
+            .Padding(iBodyPadding)
+            .Items(
+                 //X.HtmlEditor()
+                 //.ID("EDITOR")
+                 //.Width(300)
+                 //.Height(300)
+                 //,
+                 X.Container()
+                    .Layout(LayoutType.Column)
+                    .Items(
+                            X.Panel()
+                            .Cls("fullOnSmall")
+                            .ColumnWidth(0.5)
+                            .ID("pnlSchedulingLeft")
+                            .Items(
+                                X.TextFieldFor(model => model.ScheduleID)
+                    .FieldLabel(SchedulesVM.Prop.ScheduleID.Desc)
+                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                    .LabelWidth(iLabelWidth)
+                    .Hidden(true)
+                    .Width(iFieldWidth),
+                X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.TextFieldFor(model => model.FunctionID)
+                                    .FieldLabel(SchedulesVM.Prop.FunctionID.Desc)
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "SimpleRZFieldKeyBlur.funcSpecialKey(item, e,'ajaxFunctionID()', 'relatedParamFunctionID()');";
+                                        oListeners.Blur.Handler = "SimpleRZFieldKeyBlur.funcBlur(this,'ajaxFunctionID()', 'relatedParamFunctionID()');";
+                                    }),
+                                X.TextFieldFor(model => model.FunctionDescription)
+                                    .FieldLabel("")
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.Change.Handler = "showMsgConfirmReload(this.getValue())";
+                                        //oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                        //oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                    })
+                                    //.RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseFunction
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseFunction.Handler("eraseFunctions()")
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+
+
+                                )
+
+                        ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.NotificationTemplateID)
+                                .FieldLabel(SchedulesVM.Prop.NotificationTemplateID.Desc)
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.Change.Handler = "reloadParameterValues(this.getValue())";
+                                    //oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    //oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                //.RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                ,
+                            X.TextFieldFor(model => model.NotificationTemplateDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+
+                                    //oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    //oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                })
+                                .RightButtons(
+                                    brnBrowseTemplate
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                    btnEraseNotifTemplate.Handler("eraseTemplate()")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                        ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.FPTID)
+                                .FieldLabel(SchedulesVM.Prop.FPTID.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                }),
+                            X.TextFieldFor(model => model.FPTDescription)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+
+                                    oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                .RightButtons(
+                                    btnBrowseFPTID
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    , btnEraseFPT.Handler("eraseFPT()")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                        ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.ProjectID)
+                                .FieldLabel(SchedulesVM.Prop.ProjectDesc.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                }),
+                            X.TextFieldFor(model => model.ProjectDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+
+                                    oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                .RightButtons(
+                                    btnBrowseProjectID
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    , btnEraseProject.Handler("eraseProject()")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                        ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.ClusterID)
+                                .FieldLabel(SchedulesVM.Prop.ClusterDesc.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                }),
+                            X.TextFieldFor(model => model.ClusterDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                .RightButtons(
+                                    btnBrowseClusterID
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    , btnEraseCluster.Handler("eraseCluster()")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                        ),
+            X.TextFieldFor(model => model.StatusID).Hidden(true),
+            X.TextFieldFor(model => model.MailNotificationID).Hidden(true),
+            X.TextFieldFor(model => model.TaskID)
+                .FieldLabel(SchedulesVM.Prop.TaskID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth).Hidden(true),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.DateFieldFor(model => model.StartDate)
+                                .FieldLabel(SchedulesVM.Prop.StartDate.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth)
+                                .Format(global_asax.DefaultDateFormat).Listeners(oListeners =>
+                                {
+                                    // oListeners.Change.Fn = "DateChange";
+                                })
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TimeField()
+                                .ID("TimeStart")
+                                .Increment(30)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .SelectedTime(Model.StartDateHour)
+                                .Format("H:mm")
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.Change.Fn = "SetTimeConfigStart";
+                                }),
+                            X.TimeFieldFor(model => model.StartDateHour)
+                                .Hidden(true)
+                        ),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.DateFieldFor(model => model.EndDate)
+                                .FieldLabel(SchedulesVM.Prop.EndDate.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth)
+                                .Format(global_asax.DefaultDateFormat).Listeners(oListeners =>
+                                {
+                                    // oListeners.Change.Fn = "DateChange";
+                                })
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TimeField()
+                                .ID("TimeEnd")
+                                .Increment(30)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .SelectedTime(Model.EndDateHour)
+                                .Format("H:mm")
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.Change.Fn = "SetTimeConfigEnd";
+                                }),
+                            X.TimeFieldFor(model => model.EndDateHour)
+                                .Hidden(true)
+                        )
+                                ),
+                     X.Panel()
+                            .Cls("fullOnSmall")
+                            .ColumnWidth(0.5)
+                            .ID("pnlBudgetPlanRight")
+                            .Items(
+
+
+            X.TextFieldFor(model => model.Subject)
+                .FieldLabel(SchedulesVM.Prop.Subject.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Notes)
+                .FieldLabel(SchedulesVM.Prop.Notes.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Weblink)
+                .FieldLabel(SchedulesVM.Prop.Weblink.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Location)
+                .FieldLabel(SchedulesVM.Prop.Location.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.NumberFieldFor(model => model.Priority)
+                .FieldLabel(SchedulesVM.Prop.Priority.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth).MinValue(0)
+                .Width(iFieldWidth),
+             X.CheckboxFor(model => model.IsAllDay)
+                .BoxLabel("X")
+                .FieldLabel(SchedulesVM.Prop.IsAllDay.Desc)
+                .LabelWidth(iLabelWidth)
+                .Listeners(oListener =>
+                {
+                    oListener.Render.Handler = "renderisAllDay(App.IsAllDay.getValue());";
+                    oListener.Change.Handler = "renderisAllDay(App.IsAllDay.getValue());";
+                }),
+             X.CheckboxFor(model => model.IsBatchMail)
+                .BoxLabel("X")
+                .FieldLabel(SchedulesVM.Prop.IsBatchMail.Desc)
+                .LabelWidth(iLabelWidth)
+                .Listeners(oListener =>
+                {
+                    oListener.Render.Handler = "renderisbatchmail(App.IsBatchMail.getValue());";
+                    oListener.Change.Handler = "renderisbatchmail(App.IsBatchMail.getValue());";
+                }),
+             X.CheckboxFor(model => model.IsKeepTask)
+                .BoxLabel("X")
+                .FieldLabel("Keep Task")
+                .Hidden(!bool.Parse(ViewData.ContainsKey("IsCopyData") ? ViewData.Eval("IsCopyData").ToString() : bool.FalseString))
+                .LabelWidth(iLabelWidth)
+                .Listeners(oListener =>
+                {
+                    oListener.Render.Handler = "renderKeepTask(App.IsKeepTask.getValue());";
+                    oListener.Change.Handler = "renderKeepTask(App.IsKeepTask.getValue());";
+                })
+                            )
+                         )
+
+        ).TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        ),
+
+                X.FormPanel()
+                .ID("panelParticipants")
+                .Title("Participant List")
+                .Collapsible(false)
+                .ItemsFromPartial("Recipients/_listRecipients", Model.LstRecipients, ViewData)
+                .Padding(iBodyPadding),
+
+                X.FormPanel()
+                .ID("panelNotifValues")
+                .Title("Parameter Values")
+                .Collapsible(true)
+                .ItemsFromPartial("NotificationValues/_listNotificationValues", Model.LstNotificationValues, ViewData)
+                .Padding(iBodyPadding),
+
+                X.FormPanel()
+                .ID("panelAttachment")
+                .Title("Attachment")
+                .Collapsible(true)
+                .ItemsFromPartial("Attachment/_listAttachment", Model.LstNotificationAttachment, ViewData)
+                .Padding(iBodyPadding)
+            )
+)

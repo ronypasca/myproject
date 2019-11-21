@@ -1,0 +1,102 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemDetailUploadVM>
+@{
+    ViewBag.Title = "Item Detail";
+    var X = Html.X();
+    string sPageName = "HomeItemDetail";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+    ColumnCollection clmBase = new ColumnCollection();
+    ModelFieldCollection mdlField = new ModelFieldCollection();
+    Array m_objItemDetailTypes = System.Enum.GetValues(typeof(ItemDetailTypes));
+    clmBase.Add(X.Column().Text(ItemDetailUploadVM.Prop.ItemDetailID.Desc).DataIndex(Model, model => model.ItemDetailID).Hidden(true));
+    clmBase.Add(X.Column().Text(ItemDetailUploadVM.Prop.ItemID.Desc).DataIndex(Model, model => model.ItemID).Flex(1));
+    clmBase.Add(X.Column().Text(ItemDetailUploadVM.Prop.ItemDesc.Desc).DataIndex(Model, model => model.ItemDesc).Flex(1));
+    clmBase.Add(X.Column().Text(ItemDetailUploadVM.Prop.VendorID.Desc).DataIndex(Model, model => model.VendorID).Flex(1));
+    mdlField.Add(X.ModelField().Name(Model, model => model.ItemDetailID));
+    mdlField.Add(X.ModelField().Name(Model, model => model.ItemID));
+    mdlField.Add(X.ModelField().Name(Model, model => model.ItemDesc));
+    mdlField.Add(X.ModelField().Name(Model, model => model.VendorID));
+    foreach (var strItemDetailType in m_objItemDetailTypes)
+    {
+        clmBase.Add(X.Column().Text(strItemDetailType.ToString()).DataIndex(strItemDetailType.ToString()).Flex(1));
+        mdlField.Add(X.ModelField().Name(strItemDetailType.ToString()));
+    }
+
+    <script>
+        var sTitleItemDetail = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizegrdItemDetailFromFileUpload()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizegrdItemDetailFromFileUpload();
+        });
+
+        resizegrdItemDetailFromFileUpload = function () {
+            if (App.grdItemDetailFromFileUpload != null)
+                App.grdItemDetailFromFileUpload.updateLayout();
+                /*App.grdItemDetailFromFileUpload.setHeight($(window).height() - App.grdItemDetailFromFileUpload.getY() - (App.grdItemDetailFromFileUpload.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeItemDetail = function (length) {
+            
+        };
+
+        deleteSuccess = function () {
+            App.grdItemDetailFromFileUpload.getStore().reload();
+        };
+
+        deleteRow = function()
+        {
+            App.grdItemDetailFromFileUpload.getStore().remove(App.grdItemDetailFromFileUpload.getSelectionModel().getSelection());
+        };
+
+       
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdItemDetailFromFileUpload")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+    )
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelItemDetail")
+                .Fields(
+                    mdlField
+                )
+            )
+        )
+    .ColumnModel(
+           clmBase
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

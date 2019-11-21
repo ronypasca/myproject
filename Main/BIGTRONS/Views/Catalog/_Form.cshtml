@@ -1,0 +1,339 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 600;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    var isHasUnitPriceAnalysis = Model.HasUnitPriceAnalysis;
+    var dict_itemID = "ItemID";
+    var dict_vendorID = "VendorID";
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemVM.Prop.ItemGroupID.Name, ItemVM.Prop.ItemGroupID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.ItemGroupDesc.Name, ItemVM.Prop.ItemGroupDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.ItemTypeID.Name, ItemVM.Prop.ItemTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.ItemTypeDesc.Name, ItemVM.Prop.ItemTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.HasParameter.Name, ItemVM.Prop.HasParameter.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.HasPrice.Name, ItemVM.Prop.HasPrice.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItemGroup = global_asax.Button(Buttons.ButtonBrowse, "ItemGroup", "", "../ItemGroup/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItemGroup = global_asax.Button(Buttons.ButtonErase, "ItemGroup", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemVM.Prop.UoMID.Name, ItemVM.Prop.UoMID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVM.Prop.UoMDesc.Name, ItemVM.Prop.UoMDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseUoM = global_asax.Button(Buttons.ButtonBrowse, "UoM", "", "../UoM/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseUoM = global_asax.Button(Buttons.ButtonErase, "UoM", "", "", true);
+
+    <script>
+
+        renderIsActive = function (value) {
+            App.IsActive.setBoxLabel(value == true ? "Yes" : "No");
+        };
+
+        var bPreventGetItemGroup = false;
+
+        getItemGroup = function (itemGroupID, itemGroupDesc, exact) {
+            if (App.ItemGroupID.isDirty() || App.ItemGroupDesc.isDirty()) {
+                App.ItemGroupID.originalValue = App.ItemGroupID.getValue();
+                App.ItemGroupDesc.originalValue = App.ItemGroupDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItemGroup", "ItemGroup"))',
+                    params: {
+                        ControlItemGroupID: App.ItemGroupID.id,
+                        ControlItemGroupDesc: App.ItemGroupDesc.id,
+                        ControlItemTypeID: App.ItemTypeID.id,
+                        ControlItemTypeDesc: App.ItemTypeDesc.id,
+                        ControlHasParameter: App.HasParameter.id,
+                        ControlHasPrice: App.HasPrice.id,
+                        FilterItemGroupID: itemGroupID,
+                        FilterItemGroupDesc: itemGroupDesc,
+                        Exact: exact
+                    },
+                    success: getItemGroupSuccess,
+                    failure: getItemGroupFailed
+                });
+            }
+        };
+
+        getItemGroupSuccess = function () {
+            if (!App.ItemGroupID.isDirty() && !App.ItemGroupDesc.isDirty() && !App.ItemTypeID.isDirty()
+                && !App.ItemTypeDesc.isDirty() && !App.HasParameter.isDirty() && !App.HasPrice.isDirty()) {
+                App.ItemGroupID.originalValue = "";
+                App.ItemGroupDesc.originalValue = "";
+                App.ItemTypeID.originalValue = "";
+                App.ItemTypeDesc.originalValue = "";
+                App.HasParameter.originalValue = "";
+                App.HasPrice.originalValue = "";
+            }
+            bPreventGetItemGroup = false;
+        };
+
+        getItemGroupFailed = function () {
+            eraseItemGroup();
+        };
+
+        itemGroupIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemGroup = true;
+                getItemGroup(field.getValue(), "", false);
+            }
+        };
+
+        itemGroupDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemGroup = true;
+                getItemGroup("", field.getValue(), false);
+            }
+        };
+
+        itemGroupIDBlur = function (itemGroupID) {
+            console.log(bPreventGetItemGroup);
+            if (!bPreventGetItemGroup) {
+                bPreventGetItemGroup = true;
+                if (itemGroupID.trim() == "")
+                    getItemGroupFailed();
+                else
+                    getItemGroup(itemGroupID, "", true);
+            }
+            bPreventGetItemGroup = false;
+        };
+
+        itemGroupDescBlur = function (itemGroupDesc) {
+            if (!bPreventGetItemGroup) {
+                bPreventGetItemGroup = true;
+                if (itemGroupDesc.trim() == "")
+                    getItemGroupFailed();
+                else
+                    getItemGroup("", itemGroupDesc, true);
+            }
+            bPreventGetItemGroup = false;
+        };
+
+        eraseItemGroup = function () {
+            App.ItemGroupID.clear();
+            App.ItemGroupDesc.clear();
+            App.ItemGroupID.originalValue = "";
+            App.ItemGroupDesc.originalValue = "";
+
+            App.ItemTypeID.clear();
+            App.ItemTypeDesc.clear();
+            App.ItemTypeID.originalValue = "";
+            App.ItemTypeDesc.originalValue = "";
+
+            App.HasParameter.clear();
+            App.HasPrice.clear();
+            App.HasParameter.originalValue = "";
+            App.HasPrice.originalValue = "";
+
+            if (App.HasParameter.getValue() == "")
+                App.grdItemParameter.getStore().loadData([], false);
+        };
+
+        /*UoM*/
+        var bPreventGetUoM = false;
+
+        getUoM = function (uomID, uomDesc, exact) {
+            if (App.UoMID.isDirty() || App.UoMDesc.isDirty()) {
+                App.UoMID.originalValue = App.UoMID.getValue();
+                App.UoMDesc.originalValue = App.UoMDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetUoM", "UoM"))',
+                    params: {
+                        ControlUoMID: App.UoMID.id,
+                        ControlUoMDesc: App.UoMDesc.id,
+                        FilterUoMID: uomID,
+                        FilterUoMDesc: uomDesc,
+                        Exact: exact
+                    },
+                    success: getUoMSuccess,
+                    failure: getUoMFailed
+                });
+            }
+        };
+
+        getUoMSuccess = function () {
+            if (!App.UoMID.isDirty() && !App.UoMDesc.isDirty()) {
+                App.UoMID.originalValue = "";
+                App.UoMDesc.originalValue = "";
+            }
+            bPreventGetUoM = false;
+        };
+
+        getUoMFailed = function () {
+            eraseUoM();
+        };
+
+        uomIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUoM = true;
+                getUoM(field.getValue(), "", false);
+            }
+        };
+
+        uomDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUoM = true;
+                getUoM("", field.getValue(), false);
+            }
+        };
+
+        uomIDBlur = function (uomID) {
+            console.log(bPreventGetUoM);
+            if (!bPreventGetUoM) {
+                bPreventGetUoM = true;
+                if (uomID.trim() == "")
+                    getUoMFailed();
+                else
+                    getUoM(uomID, "", true);
+            }
+            bPreventGetUoM = false;
+        };
+
+        uomDescBlur = function (uomDesc) {
+            if (!bPreventGetUoM) {
+                bPreventGetUoM = true;
+                if (uomDesc.trim() == "")
+                    getUoMFailed();
+                else
+                    getUoM("", uomDesc, true);
+            }
+            bPreventGetUoM = false;
+        };
+
+        eraseUoM = function () {
+            App.UoMID.clear();
+            App.UoMDesc.clear();
+            App.UoMID.originalValue = "";
+            App.UoMDesc.originalValue = "";
+        };
+
+        HasParameter = function () {
+            return (App.HasParameter.getValue().toLowerCase() == "true");
+        };
+
+        HasPrice = function () {
+            return (App.HasPrice.getValue().toLowerCase() == "true");
+        };
+
+        /*load price*/
+        getListItemGroupParameter = function () {
+            if (HasParameter()) {
+                Ext.Ajax.request({
+                    url: '@(Url.Action("GetListParamterByItemGroupID", "Item"))',
+                    method: 'POST',
+                    params: { FilterItemGroupID: App.ItemGroupID.getValue() },
+                    success: getListParameterSuccess,
+                    failure: getListParameterFailure
+                });
+            }
+        };
+
+        getListParameterSuccess = function (response) {
+            var jsonData = Ext.util.JSON.decode(response.responseText);
+            if (jsonData.data.length > 0)
+                App.grdItemParameter.getStore().loadData(jsonData.data);
+            else
+                App.grdItemParameter.getStore().loadData([], false);
+        };
+
+        getListParameterFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdItemParameter.getStore().loadData([], false);
+        };
+
+        var setVisibleItemPrice = function () {
+            App.pnlItemPrice.setVisible(false);
+            if (HasPrice())
+                App.pnlItemPrice.setVisible(true);
+        };
+        var setVisibleItemParameter = function () {
+            App.pnlItemParameter.setVisible(false);
+            if (HasParameter())
+                App.pnlItemParameter.setVisible(true);
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PItemForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItem")
+        .Padding(iBodyPadding)
+        .Items(
+          X.Panel()
+                .ID("FPnlItemCatalog")
+                .Height(400)
+                .Loader(
+                    X.ComponentLoader()
+                    .AutoLoad(true)
+                    .Url(Url.Action("Index","ImageCatalog", new { itemID = ViewData[dict_itemID].ToString(), vendorID = ViewData[dict_vendorID].ToString() }))
+                    .Mode(LoadMode.Frame)
+                )
+                .Listeners(
+                    l =>
+                    {
+                        l.AfterRender.Fn = "function(){ setInterval(function(){$('#FPnlItemCatalog-body').removeAttr('style');$('#FPnlItemCatalog-body').addClass('col-md-8 col-sm-12 col-md-offset-0'); $('iframe[name=FPnlItemCatalog_IFrame]').css('width','-webkit-fill-available !important');var iFrameDOM = $('iframe[name=FPnlItemCatalog_IFrame]').contents();iFrameDOM.find('#carousel-box').css('display', '');}, 1000); }";
+                        l.BeforeRender.Fn = "function(){ console.info('before render') }";
+                    }
+                ),
+
+          X.TabPanel()
+            .ID("TABItemCatalog")
+            .ActiveTabIndex(0)
+            .MinWidth(600)
+            .Height(350)
+            .MarginSpec("0 0 0 0")
+            .Plain(true)
+            .Items(
+                X.FormPanel()
+                    .ID("TabSpec")
+                    .Title("Specification")
+                    .BodyPadding(6)
+                    .Loader(
+                        X.ComponentLoader()
+                        .AutoLoad(true)
+                        .Url(Url.Action("GetSpecTab", new { itemID = ViewData[dict_itemID].ToString() }))
+                        .Mode(LoadMode.Component)
+                    ),
+                X.FormPanel()
+                    .ID("TabRegion")
+                    .Title("Price")
+                    .Loader(
+                        X.ComponentLoader()
+                        .AutoLoad(true)
+                        .Url(Url.Action("GetRegionTab", new { itemID = ViewData[dict_itemID].ToString(), vendorID = ViewData[dict_vendorID].ToString() }))
+                        .Mode(LoadMode.Component)
+                    )
+            )
+         )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+
+
+        )
+    )
+)

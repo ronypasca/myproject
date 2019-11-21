@@ -1,0 +1,1102 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.Controllers
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanVM
+@{
+    ViewBag.Title = "Budget Plan Template Structure";
+    var X = Html.X();
+    string sPageName = "HomeBudgetPlanVersionStructure";
+    string sToolbarPaddingSpec = "10 10 10 0";
+    int iTreeMinHeight = 200;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    string gridClass = "printSection";
+    string topBarClass = "topbar";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(ItemVersionChildVM.Prop.ChildItemTypeID.Name, "getChildItemTypeId()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treePanelBudgetVersionStructure.getSelectedNodes()[0].attributes", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, General.EnumDesc(Buttons.ButtonAdd) + "BudgetPlanVersionStructure", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treePanelBudgetVersionStructure.getSelectedNodes()[0].attributes", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, General.EnumDesc(Buttons.ButtonUpdate) + "BudgetPlanVersionStructure", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Value" + ItemPriceVM.Prop.ItemID.Name, "App.treePanelBudgetVersionStructure.getSelectedNodes()[0].attributes.itemid", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnChangeSupplier = global_asax.Button(Buttons.ButtonUpdate, "ItemPriceVendor", "Change Supplier", "../Item/" + General.EnumDesc(Buttons.ButtonBrowse) + "ItemPriceVendorPeriod", true, false, false, null, oParamList);
+
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    Button.Builder btnRefreshPrice = global_asax.Button(Buttons.ButtonReverse, sPageName, "Refresh Price", string.Empty, true);
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true).EnableToggle(true).ToggleHandler("toggleButtonHandler");
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+    Button.Builder btnPrint = global_asax.Button(Buttons.ButtonPrint, sPageName, null, string.Empty, true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GridStructure", "GetStructure()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, "btnExp", "Export", "../BudgetPlan/ExportExcelReturnDirect", true, false, false, null, oParamList, null, "SuccessExport");
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GridStructure", "GetStructure()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "App.grdBudgetPlan.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(BudgetPlanVersionStructureVM.Prop.ItemTypeID.Name, "BOI", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnExportBOI = global_asax.Button(Buttons.ButtonExport, "btnExpBOI", "Export (Only BOI Level)", "../BudgetPlan/ExportExcelReturnDirect", true, false, false, null, oParamList, null, "SuccessExport");
+
+    
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        var iTreeInitHeight = -1;
+        var sequence=0;
+
+        $(window).resize(function () {
+            resizeTreeBudgetPlanVersionStructure();
+            resizeContainer();
+        });
+
+        var doPrint = function () {
+            App.treePanelBudgetVersionStructure.setHeight("100%");
+            document.body.scrollTop = document.documentElement.scrollTop = 0;
+            window.print();
+        };
+
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelBudgetVersionStructure.getHeight();
+            resizeTreeBudgetPlanVersionStructure();
+            resizeContainer();
+        };
+
+        var resizeTreeBudgetPlanVersionStructure = function () {
+            if (App.treePanelBudgetVersionStructure != null) {
+                var iHeight = $(window).height() - (App.treePanelBudgetVersionStructure.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelBudgetVersionStructure.setHeight(iHeight);
+                if (iTreeInitHeight > iHeight)
+                    App.treePanelBudgetVersionStructure.setHeight(iHeight);
+            }
+            App.treePanelBudgetVersionStructure.updateLayout();
+        };
+
+        var selectionChangeBudgetPlanVersionStructure = function (view, record, eOpts) {
+            App.ButtonAddHomeBudgetPlanVersionStructure.setDisabled(true);
+            App.ButtonUpdateHomeBudgetPlanVersionStructure.setDisabled(true);
+            App.ButtonDeleteHomeBudgetPlanVersionStructure.setDisabled(true);
+            App.ButtonUpdateItemPriceVendor.setDisabled(true);
+
+            if(record[0]!=null && record[0] != undefined && record[0].hasOwnProperty('data')){
+                if(record[0].data.isboi){
+                    App.ButtonDeleteHomeBudgetPlanVersionStructure.setDisabled(false);
+                    if(record[0].data.children!=null)
+                        if(record[0].data.isboi == record[0].data.children[0].isboi){
+                            App.ButtonAddHomeBudgetPlanVersionStructure.setDisabled(false);
+                        }
+                }else{
+                    App.ButtonUpdateHomeBudgetPlanVersionStructure.setDisabled(false);
+                    App.ButtonUpdateItemPriceVendor.setDisabled(false);
+                }
+
+
+            }
+        };
+
+        var editBudgetPlanVersionStructure = function (editor, e) {
+
+            var vol = ((e.record.get == "undefined" || e.record.get("volume") == null) ? 0 : e.record.get("volume"));
+            var wage = ((e.record.get == "undefined" || e.record.get("wageamount") == null) ? 0 : e.record.get("wageamount"));
+            var misc = ((e.record.get == "undefined" || e.record.get("miscamount") == null) ? 0 : e.record.get("miscamount"));
+            var material = ((e.record.get == "undefined" || e.record.get("materialamount") == null) ? 0 : e.record.get("materialamount"));
+            var total = parseFloat(vol) * parseFloat(wage+misc+material);
+
+
+            /*if(total>0){*/
+            e.record.set("total", total);
+            e.record.commit();
+
+            var _itemGroupIDs = '@(ViewData["ItemGroupID"])'.toString().split(',');
+            isGroup=false;
+            if(_itemGroupIDs.length>0){
+                _itemGroupIDs.forEach(function(item){
+                    if(item==e.record.data.itemgroupid)
+                        isGroup= true;
+                });
+            }
+
+            var node=e.record.parentNode;
+            while (node!=null) {
+                var _total=0;
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    var __total = ((isNaN(node.childNodes[i].get("total")) || node.childNodes[i].get("total") == undefined )  ? 0: node.childNodes[i].get("total"));
+                    /*if(__total>0);*/
+                    _total+=parseFloat(__total);
+                }
+                if (_total==0) {
+                    node.set("total","");
+                }else
+                    node.set("total",_total);
+                node=node.parentNode;
+                e.record.commit();
+            }
+            /*}*/
+            recalculateSubTotalNodes();
+
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+            if(parseFloat(total)==0)
+            {
+
+                e.row.bgColor="#e17878";
+                if(isGroup)e.row.bgColor="";
+                /*e.cell.style.backgroundColor = "#e17878";*/
+            }
+            else{
+                e.row.bgColor="";
+            }
+        };
+
+        var beforeEditBudgetPlanVersionStructure = function (editor, e) {
+            isBOI = e.record.data.isboi;
+            isAHS = e.record.data.isahs;
+            hasChild = e.record.data.haschild;
+            isChildSameItemType=false;
+            if(hasChild)
+                isChildSameItemType = e.record.data.children[0].isboi;
+
+            if("@isDisableButton" == "True")
+                return false;
+
+            if(e.field == "volume")
+                if(!isBOI || (isBOI && isChildSameItemType && hasChild))
+                    return false;
+                else{
+                    e.column.setEditor({xtype:"numberfield",spinDownEnabled:false,spinUpEnabled:false,maxLength:16,decimalPrecision:4,hideTrigger:true,submitValue:true,enforceMaxLength:true})
+                }
+            if(e.field == "specification"){
+                if(hasChild)
+                    if(isBOI && e.record.data.children[0].isboi)return false;
+                if(!isBOI)
+                    return false;
+            }
+            var _itemGroupIDs = '@(ViewData["ItemGroupID"])'.toString().split(',');
+            if((e.field == "materialamount" || e.field == "wageamount" || e.field == "miscamount" )){
+                isGroup=false;
+                if(_itemGroupIDs.length>0){
+                    _itemGroupIDs.forEach(function(item){
+                        console.log(e.record.data.itemgroupid);
+                        if(item==e.record.data.itemgroupid)
+                            isGroup= true;
+                    });
+                }
+                if(!isBOI || (isBOI && hasChild) || isGroup)
+                    return false;
+
+            }
+
+        };
+
+        var setrowbgclass = function(node, rowIndex, rowParams, store) {
+            var _isboi = node.data.isboi;
+            var _isahs = node.data.isahs;
+            var _volume = (node.data.volume == null) ? 0 : node.data.volume;
+            var _materialamount = (node.data.materialamount == null) ? 0 : node.data.materialamount;
+            var _wageamount = (node.data.wageamount == null) ? 0 : node.data.wageamount;
+            var _miscamount = (node.data.miscamount == null) ? 0 : node.data.miscamount;
+            var _expandable = node.data.expandable;
+            var _totprice = _materialamount + _wageamount + _miscamount;
+            var _leaf = node.data.leaf;
+            var _hasChild = node.data.haschild;
+            var trueChild= true;
+            var isGrandTotal = node.data.isGrandTotal;
+            var _itemGroupIDs = '@(ViewData["ItemGroupID"])'.toString().split(',');
+
+            if(isGrandTotal== undefined)
+                isGrandTotal=false;
+
+            var isGroup=false;
+            _itemGroupIDs.forEach(function(item){
+                if(node.data.itemgroupid==item){
+                    console.log(node.data.itemgroupid);
+                    isGroup=true;
+                }
+
+            });
+
+            var isHighlight = false;
+
+            if(!node.data.hasOwnProperty('isgrandtotal')){
+                if (_isboi)
+                {
+
+                    if (node.childNodes.length==0){
+                        if(_volume <= 0 || _totprice <= 0){
+                            isHighlight=true;
+                        }
+                    }
+                    else{
+
+                        if(_volume <= 0 && node.childNodes[0].data.isahs){
+                            isHighlight=true;
+                        }
+                    }
+
+                }else if(_isahs){
+                    if(_totprice <= 0){
+                        isHighlight=true;
+                    }
+                }else if(!_isahs && !_isboi && !isGrandTotal)
+                {
+                    if(_totprice <= 0){
+                        isHighlight=true;
+                    }
+                }
+
+                if(isGroup) isHighlight=false;
+            }
+
+
+            return isHighlight?"x-grid-item-danger ":"";
+
+        };
+
+
+        var viewReady = function (grid, eOpts) {
+
+            loadTreePanel(false);
+        };
+
+        var getListBudgetPlanVersionStructure = function (nodeTree) {
+            var data =new Array();
+
+            var nodes = getDeepAllChildNodes(nodeTree);
+            for (var i = 0; i < nodes.length; i++) {
+                /*if(!nodes[i].data.root)*/
+                if(!nodes[i].data.hasOwnProperty('isGrandTotal'))
+                    data.push(nodes[i].data);
+            }
+
+            return data;
+        };
+
+        var SuccessExport = function (filename) {
+
+            window.location = "Content/"+JSON.parse(filename.responseText).result;
+            Ext.Ajax.request({
+                url: '../BudgetPlan/ClearExcelFile',
+                method: 'POST',
+                params:{
+                    filename: JSON.parse(filename.responseText).result
+                },
+                /*success: function (response) {
+                var jsonData = Ext.util.JSON.decode(response.responseText);
+                vendorList = jsonData.data;
+                if(vendorList.length > 0){
+                    var dataStore = store.store.root.data;
+                    combineVendortoTemplate(dataStore, vendorList, store.store);
+                }
+                else{
+
+                }
+            },*/
+                failure: function (response) {
+                    Ext.Msg.alert("Error Delete from Server", response);
+                }
+            });
+        };
+
+        var getDeepAllChildNodes = function(node){
+            var allNodes = new Array();
+            if(node==null || node==undefined){
+                return [];
+            }
+
+            if(!node.hasChildNodes()){
+                return node;
+            }else{
+                allNodes.push(node);
+                node.eachChild(function(Mynode){allNodes = allNodes.concat(getDeepAllChildNodes(Mynode));});
+            }
+            return allNodes;
+        };
+
+
+        var reSequence = function (NodeTree) {
+            if(NodeTree.childNodes.length==0){
+                var oldSequenceDesc = String(NodeTree.data.sequencedesc);
+                NodeTree.data.sequencedesc = NodeTree.data.sequencedesc + '.' + (i + 1).toString();
+                NodeTree.data.sequencedesc = NodeTree.data.sequencedesc.replace('.NaN', '');
+
+                NodeTree.commit();
+            }else
+
+                for (var i = 0; i < NodeTree.childNodes.length; i++) {
+                    if(!NodeTree.childNodes[i].data.hasOwnProperty('isGrandTotal')){
+                        var oldSequenceDesc = String(NodeTree.childNodes[i].data.sequencedesc);
+                        NodeTree.childNodes[i].data.parentsequence =  (NodeTree.data.sequence == 'NaN' || NodeTree.data.sequence == undefined) ? 0 : NodeTree.data.sequence;
+                        NodeTree.childNodes[i].data.sequencedesc = NodeTree.data.sequencedesc + '.' + (i + 1).toString();
+                        NodeTree.childNodes[i].data.sequencedesc = NodeTree.childNodes[i].data.sequencedesc.replace('undefined.', '');
+
+                        sequence = (sequence==undefined?0:sequence) + 1;
+                        NodeTree.childNodes[i].data.sequence = sequence;
+
+                        reSequence(NodeTree.childNodes[i]);
+                        NodeTree.commit();
+                    }
+                }
+
+
+        };
+
+
+        var deleteNodeConfirm = function () {
+            Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected record?", "deleteNode");
+        };
+
+        var deleteNode = function (title, message, fn, scope) {
+
+            if (title == "yes") {
+                /*var node = App.treePanelBudgetVersionStructure.getSelection()[0];
+                var nodeParent=node.parentNode;
+                node.remove(true);
+                recalculatePrice(nodeParent);
+                reSequence(nodeParent);*/
+                var nodearray = App.treePanelBudgetVersionStructure.getSelection();
+                nodearray.forEach(function(node) {
+                    if(node.data.isboi){
+                        var nodeParent=node.parentNode;
+                        node.remove();
+                        recalculatePrice(nodeParent);
+
+                    }
+                });
+                sequence=0;
+                reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                recalculateSubTotalNodes();
+
+            }
+
+        };
+
+        var getChildItemTypeId =function(){
+            if(App.treePanelBudgetVersionStructure.getSelection()[0].data.children!=null)
+                return App.treePanelBudgetVersionStructure.getSelection()[0].data.children[0].itemtypeid;
+            else return "";
+        };
+
+
+        var recalculatePrice= function(_node){
+            while (_node!=null) {
+                var _total=0;
+                var _volume=0;
+                var _material=0;
+                var _wage =0;
+                var _misc =0;
+
+                for (var i = 0; i < _node.childNodes.length; i++) {
+                    var total = (Ext.isEmpty(_node.childNodes[i].data.total)  ? 0: _node.childNodes[i].data.total);
+                    _total+=total;
+
+                    var material = (Ext.isEmpty(_node.childNodes[i].data.materialamount)  ? 0: _node.childNodes[i].data.materialamount);
+                    _material+=material;
+
+                    var wage = (Ext.isEmpty(_node.childNodes[i].data.wageamount)  ? 0: _node.childNodes[i].data.wageamount);
+                    _wage+=wage;
+
+                    var misc = (Ext.isEmpty(_node.childNodes[i].data.miscamount)  ? 0: _node.childNodes[i].data.miscamount);
+                    _misc+=misc;
+
+
+                }
+
+                @*if(_node.get("isboi") && _node.parentNode.get("isboi") && _node.childNodes.length>0  ){
+                    if( _node.childNodes[0].get("isboi")){
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()",0);
+                    }
+                }else*@
+                _node.set("@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()",_total);
+
+                var hasBOIChild=false;
+                if(!Ext.isEmpty(_node.childNodes))
+                    if(_node.childNodes[0].data.itemtypeid=="BOI")
+                        hasBOIChild=true;
+
+                if((_node.data.isboi && !hasBOIChild && _node.parentNode.data.isboi && _node.parentNode.id !="0")||
+                    (_node.data.isahs)){
+                    if (_material==0) {
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()","");
+                    }else
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()",_material);
+
+                    if (_wage==0) {
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()","");
+                    }else
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()",_wage);
+
+                    if (_misc==0) {
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()","");
+                    }else
+                        _node.set("@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()",_misc);
+
+                    _volume = (Ext.isEmpty(_node.data.volume)  ? 0: _node.data.volume);
+
+                    if(_volume>0){
+                        var row_totalunitprice = (parseFloat(_material==null?0:_material)+parseFloat(_wage==null?0:_wage)+parseFloat(_misc==null?0:_misc));
+                        var row_total =(parseFloat(_volume==null?0:_volume) * (Ext.isEmpty(row_totalunitprice)?0:row_totalunitprice));
+
+                        if (row_total==0) {
+                            _node.set("@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()","");
+                            _node.set("@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()","");
+                        }else{
+                            _node.set("@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()",row_totalunitprice);
+                            _node.set("@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()",row_total);
+                        }
+                    }
+
+
+                }
+                App.treePanelBudgetVersionStructure.store.getNodeById(_node.id).commit();
+                _node=_node.parentNode;
+
+            }
+        };
+
+        var afterRenderTree =function() {
+
+            /*nodes = App.treePanelBudgetVersionStructure.store.getAllRange();
+            rowIndex=0;
+            for (var rowKey in nodes) {
+                if (nodes.hasOwnProperty(rowKey)) {
+                    var row = nodes[rowKey];
+                    App.treePanelBudgetVersionStructure.editingPlugin.startEditByPosition({ row: rowIndex, column: 3 });
+                }
+            }*/
+        };
+
+
+        var loadTreePanel = function(refreshPrice){
+            if ((App.BudgetPlanTemplateID.getValue() != undefined && App.BudgetPlanTemplateID.getValue() != "") &&
+                       (App.ProjectID.getValue() != undefined && App.ProjectID.getValue() != "" && App.RegionID.getValue() != "") &&
+                       (App.BudgetPlanVersion.getValue() == null || App.BudgetPlanVersion.getValue() == undefined || App.BudgetPlanVersion.getValue() != 0)
+                       ) {
+                App.treePanelBudgetVersionStructure.store.getProxy().setExtraParams({
+                    BudgetPlanID: '@ViewData[BudgetPlanVersionStructureVM.Prop.BudgetPlanID.Name].ToString()',
+                    BudgetPlanVersion : '@ViewData[BudgetPlanVersionStructureVM.Prop.BudgetPlanVersion.Name].ToString()',
+                    BudgetPlanTemplateID: '@Model.BudgetPlanTemplateID',
+                    FeeContractor: App.FeePercentage.getValue(),
+                    Area: App.Area.getValue(),
+                    IsRefreshPrice : refreshPrice
+                });
+
+                Ext.getBody().mask('Loading');
+                App.treePanelBudgetVersionStructure.store.reload({
+                    callback: function (records, operation, success) {
+
+                        /* performance */
+                        Ext.suspendLayouts();
+
+                        sequence=0;
+                        reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                        Ext.getBody().unmask();
+                        App.treePanelBudgetVersionStructure.getRootNode().expand(true);
+
+                        /* performance */
+                        Ext.resumeLayouts(true);
+                        setTimeout("afterFirstLoadTree()", 1);
+
+                        recalculateSubTotalNodes();
+
+                    }
+                });
+            }
+
+        };
+
+        updateTreeView = function(tree, fn) {
+            var view = tree.getView();
+            view.getStore().loadRecords(fn(tree.getRootNode()));
+            view.refresh();
+            Ext.getBody().unmask();
+        };
+
+        collapseAll = function(tree) {
+            this.updateTreeView(tree, function(root) {
+                root.cascadeBy(function(node) {
+                    if (!node.isRoot() || tree.rootVisible) {
+                        node.data.expanded = false;
+                    }
+                });
+                return tree.rootVisible ? [root] : root.childNodes;
+            });
+        };
+
+        expandAll = function(tree) {
+            this.updateTreeView(tree, function(root) {
+                var nodes = [];
+                root.cascadeBy(function(node) {
+                    if (!node.isRoot() || tree.rootVisible) {
+                        node.data.expanded = true;
+                        nodes.push(node);
+                    }
+                });
+                return nodes;
+            });
+        };
+
+        var handleCollapseExpandAll = function(btn){
+            btn.setHidden(true);
+            sequence=0;
+
+            if(btn.id=='@General.EnumName(Buttons.ButtonCollapse)@sPageName'){
+                /*App.treePanelBudgetVersionStructure.collapseAll();*/
+                collapseAll(App.treePanelBudgetVersionStructure);
+                reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+            }else{
+                /*App.treePanelBudgetVersionStructure.expandAll();*/
+                expandAll(App.treePanelBudgetVersionStructure);
+                reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+
+            }
+
+        };
+
+        toggleButtonHandler = function(btn, pressed,e){
+            try {
+
+
+                sequence=0;
+                if(btn.text=='Collapse'){
+                    btn.setText('Expand');
+                    /*App.treePanelBudgetVersionStructure.collapseAll();*/
+                    collapseAll(App.treePanelBudgetVersionStructure);
+                    reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                }else{
+                    btn.setText('Collapse');
+                    /*App.treePanelBudgetVersionStructure.expandAll();*/
+                    expandAll(App.treePanelBudgetVersionStructure);
+                    reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                }
+            }catch (e) {
+
+            }
+        };
+
+
+        @*/*
+        var refreshTree = function (tree) {
+            Ext.getBody().mask('Loading');
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("RefreshPriceBudgetPlanVersionStructure", "BudgetPlan"))',
+                params: {
+                    BudgetPlanID: App.BudgetPlanID.getValue(),
+                    BudgetPlanVersion: App.BudgetPlanVersion.getValue(),
+                    BudgetPlanTemplateID: App.BudgetPlanTemplateID.getValue(),
+                    ProjectID: App.ProjectID.getValue(),
+                    ClusterID: App.ClusterID.getValue(),
+                    UnitTypeID: App.UnitTypeID.getValue(),
+                    RegionID:App.RegionID.getValue(),
+                    IsLoadTemplate: App.IsLoadTemplate.getValue(),
+                    FeeContractor: App.FeePercentage.getValue(),
+                    Area : App.Area.getValue()
+                }
+                ,
+                success : function (node) {
+                    reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+                    Ext.getBody().unmask();
+                    App.treePanelBudgetVersionStructure.getRootNode().expand(true);
+                    setTimeout("afterFirstLoadTree()", 1);
+
+
+                }
+            }
+            );
+        };*@
+
+        var renderTotalUnitPrice = function(record){
+            var row=record.data;
+            var material =parseFloat(Ext.isEmpty(row.materialamount)?0:row.materialamount);
+            var wage = parseFloat(Ext.isEmpty(row.wageamount)?0:row.wageamount);
+            var misc = parseFloat(Ext.isEmpty(row.miscamount)?0:row.miscamount);
+            var decTotalUnitPrice =parseFloat((material==null?0:material)+(wage==null?0:wage)+(misc==null?0:misc));
+
+            if(record.get("displayprice") && ( record.get("isahs") || record.get("isboi"))){
+                return decTotalUnitPrice==0?null:(Ext.util.Format.number(decTotalUnitPrice, integerNumberFormat));
+            }
+            else
+                return "";
+        };
+
+        var renderTotal = function(record){
+            isHide=false;
+
+            var decTotal=0;
+            decTotal = Ext.util.Format.number(((record.get == "total" || record.get("total") == null) ? 0 : record.get("total")), defaultNumberFormat);
+            if(record.get("isboi") && record.parentNode.get("isboi") && record.childNodes.length>0  ){
+                if( record.childNodes[0].get("isboi")){
+                    decTotal= 0;
+                    /*record.set("total",0);*/
+                }
+            }
+
+            return (decTotal==0?null:decTotal.replace(/\.?0+$/, ''));
+        };
+
+        var renderMaterialAmount = function(record){
+            var valMaterial =   Ext.util.Format.number(record.get("materialamount"),integerNumberFormat);
+            return record.get("displayprice") ?  (valMaterial==0?"":valMaterial) : "" ;
+        };
+
+        var renderWageAmount = function(record){
+            var valWage =   Ext.util.Format.number(record.get("wageamount"),integerNumberFormat);
+            return record.get("displayprice") ? (valWage==0?"":valWage)  : "" ;
+        };
+
+        var renderMiscAmount = function(record){
+            var valMisc =   Ext.util.Format.number(record.get("miscamount"),integerNumberFormat);
+            return record.get("displayprice") ? (valMisc==0?"":valMisc) : "" ;
+        };
+
+        var renderTreeColumn = function(a,b){
+
+            var recorddata = b.record.data;
+            var isboi = recorddata.isboi;
+            var isahs = recorddata.isahs;
+            var datawageamount = recorddata.wageamount;
+            var datamaterialamount = recorddata.materialamount;
+            var datamiscamount = recorddata.miscamount;
+            var datatotal =  datawageamount + datamaterialamount + datamiscamount;
+
+
+            if(!recorddata.hasOwnProperty('isGrandTotal')){
+                if(!isboi && !isahs){
+                    if(datatotal == 0){
+                        b.style = "color:red;";
+                    }
+                }
+            }
+
+            return a;
+        };
+
+        var recalculateSubTotalNodes = function(){
+            var areaSize = App.Area.value == 0 ? 1 :App.Area.value;
+            var Rootnode = App.treePanelBudgetVersionStructure.store.getRootNode();
+            var valueGrandTotal=0;
+            for (var i = 0; i < Rootnode.childNodes.length - 2; i++) {
+                valueGrandTotal=valueGrandTotal+Rootnode.childNodes[i].data.total;
+            }
+
+
+            valueUnit = App.Unit.value;
+
+            if(!Ext.isEmpty(App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.Subtotal.Name'))){
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.Subtotal.Name').set("total",valueGrandTotal);
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.ContractorFee.Name').set("total",valueGrandTotal*App.FeePercentage.getValue()/100);
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.Total.Name').set("total",valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal);
+                var dRounding = Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000;
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.Rounding.Name').set("total",dRounding);
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.GrandTotalExcPPN.Name').set("total",dRounding * valueUnit); /* kali unit */
+                var dtax = dRounding* valueUnit*0.1;
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.Tax.Name').set("total",dtax);
+                App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.GrandTotalIncPPN.Name').set("total",(dRounding* valueUnit) +dtax);
+                if(!Ext.isEmpty(App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.AreaSize.Name')))App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.AreaSize.Name').set("total",parseFloat(App.Area.value));
+                if(!Ext.isEmpty(App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceI.Name')))App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceI.Name').set("total",valueGrandTotal/parseFloat(areaSize));
+                if(!Ext.isEmpty(App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceII.Name')))App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceII.Name').set("total",(Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000)/parseFloat(areaSize));
+                if(!Ext.isEmpty(App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceIII.Name')))App.treePanelBudgetVersionStructure.store.getNodeById('@BudgetPlanVM.Prop.BasicPriceIII.Name').set("total",((Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*100)+(Math.floor((valueGrandTotal*App.FeePercentage.value/100+valueGrandTotal)/1000)*1000))/parseFloat(areaSize));
+
+            }
+        };
+
+
+
+        Ext.define('ModelBudgetPlan', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: '@BudgetPlanVersionStructureVM.Prop.SequenceDesc.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()'},
+                {name: '@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()'}
+            ]
+        });
+
+        var createGridToExports = function (grid) {
+
+            var dataToExports = getListBudgetPlanVersionStructure(grid.getRootNode());
+            dataToExports[0] = {
+                '@BudgetPlanVersionStructureVM.Prop.SequenceDesc.Name.ToLower()': 'No',
+                '@BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()' : '@BudgetPlanVersionStructureVM.Prop.ItemDesc.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()': '@BudgetPlanVersionStructureVM.Prop.Specification.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()' : '@BudgetPlanVersionStructureVM.Prop.UoMID.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()' :'@BudgetPlanVersionStructureVM.Prop.Volume.Desc',
+                '@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()':'@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()':'@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()':'@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()':'@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc' ,
+                '@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()':'@BudgetPlanVersionStructureVM.Prop.Total.Desc'
+            };
+
+            var exportStore= Ext.create('Ext.data.Store', {
+                storeId: 'exportStore',
+                data: dataToExports,
+                model: 'ModelBudgetPlan'
+            });
+
+            Ext.create('Ext.grid.Panel', {
+                id: 'gridToExport',
+                store: exportStore,
+                columns:
+                    [
+                    { text: 'No',  dataIndex: '@BudgetPlanVersionStructureVM.Prop.SequenceDesc.Name.ToLower()', type: 'string' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.ItemDesc.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.Specification.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.UoMID.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.Volume.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()' },
+                    { text: '@BudgetPlanVersionStructureVM.Prop.Total.Desc', dataIndex: '@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()' }
+                    ]
+            });
+        };
+
+        var exportFromTreePanelToGrid = function (grid) {
+            createGridToExports(grid);
+            exportGrid(App.gridToExport, false, true, 'BudgetPlan', 'xls', 'budgetplan');
+            App.gridToExport.destroy();
+            App.exportStore.destroy();
+        };
+        /*saving here*/
+        GetStructure = function(){
+            var childata = App.treePanelBudgetVersionStructure.getRootNode().childNodes;
+            var dataLength = childata.length;
+            var data = [];
+            var x;
+            for(x in childata)
+            {
+                data.push(childata[x].data);
+                var node_ = childata[x];
+                var setpushA_ = false;
+                if(node_.data.haschild){
+                    setpushA_ = true;}
+                if(node_.childNodes.length > 0){
+                    data = loopStruct(node_,data,setpushA_);
+                };
+            }
+            return data;
+        };
+        var loopStruct = function(node, data,setpush){
+
+            if(setpush){
+                var setpush_ = false;
+                var c;
+                for(c in node.childNodes)
+                {
+                    data.push(node.childNodes[c].data);
+                    var node_ = node.childNodes[c];
+                    if(node_.data.haschild){setpush_ = true;}
+                    if(node_.childNodes.length > 0){
+                        data = loopStruct(node_,data,setpush_);
+                    }
+                }
+            }
+            return data;
+        };
+
+
+        function renderTip(val, meta, rec, rowIndex, colIndex, store) {
+            meta.tdAttr = 'data-qtip="' + val.replace("'","").replace("\""," inches") + '"';
+            return val;
+        };
+
+    </script>
+}
+@(
+        X.TreePanel()
+            .ID("treePanelBudgetVersionStructure")
+            .MinHeight(iTreeMinHeight)
+            .UseArrows(true)
+            .RootVisible(false)
+            .MultiSelect(true)
+            .FolderSort(false)
+            .RowLines(true)
+            .ColumnLines(true)
+            .AllowDeselect(true)
+            .SortableColumns(false)
+            .Layout(LayoutType.Auto)
+            .AutoScroll(true)
+
+            .Cls(gridClass)
+            .Store(
+                X.TreeStore()
+                .AutoLoad(false)
+                .Group(BudgetPlanVersionStructureVM.Prop.ItemDesc.Name)
+                .Model(Html.X().Model()
+                    .Fields(X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.BudgetPlanID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.BudgetPlanVersionStructureID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Version.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Sequence.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentItemID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentVersion.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentSequence.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemVersionChildID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.HasChild.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsDefault.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsBOI.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsAHS.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemTypeID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()),
+                               X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.UoMDesc.Name.ToLower())
+                   )
+                )
+                .Proxy(Html.X().AjaxProxy()
+                    .Url(Url.Action("GetNodeBudgetPlanVersionStructure"))
+            )
+        )
+
+        .ColumnModel(
+             X.Column()
+            .Text("No")
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.SequenceDesc.Name.ToLower())
+             .Flex(1),
+            X.TreeColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.ItemDesc.Desc)
+            .Flex(3)
+            .Renderer("renderTreeColumn")
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower())
+            //.Renderer("renderTip")
+            ,
+            X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.Specification.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower())
+            .Flex(2)
+            .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("ColSpecification")
+            )
+            //.Renderer("renderTip")
+            ,
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.UoMID.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower())
+            .Flex(1),
+            X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.UoMDesc.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.UoMDesc.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.ItemID.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.ItemID.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.Version.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.Version.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.Sequence.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.Sequence.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.ParentItemID.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.ParentItemID.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.ParentSequence.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.ParentSequence.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(BudgetPlanVersionStructureVM.Prop.ParentVersion.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.ParentVersion.Name.ToLower())
+            .Flex(1).Hidden(true),
+             X.Column()
+            .Text(ItemVersionChildVM.Prop.Coefficient.Desc)
+            .DataIndex(ItemVersionChildVM.Prop.Coefficient.Name.ToLower())
+            .Flex(1).Hidden(true),
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.Volume.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower())
+            .Format(global_asax.DefaultNumberFormat)
+            .Align(ColumnAlign.End)
+            .Editor(
+                     X.NumberField()
+                         .ID("ColVolume")
+                         .SubmitValue(true)
+                         .HideTrigger(true)
+                         .EnforceMaxLength(true)
+                         .MinValue(0)
+                         .MaxLength(16)
+                         .DecimalPrecision(4)
+                         .SpinDownEnabled(false)
+                         .SpinUpEnabled(false)
+            )
+            .Flex(1)
+            ,
+            X.Column()
+            .Text("Unit Price")
+            .Flex(2)
+            .Columns(
+                X.NumberColumn()
+                .Text(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc)
+                .DataIndex(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower())
+                .Format(global_asax.IntegerNumberFormat)
+                .Align(ColumnAlign.End)
+                .Editor(
+                     X.NumberField()
+                         .ID("ColMaterial")
+                         .SubmitValue(true)
+                         .HideTrigger(true)
+                         .EnforceMaxLength(true)
+                         .MinValue(0)
+                         .MaxLength(16)
+                         .DecimalPrecision(4)
+                         .SpinDownEnabled(false)
+                         .SpinUpEnabled(false)
+                )
+                .Renderer("return renderMaterialAmount(record);"),
+                X.NumberColumn()
+                .Text(BudgetPlanVersionStructureVM.Prop.WageAmount.Desc)
+                .DataIndex(BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower())
+                .Format(global_asax.IntegerNumberFormat)
+                .Align(ColumnAlign.End)
+                .Editor(
+                     X.NumberField()
+                         .ID("ColWage")
+                         .SubmitValue(true)
+                         .HideTrigger(true)
+                         .EnforceMaxLength(true)
+                         .MinValue(0)
+                         .MaxLength(16)
+                         .DecimalPrecision(4)
+                         .SpinDownEnabled(false)
+                         .SpinUpEnabled(false)
+                )
+                .Renderer("return renderWageAmount(record);"),
+                X.NumberColumn()
+                .Text(BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc)
+                .DataIndex(BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower())
+                .Format(global_asax.IntegerNumberFormat)
+                .Align(ColumnAlign.End)
+                .Editor(
+                     X.NumberField()
+                         .ID("ColMisc")
+                         .SubmitValue(true)
+                         .HideTrigger(true)
+                         .EnforceMaxLength(true)
+                         .MinValue(0)
+                         .MaxLength(16)
+                         .DecimalPrecision(4)
+                         .SpinDownEnabled(false)
+                         .SpinUpEnabled(false)
+                )
+                .Renderer("return renderMiscAmount(record);")
+            ),
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc)
+            .Format(global_asax.IntegerNumberFormat)
+            .Align(ColumnAlign.End)
+            .Flex(2)
+            .Renderer("return renderTotalUnitPrice(record);")
+            ,
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.Total.Desc)
+            //.Format(global_asax.IntegerNumberFormat)
+            .Align(ColumnAlign.End)
+            .Flex(2)
+            .Renderer("return renderTotal(record);")
+
+
+    )
+    .ItemsFromPartial("../Shared/_PrintWindow")
+     .Listeners(listener =>
+     {
+         //listener.AfterRender.Fn = "afterRenderTree";
+         //listener.BeforeLoad.Handler = "loadTreePanel()";
+         listener.ViewReady.Fn = "viewReady";
+         //listener.AfterItemExpand.Fn = "afterItemExpand";
+         listener.SelectionChange.Fn = (!isDisableButton ? "selectionChangeBudgetPlanVersionStructure" : "");
+         //listener.AfterItemCollapse.Fn = "afterItemCollapse";
+
+     })
+    .Root(
+          X.Node().NodeID("0").Text("Root").Expanded(false)
+         )
+    .Plugins(
+         //X.FilterHeader(),
+         //.Remote(true),
+         X.BufferedRenderer(),
+         X.CellEditing()
+             .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editBudgetPlanVersionStructure")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditBudgetPlanVersionStructure")
+                .ID("rowEditorBudgetPlanVersionStructure")
+
+    )
+    //.View(Html.X().TreeView().GetRowClass(function => function.Fn = "userGridRowClass"))
+    .ViewConfig(Html.X().TreeView().LoadMask(false).GetRowClass(function => function.Fn = "setrowbgclass"))
+    .TopBar(
+        X.Toolbar()
+        .Cls(topBarClass)
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(true),
+            btnUpdate.Disabled(true),
+            btnChangeSupplier.Disabled(true),
+            btnDelete.Disabled(true).Handler("deleteNodeConfirm"),
+            btnRefreshPrice.Icon(Icon.ArrowRefresh).Disabled(isDisableButton).Handler("loadTreePanel(true);"),
+            btnCollapse,//,.Handler("handleCollapseExpandAll"),
+                        //btnExpand,//.Handler("handleCollapseExpandAll").Hidden(true),
+            btnExport,
+            btnExportBOI
+        //btnExport.Handler("exportFromTreePanelToGrid(App.treePanelBudgetVersionStructure)")
+        //btnPrint.Handler("doPrint();")
+        )
+    ).BottomBar(
+        X.StatusBar().AutoClear(1500)
+        )
+
+)

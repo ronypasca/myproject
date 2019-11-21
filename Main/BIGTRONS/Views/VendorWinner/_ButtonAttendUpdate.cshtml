@@ -1,0 +1,19 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    var FPTID = ViewData["FPTIDData"].ToString();
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("FPTID", FPTID, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GridList", "getGridList('gridPanelAttstructure')", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnSubmit = global_asax.Button(Buttons.ButtonSave, "BtnSaveAttend", "Save", "SaveAttend", true, false, false, null, oParamList, null, "");
+    
+
+}
+@(btnSubmit)
+

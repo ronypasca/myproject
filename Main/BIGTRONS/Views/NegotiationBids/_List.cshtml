@@ -1,0 +1,282 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@{
+
+    var X = Html.X();
+    
+    <script>
+        var nego = $.connection.negotiationHub;
+        $(function () {
+            nego.client.updateGrid = function (FPTID, RoundID, TopValue, BottomValue) {
+                debugger;
+               
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("IsOwnFPT", "NegotiationBids"))',
+                    params: { FPTID : FPTID, RoundID : RoundID },
+                    success: function(a,b){
+                        if (a != null && a != undefined && a != '') {
+                            if(a.objresult){
+                                addFPTtab(FPTID, RoundID, TopValue, BottomValue);
+                            }
+                        }
+                        
+                    },
+                    failure: function(){}
+                });
+                
+            };
+
+            nego.client.countDown = function (FPTID, RoundID, span) {
+                $("#LblRemaining" + FPTID + RoundID).text("Time Remaining : " + span);
+            };
+
+            nego.client.updateEndRound = function (FPTID, RoundID) {
+                App.TPContainer.remove('pnl' + FPTID + RoundID, true);
+            };
+
+            $.connection.hub.start();
+        });
+    </script>
+
+    <script>
+
+
+
+        var addFPTtab = function (FPTID, RoundID, TValue, BValue) {
+            if(Ext.isEmpty(Ext.getCmp('pnl' + FPTID + RoundID))){
+                var tabPanel = App.TPContainer;
+                tabPanel.add({
+                    id : 'pnl' + FPTID + RoundID,
+                    title: FPTID,
+                    loader: {
+                        url: '@Url.Action("GetPanel")',
+                        params: { FPTID: FPTID, RoundID: RoundID, /*lastLevel : 3*/ BValue: BValue, TValue: TValue },
+                        renderer: 'component',
+                        autoLoad: true,
+                        disableCaching :true,
+                        loadMask: {
+                            showMask: true,
+                            msg: 'Loading...'
+                        }
+                    }
+                });
+                /*tabPanel.setActiveTab(Ext.getCmp('pnl' + FPTID + RoundID));*/
+            }
+        };
+
+        checkActiveRound = function (e, f) {
+            if (e != null && e != undefined && e != '') {
+                for (var i = 0; i < e.length; i++) {
+                    addFPTtab(e[i].FPTID, e[i].RoundID, e[i].TopValue, e[i].BottomValue);
+                }
+                App.TPContainer.setActiveTab(0);
+            }
+        };
+
+        var boxReady = function (e) {
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetActiveRound", "NegotiationBids"))',
+                success: checkActiveRound,
+                failure: function(){}
+            });
+        };
+
+
+        var viewReady = function(e){
+            /*var BPTree = Ext.getCmp(e.id);
+            if (BPTree === undefined){
+                return;
+            }
+                BPTree.height = $(window).height() - BPTree.getY() - (BPTree.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();*/
+        };
+        var changechildvalue = function (e){
+            for (var i = 0; i < e.childNodes.length; i++) {
+                e.childNodes[i].set("bid",0);
+                changechildvalue(e.childNodes[i]);
+            }
+
+        };
+        var calculateTotal = function (b, e) {
+            debugger;
+            var node=e.parentNode;
+            while (node!=null) {
+                var _total=0;
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    _total+=node.childNodes[i].get("bid");
+                }
+                if (_total==0) {
+                    node.set("bid",null);
+                }else
+                    node.set("bid",_total);
+                node=node.parentNode;
+            }
+
+            var grandtotal = 0;
+            var BPTree = Ext.getCmp(b.grid.id);
+            var GrandTotalID = "";
+            var FeeID = "";
+            var AfterFeeID = "";
+            for (var i = 0; i < BPTree.store.data.items.length; i++) {
+                var node = BPTree.store.data.items[i];
+
+                if (node.data.sequencelevel == 7777){
+                    GrandTotalID = node.id;
+                }
+                if (node.data.sequencelevel == 8888){
+                    FeeID = node.id;
+                }
+                if (node.data.sequencelevel == 9999){
+                    AfterFeeID = node.id;
+                }
+                if (node.data.id != '######' &&  node.data.sequencelevel == 1) {
+                    grandtotal += node.get("bid");
+                }
+            }
+            var Fee = BPTree.store.getNodeById(FeeID).get('bid');
+            BPTree.store.getNodeById(GrandTotalID).set("bid",grandtotal);
+            BPTree.store.getNodeById(AfterFeeID).set("bid", grandtotal + (grandtotal * (Fee /100)));
+        };
+        var editBidStructure = function (a, b) {
+           
+            if(b.originalValue == b.value) return;
+            if (b.record.data.sequencelevel == 8888 && b.value > 100){
+                b.record.set('bid', b.originalValue);
+                return;
+            }
+            var BPTree = Ext.getCmp(b.grid.id);
+            var grandtotal = 0;
+            var Fee = 0;
+            var GrandTotalID = "";
+            var FeeID = "";
+            var AfterFeeID = "";
+            for (var i = 0; i < BPTree.store.data.items.length; i++) {
+                var node = BPTree.store.data.items[i];
+
+                if (node.data.sequencelevel == 7777){
+                    GrandTotalID = node.id;
+                }
+                if (node.data.sequencelevel == 8888){
+                    FeeID = node.id;
+                }
+                if (node.data.sequencelevel == 9999){
+                    AfterFeeID = node.id;
+                }
+            }
+
+            
+            /**After Fee**/
+            if (b.record.data.sequencelevel == 9999) {
+                for (var i = 0; i < BPTree.store.data.items.length; i++) {
+                    var node = BPTree.store.data.items[i];
+                    if (node.data.id != '######' &&  node.data.sequencelevel != 7777 && node.data.sequencelevel != 8888 && node.data.sequencelevel != 9999) {
+                        node.set("bid",0);
+                    }
+                }
+                Fee = BPTree.store.getNodeById(FeeID).get('bid');
+                BPTree.store.getNodeById(GrandTotalID).set("bid", b.value / (1 + (Fee / 100)) );
+                BPTree.store.commitChanges();
+            }
+            /**Fee**/
+            else if(b.record.data.sequencelevel == 8888){
+                grandtotal = BPTree.store.getNodeById(GrandTotalID).data.bid;
+                BPTree.store.getNodeById(AfterFeeID).set("bid", grandtotal + (grandtotal * (b.value /100)));
+            }
+            /**Before Fee**/
+            else if (b.record.data.sequencelevel == 7777) {
+                for (var i = 0; i < BPTree.store.data.items.length; i++) {
+                    var node = BPTree.store.data.items[i];
+                    if (node.data.id != '######' && node.data.sequencelevel != 7777 && node.data.sequencelevel != 8888 && node.data.sequencelevel != 9999) {
+                        node.set("bid", 0);
+                    }
+                }
+                Fee = BPTree.store.getNodeById(FeeID).get('bid');
+                grandtotal = BPTree.store.getNodeById(GrandTotalID).data.bid;
+                BPTree.store.getNodeById(AfterFeeID).set("bid", grandtotal + (grandtotal * (Fee / 100)));
+            }
+            else{
+                changechildvalue(b.record);
+                calculateTotal(a, b.record);
+            }
+
+        };
+
+        var beforeEditBidStructure = function (a, b, c) {
+            debugger;
+            var subitemlvl = b.grid.tag.lastLevel;
+            if (b.record.data.sequencelevel == 7777 || b.record.data.sequencelevel == 8888 || b.record.data.sequencelevel == 9999 || (b.record.data.sequencelevel <= subitemlvl)) {
+                return true;
+            }
+
+            return false;
+        };
+
+        var ExColHandler = function (e) {
+            var BPTree = Ext.getCmp(e.tag);
+            debugger;
+            if (e.text == '@General.EnumDesc(Buttons.ButtonExpand)') {
+                BPTree.expandAll();
+                e.setText('@General.EnumDesc(Buttons.ButtonCollapse)');
+            }
+            else {
+                BPTree.collapseAll();
+                e.setText('@General.EnumDesc(Buttons.ButtonExpand)');
+            }
+
+            return;
+        };
+
+        var getListStructure = function (TreePanelID) {
+            debugger;
+            var BPTree = Ext.getCmp(TreePanelID);
+            var data = [];
+
+            for (var i = 0; i < BPTree.store.data.items.length; i++) {
+                var nodeData = BPTree.store.data.items[i].data;
+                if (nodeData.id != '######') {
+                    if (nodeData.bid != undefined && nodeData.bid != 0) {
+                        data.push(nodeData);
+                    }
+
+                }
+            }
+            return data;
+        };
+        var GetLeafData = function (data, node) {
+            debugger;
+            if (node.childNodes.length == 0) {
+                data.push(node.data);
+            } else {
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    data = GetLeafData(data, node.childNodes[i]);
+                }
+            }
+            return data;
+        };
+        var renderTreeColumn = function(a,b,c,d,e,f,g){
+            
+            var prop = g.grid.tag;
+            var bvalue = b.record.data.bpvalue - (b.record.data.bpvalue * (prop.bVal / 100));
+            if(a > bvalue && c.data.sequencelevel != 8888){
+                b.style = "color:red;";
+            }
+            return Ext.util.Format.number(a, integerNumberFormat);
+        };
+
+        var onSubmit = function(a,b,c,d,e){
+
+            var BPTree = Ext.getCmp(d.treeID);
+            BPTree.store.commitChanges();
+        };
+
+
+
+    </script>
+
+}
+
+
+
+@(
+    X.TabPanel().ID("TPContainer").Listeners(x => x.BoxReady.Fn = "boxReady")
+)

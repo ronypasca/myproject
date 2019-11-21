@@ -1,0 +1,904 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    var isDisableVersion = (Model.BudgetPlanVersion > 1);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control"+BudgetPlanVM.Prop.BudgetPlanID.Name, "CFP"+BudgetPlanVM.Prop.BudgetPlanID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.Description.Name, "CFP" + BudgetPlanVM.Prop.Description.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVM.Prop.BudgetPlanVersion.Name, "CFP" + BudgetPlanVM.Prop.BudgetPlanVersion.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlan = global_asax.Button(Buttons.ButtonBrowse, "BudgetPlan", "", "../BudgetPlan/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBudgetPlan = global_asax.Button(Buttons.ButtonErase, "BudgetPlan", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Name, BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Name, BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTypeDesc.Name, BudgetPlanTemplateVM.Prop.BudgetPlanTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlanTemplate = global_asax.Button(Buttons.ButtonBrowse, "BudgetPlanTemplate", "", "../BudgetPlanTemplate/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBudgetPlanTemplate = global_asax.Button(Buttons.ButtonErase, "BudgetPlanTemplate", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.CompanyDesc.Name, ProjectVM.Prop.CompanyDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.LocationDesc.Name, ProjectVM.Prop.LocationDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.DivisionDesc.Name, ProjectVM.Prop.DivisionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + RegionVM.Prop.RegionID.Name, RegionVM.Prop.RegionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.RegionDesc.Name, ProjectVM.Prop.RegionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterID.Name, ClusterVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ClusterVM.Prop.ClusterDesc.Name, ClusterVM.Prop.ClusterDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCluster = global_asax.Button(Buttons.ButtonBrowse, "Cluster", "", "../Cluster/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCluster = global_asax.Button(Buttons.ButtonErase, "Cluster", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeID.Name, UnitTypeVM.Prop.UnitTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + UnitTypeVM.Prop.UnitTypeDesc.Name, UnitTypeVM.Prop.UnitTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseUnitType = global_asax.Button(Buttons.ButtonBrowse, "UnitType", "", "../UnitType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseUnitType = global_asax.Button(Buttons.ButtonErase, "UnitType", "", "", true);
+
+    oParam = new Parameter(General.EnumDesc(Params.Caller), "GetData", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "{ BudgetPlanID: App.CFPBudgetPlanID.getValue(), BudgetPlanVersion: App.CFPBudgetPlanVersion.getValue() }", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnGetData = global_asax.Button(Buttons.ButtonDetail, "ButtonGetData", "Get Data", "Add", true,false,false,null,oParamList);
+
+    <script>
+        /*budget plan*/
+        
+        var bPreventGetBudgetPlan = false;
+
+        getBudgetPlan = function (budgetPlanID, budgetPlanDesc, exact) {
+            if (App.CFPBudgetPlanID.isDirty() || App.CFPDescription.isDirty()) {
+                App.CFPBudgetPlanID.originalValue = App.CFPBudgetPlanID.getValue();
+                App.CFPDescription.originalValue = App.CFPDescription.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBudgetPlan", "BudgetPlan"))',
+                    params: {
+                        ControlBudgetPlanID: App.CFPBudgetPlanID.id,
+                        ControlBudgetPlanDesc: App.CFPDescription.id,
+                        ControlBudgetPlanVersion: App.CFPBudgetPlanVersion.id,
+                        FilterBudgetPlanID: budgetPlanID,
+                        FilterBudgetPlanDesc: budgetPlanDesc,
+                        Exact: exact
+                    },
+                    success: getBudgetPlanSuccess,
+                    failure: getBudgetPlanFailed
+                });
+            }
+        };
+
+        getBudgetPlanSuccess = function () {
+            if (!App.CFPBudgetPlanID.isDirty() && !App.CFPDescription.isDirty()
+                && !App.CFPBudgetPlanVersion.isDirty()) {
+                App.CFPBudgetPlanID.originalValue = "";
+                App.CFPDescription.originalValue = "";
+                App.CFPBudgetPlanVersion.originalValue = "";
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        getBudgetPlanFailed = function () {
+            eraseBudgetPlan();
+        };
+
+        budgetPlanIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlan = true;
+                getBudgetPlan(field.getValue(), "", false);
+                getListBudgetPlanStructure();
+            }
+        };
+
+        budgetPlanDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlan = true;
+                getBudgetPlan("", field.getValue(), false);
+            }
+        };
+
+        budgetPlanIDBlur = function (budgetPlanID) {
+            console.log(bPreventGetBudgetPlan);
+            if (!bPreventGetBudgetPlan) {
+                bPreventGetBudgetPlan = true;
+                if (budgetPlanID.trim() == "")
+                    getBudgetPlanFailed();
+                else {
+                    getBudgetPlan(budgetPlanID, "", true);
+                    getListBudgetPlanStructure();
+                }
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        budgetPlanDescBlur = function (budgetPlanDesc) {
+            if (!bPreventGetBudgetPlan) {
+                bPreventGetBudgetPlan = true;
+                if (budgetPlanDesc.trim() == "")
+                    getBudgetPlanFailed();
+                else
+                    getBudgetPlan("", budgetPlanDesc, true);
+            }
+            bPreventGetBudgetPlan = false;
+        };
+
+        eraseBudgetPlan = function () {
+            App.CFPBudgetPlanID.clear();
+            App.CFPDescription.clear();
+            App.CFPBudgetPlanVersion.clear();
+            App.CFPBudgetPlanID.originalValue = "";
+            App.CFPDescription.originalValue = "";
+            App.CFPBudgetPlanVersion.originalValue = "";
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        /*load template*/
+        getListBudgetPlanTemplateStructure = function (bloadtemplate) {
+            if ((App.BudgetPlanTemplateID.getValue() != undefined && App.BudgetPlanTemplateID.getValue() != "") &&
+                    (App.ProjectID.getValue() != undefined && App.ProjectID.getValue() != "" && App.RegionID.getValue() != "") &&
+                    (App.BudgetPlanVersion.getValue() == null || App.BudgetPlanVersion.getValue() == undefined || App.BudgetPlanVersion.getValue() == 1)
+                    ) {
+                App.IsLoadTemplate.setValue(bloadtemplate);
+                App.treePanelBudgetVersionStructure.store.getProxy().setExtraParams({
+                    BudgetPlanID: App.BudgetPlanID.getValue(),
+                    BudgetPlanVersion: App.BudgetPlanVersion.getValue(),
+                    BudgetPlanTemplateID: App.BudgetPlanTemplateID.getValue(),
+                    RegionID:App.RegionID.getValue(),
+                    ProjectID: App.ProjectID.getValue(),
+                    ClusterID: App.ClusterID.getValue(),
+                    UnitTypeID: App.UnitTypeID.getValue(),
+                    IsLoadTemplate: App.IsLoadTemplate.getValue(),
+                    IsRefreshPrice : false
+                });
+
+                Ext.getBody().mask('Loading');
+                App.treePanelBudgetVersionStructure.store.load({
+                    callback: function (a, b, c) {
+                        debugger;
+                        /*Ext.suspendLayouts();*/
+                        App.treePanelBudgetVersionStructure.getRootNode().expand();
+                        /*  Ext.resumeLayouts(true);*/
+                        if (b._response.responseText != "") {
+                            if (Ext.util.JSON.decode(b._response.responseText.toString()).hasOwnProperty("script")) {
+                                var func = new Function(Ext.util.JSON.decode(b._response.responseText.toString()).script);
+                                func.call();
+                                
+                            }
+                        }
+                        Ext.getBody().unmask();
+                        reSequence(App.treePanelBudgetVersionStructure.getRootNode());
+
+
+                    }
+                });
+            }
+        };
+
+
+        getListBudgetPlanTemplateStructureSuccess = function (response) {
+            var jsonData = Ext.util.JSON.decode(response.responseText);
+            if (jsonData.data.length > 0)
+                App.treePanelBudgetVersionStructure.getStore().loadData(jsonData.data);
+            else
+                App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        getListBudgetPlanTemplateStructureFailure = function (response) {
+            showError(sTitle, response.responseText);
+            App.grdBudgetPlanTemplateStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetBudgetPlanTemplate = false;
+
+        getBudgetPlanTemplate = function (budgetPlanTemplateID, budgetPlanTemplateDesc, exact) {
+            if (App.BudgetPlanTemplateID.isDirty() || App.BudgetPlanTemplateDesc.isDirty()) {
+                App.BudgetPlanTemplateID.originalValue = App.BudgetPlanTemplateID.getValue();
+                App.BudgetPlanTemplateDesc.originalValue = App.BudgetPlanTemplateDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBudgetPlanTemplate", "BudgetPlanTemplate"))',
+                    params: {
+                        ControlBudgetPlanTemplateID: App.BudgetPlanTemplateID.id,
+                        ControlBudgetPlanTemplateDesc: App.BudgetPlanTemplateDesc.id,
+                        ControlBudgetPlanTypeDesc: App.BudgetPlanTypeDesc.id,
+                        FilterBudgetPlanTemplateID: budgetPlanTemplateID,
+                        FilterBudgetPlanTemplateDesc: budgetPlanTemplateDesc,
+                        Exact: exact
+                    },
+                    success: getBudgetPlanTemplateSuccess,
+                    failure: getBudgetPlanTemplateFailed
+                });
+            }
+        };
+
+        getBudgetPlanTemplateSuccess = function () {
+            if (!App.BudgetPlanTemplateID.isDirty() && !App.BudgetPlanTemplateDesc.isDirty()
+                && !App.BudgetPlanTypeDesc.isDirty() ) {
+                App.BudgetPlanTemplateID.originalValue = "";
+                App.BudgetPlanTemplateDesc.originalValue = "";
+                App.BudgetPlanTypeDesc.originalValue = "";
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        getBudgetPlanTemplateFailed = function () {
+            eraseBudgetPlanTemplate();
+        };
+
+        budgetPlanTemplateIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanTemplate = true;
+                getBudgetPlanTemplate(field.getValue(), "", false);
+                getListBudgetPlanTemplateStructure();
+            }
+        };
+
+        budgetPlanTemplateDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanTemplate = true;
+                getBudgetPlanTemplate("", field.getValue(), false);
+            }
+        };
+
+        budgetPlanTemplateIDBlur = function (budgetPlanTemplateID) {
+            console.log(bPreventGetBudgetPlanTemplate);
+            if (!bPreventGetBudgetPlanTemplate) {
+                bPreventGetBudgetPlanTemplate = true;
+                if (budgetPlanTemplateID.trim() == "")
+                    getBudgetPlanTemplateFailed();
+                else {
+                    getBudgetPlanTemplate(budgetPlanTemplateID, "", true);
+                    getListBudgetPlanTemplateStructure();
+                }
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        budgetPlanTemplateDescBlur = function (budgetPlanTemplateDesc) {
+            if (!bPreventGetBudgetPlanTemplate) {
+                bPreventGetBudgetPlanTemplate = true;
+                if (budgetPlanTemplateDesc.trim() == "")
+                    getBudgetPlanTemplateFailed();
+                else
+                    getBudgetPlanTemplate("", budgetPlanTemplateDesc, true);
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        eraseBudgetPlanTemplate = function () {
+            App.BudgetPlanTemplateID.clear();
+            App.BudgetPlanTemplateDesc.clear();
+            App.BudgetPlanTemplateID.originalValue = "";
+            App.BudgetPlanTemplateDesc.originalValue = "";
+
+            App.BudgetPlanTypeDesc.clear();
+            App.BudgetPlanTypeDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        ControlCompanyDesc: App.CompanyDesc.id,
+                        ControlRegionID: App.RegionID.id,
+                        ControlRegionDesc: App.RegionDesc.id,
+                        ControlLocationDesc: App.LocationDesc.id,
+                        ControlDivisionDesc: App.DivisionDesc.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+            }
+            bPreventGetProject = false;
+        };
+
+        getProjectFailed = function () {
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.RegionID.clear();
+            App.RegionDesc.clear();
+            App.CompanyDesc.clear();
+            App.LocationDesc.clear();
+            App.DivisionDesc.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+            App.RegionID.originalValue = "";
+            App.RegionDesc.originalValue = "";
+            App.CompanyDesc.originalValue = "";
+            App.LocationDesc.originalValue = "";
+            App.DivisionDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetCluster = false;
+
+        getCluster = function (clusterID, clusterDesc, exact) {
+            if (App.ClusterID.isDirty() || App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = App.ClusterID.getValue();
+                App.ClusterDesc.originalValue = App.ClusterDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCluster", "Cluster"))',
+                    params: {
+                        ControlClusterID: App.ClusterID.id,
+                        ControlClusterDesc: App.ClusterDesc.id,
+                        FilterClusterID: clusterID,
+                        FilterClusterDesc: clusterDesc,
+                        Exact: exact
+                    },
+                    success: getClusterSuccess,
+                    failure: getClusterFailed
+                });
+            }
+        };
+
+        getClusterSuccess = function () {
+            if (!App.ClusterID.isDirty() && !App.ClusterDesc.isDirty()) {
+                App.ClusterID.originalValue = "";
+                App.ClusterDesc.originalValue = "";
+            }
+            bPreventGetCluster = false;
+        };
+
+        getClusterFailed = function () {
+            eraseCluster();
+        };
+
+        clusterIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster(field.getValue(), "", false);
+            }
+        };
+
+        clusterDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCluster = true;
+                getCluster("", field.getValue(), false);
+            }
+        };
+
+        clusterIDBlur = function (clusterID) {
+            console.log(bPreventGetCluster);
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterID.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster(clusterID, "", true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        clusterDescBlur = function (clusterDesc) {
+            if (!bPreventGetCluster) {
+                bPreventGetCluster = true;
+                if (clusterDesc.trim() == "")
+                    getClusterFailed();
+                else
+                    getCluster("", clusterDesc, true);
+            }
+            bPreventGetCluster = false;
+        };
+
+        eraseCluster = function () {
+            App.ClusterID.clear();
+            App.ClusterDesc.clear();
+            App.ClusterID.originalValue = "";
+            App.ClusterDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        var bPreventGetUnitType = false;
+
+        getUnitType = function (unitTypeID, unitTypeDesc, exact) {
+            if (App.UnitTypeID.isDirty() || App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = App.UnitTypeID.getValue();
+                App.UnitTypeDesc.originalValue = App.UnitTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetUnitType", "UnitType"))',
+                    params: {
+                        ControlUnitTypeID: App.UnitTypeID.id,
+                        ControlUnitTypeDesc: App.UnitTypeDesc.id,
+                        FilterUnitTypeID: unitTypeID,
+                        FilterUnitTypeDesc: unitTypeDesc,
+                        Exact: exact
+                    },
+                    success: getUnitTypeSuccess,
+                    failure: getUnitTypeFailed
+                });
+            }
+        };
+
+        getUnitTypeSuccess = function () {
+            if (!App.UnitTypeID.isDirty() && !App.UnitTypeDesc.isDirty()) {
+                App.UnitTypeID.originalValue = "";
+                App.UnitTypeDesc.originalValue = "";
+            }
+            bPreventGetUnitType = false;
+        };
+
+        getUnitTypeFailed = function () {
+            eraseUnitType();
+        };
+
+        unitTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType(field.getValue(), "", false);
+            }
+        };
+
+        unitTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetUnitType = true;
+                getUnitType("", field.getValue(), false);
+            }
+        };
+
+        unitTypeIDBlur = function (unitTypeID) {
+            console.log(bPreventGetUnitType);
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeID.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType(unitTypeID, "", true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        unitTypeDescBlur = function (unitTypeDesc) {
+            if (!bPreventGetUnitType) {
+                bPreventGetUnitType = true;
+                if (unitTypeDesc.trim() == "")
+                    getUnitTypeFailed();
+                else
+                    getUnitType("", unitTypeDesc, true);
+            }
+            bPreventGetUnitType = false;
+        };
+
+        eraseUnitType = function () {
+            App.UnitTypeID.clear();
+            App.UnitTypeDesc.clear();
+            App.UnitTypeID.originalValue = "";
+            App.UnitTypeDesc.originalValue = "";
+
+
+            App.treePanelBudgetVersionStructure.getStore().loadData([], false);
+        };
+
+        loadBudgetPlanByVersion = function ( combo, record, eOpts) {
+            console.log(record[0].data.BudgetPlanID);
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("Detail", "BudgetPlan"))',
+                params: {
+                    Caller : "ComboBoxVersion",
+                    Selected: App.grdBudgetPlan.getRowsValues({ selectedOnly: true })[0],
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanVersion.Name": record[0].data.BudgetPlanVersion,
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanID.Name": App.BudgetPlanID.getValue()
+                    }
+            });
+        };
+
+
+    </script>
+
+    var cbxBudgetPlanVersion = X.ComboBoxFor(model => model.BudgetPlanVersion)
+            .FieldLabel(BudgetPlanVM.Prop.BudgetPlanVersion.Desc)
+            .Editable(false)
+            .ReadOnly(true)
+            .LabelWidth(iLabelWidth)
+            .Width(iFieldWidth)
+            .DisplayField(BudgetPlanVM.Prop.BudgetPlanVersion.Name)
+            .ValueField(BudgetPlanVM.Prop.BudgetPlanVersion.Name)
+            .EmptyValue("")
+            .Store(
+                X.Store()
+                .AutoLoad(true)
+                .Proxy(X.AjaxProxy()
+                    .Url(Url.Action("../BudgetPlan/GetListBudgetPlanVersion"))
+                    .Reader(X.JsonReader()
+                    .RootProperty("data")
+                    )
+
+                )
+                .SorterFor(Model, model => model.BudgetPlanVersion, Ext.Net.SortDirection.ASC)
+                .Parameters(ps =>
+                {
+
+                    ps.Add(new StoreParameter(BudgetPlanVM.Prop.BudgetPlanID.Name, "App.BudgetPlanID.getValue()", ParameterMode.Raw));
+                }
+                )
+                .Model(Html.X().Model()
+                    .Name("ModelBudgetPlanVersion")
+                    .Fields(
+                        X.ModelField(Model, model => model.BudgetPlanVersion).Mapping(Model.BudgetPlanVersion.ToString())
+                        )
+                    )
+            )
+            .Listeners(ls =>
+            {
+                ls.Select.Fn = "loadBudgetPlanByVersion";
+            }
+
+                );
+}
+@(
+    X.FormPanel()
+    .ID("PBudgetPlanForm")
+    .Items(
+        X.FormPanel()
+        .ID("FBudgetPlan")
+        .Items(
+            X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlBudgetPlanLeft")
+                  .PaddingSpec(sPanelPaddingSpec)
+                  .Items(
+                       X.HiddenFor("IsLoadTemplate"),
+                        X.TextFieldFor(model => model.BudgetPlanID)
+                            .FieldLabel(BudgetPlanVM.Prop.BudgetPlanID.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.Description)
+                            .FieldLabel(BudgetPlanVM.Prop.Description.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            .Items(
+                                X.TextFieldFor(model => model.BudgetPlanTemplateID)
+                                    .FieldLabel(BudgetPlanVM.Prop.BudgetPlanTemplateDesc.Desc)
+                                    .ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "budgetPlanTemplateIDSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "budgetPlanTemplateIDBlur(this.getValue());";
+                                        oListeners.Change.Handler = "getListBudgetPlanTemplateStructure(true);";
+                                    })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.BudgetPlanTemplateDesc)
+                                    .FieldLabel("")
+                                    .ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "budgetPlanTemplateDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "budgetPlanTemplateDescBlur(this.getValue());";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseBudgetPlanTemplate
+                                        .Disabled(isDisableButton || isDisableVersion),
+                                        btnEraseBudgetPlanTemplate.Handler("eraseBudgetPlanTemplate()")
+                                        .Disabled(isDisableButton || isDisableVersion)
+                                    )
+                                    ),
+                         X.TextFieldFor(model => model.BudgetPlanTypeDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.BudgetPlanTypeDesc.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.TextFieldFor(model => model.CompanyDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.CompanyDesc.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.HiddenFor(model=>model.RegionID)
+                           .Listeners(oListeners =>
+                                    oListeners.Change.Handler = "getListBudgetPlanTemplateStructure(true);"),
+                         X.TextFieldFor(model => model.RegionDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.RegionDesc.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.TextFieldFor(model => model.LocationDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.LocationDesc.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.TextFieldFor(model => model.DivisionDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.DivisionDesc.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                         X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.ProjectID)
+                                .FieldLabel(ItemPriceVM.Prop.ProjectDesc.Desc)
+                              .ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "projectIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "projectIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.ProjectDesc)
+                                .FieldLabel("")
+                               .ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "projectDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "projectDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseProject
+                                    .Disabled(isDisableButton || isDisableVersion),
+                                    btnEraseProject.Handler("eraseProject")
+                                    .Disabled(isDisableButton || isDisableVersion)
+                                ))
+
+                        ),
+
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlBudgetPlanRight")
+                  .PaddingSpec(sPanelPaddingSpec)
+                  .Items(
+
+                            X.FieldContainer()
+                                .FieldLabel("")
+                                .LabelWidth(0)
+                                .Width(iFieldWidth)
+                                .Layout(LayoutType.Column)
+                                .Items(
+                                    X.TextFieldFor(model => model.ClusterID)
+                                        .FieldLabel(ItemPriceVM.Prop.ClusterDesc.Desc)
+                                        .ReadOnly(true)
+                                        .Listeners(oListeners =>
+                                        {
+                                            oListeners.SpecialKey.Handler = "clusterIDSpecialKey(item, e);";
+                                            oListeners.Blur.Handler = "clusterIDBlur(this.getValue());";
+                                            oListeners.Change.Handler = "getListBudgetPlanTemplateStructure(true);";
+                                        })
+                                        .LabelWidth(iLabelWidth)
+                                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                    X.TextFieldFor(model => model.ClusterDesc)
+                                        .FieldLabel("")
+                                        .ReadOnly(true)
+                                        .Listeners(oListeners =>
+                                        {
+                                            oListeners.SpecialKey.Handler = "clusterDescSpecialKey(item, e);";
+                                            oListeners.Blur.Handler = "clusterDescBlur(this.getValue());";
+                                        })
+                                        .LabelWidth(0)
+                                        .Width((iFieldWidth - iLabelWidth) / 2)
+                                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                        .RightButtons(
+                                            btnBrowseCluster
+                                            .Disabled(isDisableButton || isDisableVersion),
+                                            btnEraseCluster.Handler("eraseCluster")
+                                            .Disabled(isDisableButton || isDisableVersion)
+                                        )),
+                            X.FieldContainer()
+                                .FieldLabel("")
+                                .LabelWidth(0)
+                                .Width(iFieldWidth)
+                                .Layout(LayoutType.Column)
+                                .Items(
+                                    X.TextFieldFor(model => model.UnitTypeID)
+                                        .FieldLabel(ItemPriceVM.Prop.UnitTypeDesc.Desc)
+                                        .ReadOnly(true)
+                                        .Listeners(oListeners =>
+                                        {
+                                            oListeners.SpecialKey.Handler = "unitTypeIDSpecialKey(item, e);";
+                                            oListeners.Blur.Handler = "unitTypeIDBlur(this.getValue());";
+                                            oListeners.Change.Handler = "getListBudgetPlanTemplateStructure(true);";
+                                        })
+                                        .LabelWidth(iLabelWidth)
+                                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                    X.TextFieldFor(model => model.UnitTypeDesc)
+                                        .FieldLabel("")
+                                        .ReadOnly(true)
+                                        .Listeners(oListeners =>
+                                        {
+                                            oListeners.SpecialKey.Handler = "unitTypeDescSpecialKey(item, e);";
+                                            oListeners.Blur.Handler = "unitTypeDescBlur(this.getValue());";
+                                        })
+                                        .LabelWidth(0)
+                                        .Width((iFieldWidth - iLabelWidth) / 2)
+                                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                        .RightButtons(
+                                            btnBrowseUnitType
+                                            .Disabled(isDisableButton || isDisableVersion),
+                                            btnEraseUnitType.Handler("eraseUnitType")
+                                            .Disabled(isDisableButton || isDisableVersion)
+                                        )),
+                           X.NumberFieldFor(model => model.Area)
+                            .FieldLabel(BudgetPlanVM.Prop.Area.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth)
+                            .SpinDownEnabled(false)
+                            .SpinUpEnabled(false)
+                            //.Listeners(oListener =>
+                            //{
+                            //    oListener.AfterRender.Handler = "formatNumber(this, false);";
+                            //    oListener.Blur.Handler = "formatNumber(this, false);";
+                            //})
+                            .FieldCls("numField"),
+                           X.NumberFieldFor(model => model.Unit)
+
+
+                            .FieldLabel(BudgetPlanVM.Prop.Unit.Desc)
+                            .MinValue(1)
+
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth)
+                            .SpinDownEnabled(false)
+                            .SpinUpEnabled(false)
+                            //.Listeners(oListener =>
+                            //{
+                            //    oListener.AfterRender.Handler = "formatNumber(this, false);";
+                            //    oListener.Blur.Handler = "formatNumber(this, false);";
+                            //})
+                            .FieldCls("numField"),
+                           X.TextFieldFor(model => model.FeePercentage)
+                            .FieldLabel(BudgetPlanVM.Prop.FeePercentage.Desc)
+                            .ReadOnly(true)
+                            .Hidden(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth)
+                            .Listeners(oListener =>
+                            {
+                                oListener.AfterRender.Handler = "formatNumber(this, false);";
+                                oListener.Blur.Handler = "formatNumber(this, false);";
+                            })
+                            .FieldCls("numField"),
+                            X.TextFieldFor(model => model.BudgetPlanVersion)
+                            .FieldLabel(BudgetPlanVM.Prop.BudgetPlanVersion.Desc)
+                            .ReadOnly(true)
+                            .Hidden(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                          X.DateFieldFor(model => model.CreatedDate)
+                            .FieldLabel(BudgetPlanVM.Prop.CreatedDate.Desc)
+                            .Format(global_asax.DefaultDateFormat)
+                            .ReadOnly(true)
+                            .Hidden(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                          X.DateFieldFor(model => model.ModifiedDate)
+                            .FieldLabel(BudgetPlanVM.Prop.ModifiedDate.Desc)
+                            .Format(global_asax.DefaultDateFormat)
+                            .ReadOnly(true)
+                            .Hidden(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                          X.TextFieldFor(model => model.StatusDesc)
+                            .FieldLabel(BudgetPlanVM.Prop.StatusDesc.Desc)
+                            .ReadOnly(true)
+                            .Hidden(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth)
+                      )
+
+                 )
+         )
+    )
+)
+

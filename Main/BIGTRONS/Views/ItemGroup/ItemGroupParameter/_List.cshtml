@@ -1,0 +1,206 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemGroupParameterVM>
+@{
+    ViewBag.Title = "Parameter";
+    var X = Html.X();
+    string sPageName = "_SubItemGroup";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdParameter.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    /*Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "Parameter", "Delete", "DeleteParameter", false, false,false,null,oParamList,null,"deleteRow()");
+
+    */
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, null, null, "", true);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlgrdParameter", "grdParameter", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "Parameter", "Add", "../Parameter/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdParameter()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdParameter();
+        });
+
+        resizeGrdParameter = function () {
+            if (App.grdParameter != null)
+                App.grdParameter.setHeight($(window).height() - App.grdParameter.getY() - (App.grdParameter.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdParameter.getStore().reload();
+        };
+
+        deleteRow = function()
+        {
+            Ext.Ajax.request({
+                url: '../ItemGroup/DeleteParameter',
+                method: 'POST',
+                params: {
+                    ItemGroupID: App.grdParameter.getRowsValues({selectedOnly:true})[0].ItemGroupID,
+                    ParameterDesc: App.grdParameter.getRowsValues({selectedOnly:true})[0].ParameterDesc,
+                    ParameterID: App.grdParameter.getRowsValues({selectedOnly:true})[0].ParameterID
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                  
+                    if(jsonData.success != false || undefined){App.grdParameter.getStore().remove(App.grdParameter.getSelectionModel().getSelection());
+                        Ext.Msg.alert("Deleted", response) ;         }
+                    else{Ext.Msg.alert("Can't Delete Existing Parameter", response)}
+                },
+                failure: function (response) {
+                    Ext.Msg.alert("ERROR Delete Parameter", response);
+                }
+            });
+            
+           
+             
+        };
+       
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdParameter")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelItemGroupParameter")
+                .Fields(
+            X.ModelField().Name(Model, model => model.ItemGroupID),
+            X.ModelField().Name(Model, model => model.ParameterID),
+            X.ModelField().Name(Model, model => model.ParameterDesc)
+                )
+            )
+        )
+    .ColumnModel(
+         X.Column()
+        .Text(ItemGroupParameterVM.Prop.ItemGroupID.Desc)
+        .DataIndex(Model, model => model.ItemGroupID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                /*.Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })*/
+                .Listeners(oListeners =>
+                {
+                    oListeners.SpecialKey.Handler = "parameterDescSpecialKey(item, e);";
+                    oListeners.Blur.Handler = "parameterDescBlur(this.getValue());";
+                })
+            )
+        )
+        .Hidden(true)
+        ,
+        X.Column()
+        .Text(ItemGroupParameterVM.Prop.ParameterID.Desc)
+        .DataIndex(Model, model => model.ParameterID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                /*.Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })*/
+                .Listeners(oListeners =>
+                {
+                    oListeners.SpecialKey.Handler = "parameterDescSpecialKey(item, e);";
+                    oListeners.Blur.Handler = "parameterDescBlur(this.getValue());";
+                })
+            )
+        ),
+        X.Column()
+        .Text(ItemGroupParameterVM.Prop.ParameterDesc.Desc)
+        .DataIndex(Model, model => model.ParameterDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListeners =>
+                {
+                    oListeners.SpecialKey.Handler = "parameterDescy(item, e);";
+                    oListeners.Blur.Handler = "parameterDescIDBlur(this.getValue());";
+
+                })
+            )
+        )
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(isDisableButton),
+            btnDelete.Disabled(isDisableButton).
+            Handler("deleteRow()")
+
+
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

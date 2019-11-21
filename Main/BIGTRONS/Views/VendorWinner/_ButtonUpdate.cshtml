@@ -1,0 +1,9 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    var FPTID = ViewData["FPTIDData"].ToString();
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdFPTNegotiationRound.store.reload()");
+}
+
+@(btnList)

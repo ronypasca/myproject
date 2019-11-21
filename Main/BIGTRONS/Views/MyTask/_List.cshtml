@@ -1,0 +1,1256 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MyTaskVM    
+@{
+
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyTaskss.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyTasks", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyTasks.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyTasks", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetailNegoConf = global_asax.Button(Buttons.ButtonDetail, "Nego", null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyTasksUploadItem.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyTasks", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetailUpload = global_asax.Button(Buttons.ButtonDetail, "Upload", null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyApprvl.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyApproval", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetailAproval = global_asax.Button(Buttons.ButtonDetail, sPageName + "_", null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyTasksInvitation.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyTasks", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetailInvitation = global_asax.Button(Buttons.ButtonDetail, "Invitation", null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("FromBtn", "MyApproval", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyApprvl.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName + "_", null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    //Button.Builder btnVerify = global_asax.Button(Buttons.ButtonVerify, sPageName, null, string.Empty, true);
+
+
+    #region Approval Grid
+    var GridApproval = X.Panel()
+.ID("PMapprv")
+.Frame(true)
+.Items(
+X.Panel()
+    .ID("PMyApprvlFrom")
+    .Frame(true)
+    .Items(
+    X.GridPanel()
+    .ID("grdMyApprvl")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+            .ExtraParams(exParam =>
+                exParam.AddRange(new Parameter[]{
+                                            new Parameter()
+                                                {
+                                                    Name = "isFromApproval",
+                                                    Value = "TRUE",
+                                                    Mode = ParameterMode.Value,
+                                                    Encode = false
+                                                }
+                    })
+            )
+
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+    //.SorterFor(Model, model => model.EmployeeID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(MyTaskVM.Prop.TaskID.Desc)
+        .DataIndex(Model, model => model.TaskID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MyTaskVM.Prop.TaskDescription.Desc)
+        .DataIndex(Model, model => model.TaskDesciption)
+        .Flex(3).Hidden(false)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MyTaskVM.Prop.CreatedBy.Desc)
+        .DataIndex(Model, model => model.CreatedBy)
+        .Flex(1).Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MyTaskVM.Prop.CreatorFullName.Desc)
+        .DataIndex(Model, model => model.CreatorFullName)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .DataIndex(Model, model => model.StatusID)
+        .Hidden(true),
+        X.Column()
+        .Text(MyTaskVM.Prop.StatusDesc.Desc)
+        .DataIndex(Model, model => model.StatusDesc)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MyTaskVM.Prop.CurrentApprovalLvl.Desc)
+        .DataIndex(Model, model => model.CurrentApprovalLvl)
+        .Flex(1).Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.DateColumn()
+        .Text(MyTaskVM.Prop.CreatedDate.Desc)
+        .DataIndex(Model, model => model.CreatedDate)
+        .Format(global_asax.DefaultDateFormat)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(MyTaskVM.Prop.Remarks.Desc)
+        .DataIndex(Model, model => model.Remarks)
+        .Flex(2).Hidden(false)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        //X.Column()
+        //.DataIndex(Model, model => model.MailNotificationID)
+        //.Flex(2).Hidden(true),
+
+        X.Column()
+        .DataIndex(Model, model => model.ScheduleID)
+        .Flex(2).Hidden(true),
+
+        X.Column()
+        .DataIndex(Model, model => model.Subject)
+        .Flex(2).Hidden(true)
+
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnDetailAproval.Disabled(true),
+            btnUpdate.Disabled(true)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)
+);
+
+    #endregion
+
+    #region e-Negotiation
+    #region NegoConfig
+    var grdNegoConfig = X.Panel()
+                        .ID("PMTaskGeneral")
+                        .Frame(true)
+                        .Items(
+                            X.Panel()
+                                .ID("PMyTasksForm")
+                                .Frame(true)
+                                .Items(
+                                X.GridPanel()
+                                .ID("grdMyTasks")
+                                .Padding(iBodyPadding)
+                                .MinHeight(iGridMinHeight)
+                                .SelectionModel(
+                                    X.RowSelectionModel()
+                                    .Mode(SelectionMode.Multi)
+                                    .AllowDeselect(true)
+                                )
+                                .Listeners(oListener =>
+                                {
+                                    oListener.SelectionChange.Handler = "selectionChangeNego(selected.length)";
+                                })
+                                .Store(
+                                    X.StoreForModel()
+                                    .Proxy(
+                                        X.AjaxProxy()
+                                        .Url(Url.Action("Read"))
+                                        .Reader(X.JsonReader().RootProperty("data"))
+                                        .ExtraParams(exParam =>
+                                            exParam.AddRange(new Parameter[]{
+                                                        new Parameter()
+                                                            {
+                                                                Name = "isFromApproval",
+                                                                Value = "FALSE",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            },
+                                                        new Parameter()
+                                                            {
+                                                                Name = "eNegotiation",
+                                                                Value = "negotiationconfig",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            }
+                                                })
+                                        )
+                                    )
+                                    .AutoLoad(true)
+                                    .RemoteSort(true)
+                                    .RemotePaging(true)
+                                    .RemoteFilter(true)
+                                    .PageSize(iPageSize)
+                                //.SorterFor(Model, model => model.EmployeeID, Ext.Net.SortDirection.ASC)
+                                )
+                                .ColumnModel(
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskID.Desc)
+                                    .DataIndex(Model, model => model.TaskID)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskDescription.Desc)
+                                    .DataIndex(Model, model => model.TaskDesciption)
+                                    .Flex(3)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskOwnerDesc.Desc)
+                                    .DataIndex(Model, model => model.TaskOwnerDesc)
+                                    .Flex(3).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatedBy.Desc)
+                                    .DataIndex(Model, model => model.CreatedBy)
+                                    .Flex(1).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatorFullName.Desc)
+                                    .DataIndex(Model, model => model.CreatorFullName)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.StatusDesc.Desc)
+                                    .DataIndex(Model, model => model.StatusDesc)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.DateColumn()
+                                    .Text(MyTaskVM.Prop.TaskDateTimeStamp.Desc)
+                                    .DataIndex(Model, model => model.TaskDateTimeStamp)
+                                    .Format(global_asax.DefaultDateFormat)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    )
+                                )
+                                .Plugins(
+                                    X.FilterHeader()
+                                    .Remote(true)
+                                )
+                                .TopBar(
+                                    X.Toolbar()
+                                    .PaddingSpec(sToolbarPaddingSpec)
+                                    .Items(
+                                    btnDetailNegoConf.Disabled(true)
+                                    )
+                                )
+                                .BottomBar(
+                                    X.PagingToolbar()
+                                    .DisplayInfo(true)
+                                    .BaseCls("paging")
+                                    .DisplayMsg("Displaying {0} - {1} of {2}")
+                                    .EmptyMsg("No records to display")
+                                )
+                            )
+                  );
+    #endregion
+    #region vendor Winner
+    var grdVendorWinner = X.Panel()
+                        .ID("PMTaskGenerals")
+                        .Frame(true)
+                        .Items(
+                            X.Panel()
+                                .ID("PMyTasksForms")
+                                .Frame(true)
+                                .Items(
+                                X.GridPanel()
+                                .ID("grdMyTaskss")
+                                .Padding(iBodyPadding)
+                                .MinHeight(iGridMinHeight)
+                                .SelectionModel(
+                                    X.RowSelectionModel()
+                                    .Mode(SelectionMode.Multi)
+                                    .AllowDeselect(true)
+                                )
+                                .Listeners(oListener =>
+                                {
+                                    oListener.SelectionChange.Handler = "selectionChangeMT(selected.length)";
+                                })
+                                .Store(
+                                    X.StoreForModel()
+                                    .Proxy(
+                                        X.AjaxProxy()
+                                        .Url(Url.Action("Read"))
+                                        .Reader(X.JsonReader().RootProperty("data"))
+                                        .ExtraParams(exParam =>
+                                            exParam.AddRange(new Parameter[]{
+                                                        new Parameter()
+                                                            {
+                                                                Name = "isFromApproval",
+                                                                Value = "FALSE",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            },
+                                                        new Parameter()
+                                                            {
+                                                                Name = "eNegotiation",
+                                                                Value = "vendorwinner",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            }
+                                                })
+                                        )
+                                    )
+                                    .AutoLoad(true)
+                                    .RemoteSort(true)
+                                    .RemotePaging(true)
+                                    .RemoteFilter(true)
+                                    .PageSize(iPageSize)
+                                //.SorterFor(Model, model => model.EmployeeID, Ext.Net.SortDirection.ASC)
+                                )
+                                .ColumnModel(
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskID.Desc)
+                                    .DataIndex(Model, model => model.TaskID)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskDescription.Desc)
+                                    .DataIndex(Model, model => model.TaskDesciption)
+                                    .Flex(3)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatedBy.Desc)
+                                    .DataIndex(Model, model => model.CreatedBy)
+                                    .Flex(1).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatorFullName.Desc)
+                                    .DataIndex(Model, model => model.CreatorFullName)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.StatusDesc.Desc)
+                                    .DataIndex(Model, model => model.StatusDesc)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.DateColumn()
+                                    .Text(MyTaskVM.Prop.TaskDateTimeStamp.Desc)
+                                    .DataIndex(Model, model => model.TaskDateTimeStamp)
+                                    .Format(global_asax.DefaultDateFormat)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    )
+                                )
+                                .Plugins(
+                                    X.FilterHeader()
+                                    .Remote(true)
+                                )
+                                .TopBar(
+                                    X.Toolbar()
+                                    .PaddingSpec(sToolbarPaddingSpec)
+                                    .Items(
+                                    btnDetail.Disabled(true)
+                                    )
+                                )
+                                .BottomBar(
+                                    X.PagingToolbar()
+                                    .DisplayInfo(true)
+                                    .BaseCls("paging")
+                                    .DisplayMsg("Displaying {0} - {1} of {2}")
+                                    .EmptyMsg("No records to display")
+                                )
+                            )
+                  );
+    #endregion
+    #endregion
+
+    #region e-Invitation
+    var grdInvitation = X.Panel()
+                        .ID("PMTaskInvitation")
+                        .Frame(true)
+                        .Items(
+                            X.Panel()
+                                .ID("PMyTasksInvitationForm")
+                                .Frame(true)
+                                .Items(
+                                X.GridPanel()
+                                .ID("grdMyTasksInvitation")
+                                .Padding(iBodyPadding)
+                                .MinHeight(iGridMinHeight)
+                                .SelectionModel(
+                                    X.RowSelectionModel()
+                                    .Mode(SelectionMode.Multi)
+                                    .AllowDeselect(true)
+                                )
+                                .Listeners(oListener =>
+                                {
+                                    oListener.SelectionChange.Handler = "selectionChangeInvitation(selected.length)";
+                                })
+                                .Store(
+                                    X.StoreForModel()
+                                    .Proxy(
+                                        X.AjaxProxy()
+                                        .Url(Url.Action("Read"))
+                                        .Reader(X.JsonReader().RootProperty("data"))
+                                        .ExtraParams(exParam =>
+                                            exParam.AddRange(new Parameter[]{
+                                                        new Parameter()
+                                                            {
+                                                                Name = "isFromApproval",
+                                                                Value = "FALSE",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            },
+                                                        new Parameter()
+                                                            {
+                                                                Name = "eInvitation",
+                                                                Value = "TRUE",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+
+                                                            },
+                                                        new Parameter()
+                                                            {
+                                                                Name = "InvitationFunctionID",
+                                                                Value = "GetValueFID",
+                                                                Mode = ParameterMode.Raw,
+                                                                Encode = true
+                                                            }
+                                                        //App.HiddenFID.value
+
+                                                })
+                                        )
+                                    )
+                                    .AutoLoad(true)
+                                    .RemoteSort(true)
+                                    .RemotePaging(true)
+                                    .RemoteFilter(true)
+                                    .PageSize(iPageSize)
+                                //.SorterFor(Model, model => model.EmployeeID, Ext.Net.SortDirection.ASC)
+                                )
+                                .ColumnModel(
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskID.Desc)
+                                    .DataIndex(Model, model => model.TaskID)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskDescription.Desc)
+                                    .DataIndex(Model, model => model.TaskDesciption)
+                                    .Flex(3)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskOwnerDesc.Desc)
+                                    .DataIndex(Model, model => model.TaskOwnerDesc)
+                                    .Flex(3).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatedBy.Desc)
+                                    .DataIndex(Model, model => model.CreatedBy)
+                                    .Flex(1).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatorFullName.Desc)
+                                    .DataIndex(Model, model => model.CreatorFullName)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.StatusDesc.Desc)
+                                    .DataIndex(Model, model => model.StatusDesc)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.DateColumn()
+                                    .Text(MyTaskVM.Prop.TaskDateTimeStamp.Desc)
+                                    .DataIndex(Model, model => model.TaskDateTimeStamp)
+                                    .Format(global_asax.DefaultDateFormat)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    )
+                                )
+                                .Plugins(
+                                    X.FilterHeader()
+                                    .Remote(true)
+                                )
+                                .TopBar(
+                                    X.Toolbar()
+                                    .PaddingSpec(sToolbarPaddingSpec)
+                                    .Items(btnDetailInvitation.Disabled(true)
+                                    //btnDetailNegoConf.Disabled(true)
+                                    )
+                                )
+                                .BottomBar(
+                                    X.PagingToolbar()
+                                    .DisplayInfo(true)
+                                    .BaseCls("paging")
+                                    .DisplayMsg("Displaying {0} - {1} of {2}")
+                                    .EmptyMsg("No records to display")
+                                )
+                            )
+                  );
+    #endregion
+
+    #region e-Catalog
+    var grdCatalogTask = X.Panel()
+                        .ID("PMTaskUpload")
+                        .Frame(true)
+                        .Items(
+                            X.Panel()
+                                .ID("PMyTasksFormUpload")
+                                .Frame(true)
+                                .Items(
+                                X.GridPanel()
+                                .ID("grdMyTasksUploadItem")
+                                .Padding(iBodyPadding)
+                                .MinHeight(iGridMinHeight)
+                                .SelectionModel(
+                                    X.RowSelectionModel()
+                                    .Mode(SelectionMode.Multi)
+                                    .AllowDeselect(true)
+                                )
+                                .Listeners(oListener =>
+                                {
+                                    oListener.SelectionChange.Handler = "selectionChangeUpload(selected.length)";
+                                })
+                                .Store(
+                                    X.StoreForModel()
+                                    .Proxy(
+                                        X.AjaxProxy()
+                                        .Url(Url.Action("Read"))
+                                        .Reader(X.JsonReader().RootProperty("data"))
+                                        .ExtraParams(exParam =>
+                                            exParam.AddRange(new Parameter[]{
+                                                        new Parameter()
+                                                            {
+                                                                Name = "isFromApproval",
+                                                                Value = "FALSE",
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            },
+                                                        new Parameter()
+                                                            {
+                                                                Name = "eCatalog",
+                                                                Value = bool.TrueString,
+                                                                Mode = ParameterMode.Value,
+                                                                Encode = false
+                                                            }
+                                                })
+                                        )
+                                    )
+                                    .AutoLoad(true)
+                                    .RemoteSort(true)
+                                    .RemotePaging(true)
+                                    .RemoteFilter(true)
+                                    .PageSize(iPageSize)
+                                //.SorterFor(Model, model => model.EmployeeID, Ext.Net.SortDirection.ASC)
+                                )
+                                .ColumnModel(
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskID.Desc)
+                                    .DataIndex(Model, model => model.TaskID)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskDescription.Desc)
+                                    .DataIndex(Model, model => model.TaskDesciption)
+                                    .Flex(3)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.TaskOwnerDesc.Desc)
+                                    .DataIndex(Model, model => model.TaskOwnerDesc)
+                                    .Flex(3).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatedBy.Desc)
+                                    .DataIndex(Model, model => model.CreatedBy)
+                                    .Flex(1).Hidden(true)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.CreatorFullName.Desc)
+                                    .DataIndex(Model, model => model.CreatorFullName)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.Column()
+                                    .Text(MyTaskVM.Prop.StatusDesc.Desc)
+                                    .DataIndex(Model, model => model.StatusDesc)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    ),
+                                    X.DateColumn()
+                                    .Text(MyTaskVM.Prop.TaskDateTimeStamp.Desc)
+                                    .DataIndex(Model, model => model.TaskDateTimeStamp)
+                                    .Format(global_asax.DefaultDateFormat)
+                                    .Flex(1)
+                                    .Items(
+                                        X.Container()
+                                        .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                                        .Layout(LayoutType.HBox)
+                                        .Items(
+                                            X.TextField()
+                                            .Flex(1)
+                                            .Listeners(oListener =>
+                                            {
+                                                oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                                            })
+                                        )
+                                    )
+                                )
+                                .Plugins(
+                                    X.FilterHeader()
+                                    .Remote(true)
+                                )
+                                .TopBar(
+                                    X.Toolbar()
+                                    .PaddingSpec(sToolbarPaddingSpec)
+                                    .Items(
+                                    btnDetailUpload.Disabled(true)
+                                    )
+                                )
+                                .BottomBar(
+                                    X.PagingToolbar()
+                                    .DisplayInfo(true)
+                                    .BaseCls("paging")
+                                    .DisplayMsg("Displaying {0} - {1} of {2}")
+                                    .EmptyMsg("No records to display")
+                                )
+                            )
+                  );
+    #endregion
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdMyTask()", 1);
+            setTimeout("resizeGrdMyApprvl()", 1);
+        });
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdMyTask();
+            resizeGrdMyApprvl();
+        });
+        resizeGrdMyTask = function () {
+            if (App.grdMyTask != null)
+                App.grdMyTask.setHeight($(window).height() - App.grdMyTask.getY() - (App.grdMyTask.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+        resizeGrdMyApprvl = function () {
+            if (App.grdMyApprvl != null)
+                App.grdMyApprvl.setHeight($(window).height() - App.grdMyApprvl.getY() - (App.grdMyApprvl.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeNego = function (length) {
+            App.ButtonDetailNego.setDisabled(length != 1);
+        };
+
+        selectionChangeInvitation = function (length) {
+            App.ButtonDetailInvitation.setDisabled(length != 1);
+        };
+
+        selectionChangeUpload = function (length) {
+            App.ButtonDetailUpload.setDisabled(length != 1);
+        };
+
+        selectionChangeMT = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            /*App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);*/
+        };
+        selectionChange = function (selected) {
+            var length = selected.length;
+            disabled=false;
+            if(selected.length==1)if(selected[0].data.StatusID==1)disabled=true;
+            App.ButtonDetailHome_.setDisabled(length != 1);
+            App.ButtonUpdateHome_.setDisabled(length != 1);
+            App.ButtonUpdateHome_.setDisabled(disabled);
+            /*App.ButtonDeleteHome.setDisabled(length < 1);*/
+        };
+        reloadGridMyTask = function () {
+            App.grdMyTask.store.load();
+        };
+        reloadGridMyApproval = function () {
+            App.grdMyApprvl.store.load();
+        };
+
+        deleteSuccessMyTask = function () {
+            App.grdMyTask.getStore().reload();
+        };
+
+        deleteSuccessApproval = function () {
+            App.grdMyApprvl.getStore().reload();
+        };
+        GetValueFID =function(){
+            debugger;
+            return 'WA';
+        };
+        reloadInvitationGrid = function(FunctionID){
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("Read", "MyTask"))',
+                params: {
+                    InvitationFunctionID: FunctionID,
+                    eInvitation: 'TRUE',
+                    FunctionID: FunctionID
+                },
+                success: function (result) {
+                    debugger;
+                    App.grdMyTasksInvitation.getStore().remove(App.grdMyTasksInvitation.store.data.items);
+                    var data = result.data;
+                    if (data.length > 0){                        
+                        for (var n = 0; n < data.length; n++) {
+                            var s = data[n];
+                            App.grdMyTasksInvitation.store.add(
+                                data
+                                /*new ModelRecipientList({
+                                    OwnerID: s.UserID,
+                                    RecipientDesc: s.FirstName,
+                                    RecipientTypeID: 1,
+                                    MailAddress: s.Email
+                                })*/
+                            );
+                        }
+                    }
+                },
+                failure: function () { 
+                    App.grdMyTasksInvitation.getStore().remove(App.grdMyTasksInvitation.store.data.items);
+                }
+            });
+        };
+    </script>
+}
+@(
+
+    X.TabPanel()
+        .ID("TPMtask")
+        .Items(
+                   X.Panel()
+                    .ID("pnlMyApprvl")
+                    .Title("My Task")
+                    .Padding(10)
+                    .Items(GridApproval),
+                   X.Panel()
+                    .Title("e-Negotiation")
+                    .TabMenu(m => m.Add(X.Menu()
+                        .Items(
+                            X.MenuItem()
+                                .Text("Negotiation Config")
+                                .Listeners(l => l.Click.Handler = "App.pnlMyTask.show();App.pnlMyTask2.hide();"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Vendor Winner")
+                                .Listeners(l => l.Click.Handler = "App.pnlMyTask2.show();App.pnlMyTask.hide();"),
+                            X.MenuSeparator()
+                        ))
+                    )
+                    .Items(X.Panel()
+                                 .ID("pnlMyTask")
+                                 .Title("Negotiation Configurations")
+                                 .Padding(10)
+                                 .Items(grdNegoConfig)
+                                 .Hidden(false),
+                                 X.Panel()
+                                 .ID("pnlMyTask2")
+                                 .Title("Vendor Winner")
+                                 .Padding(10)
+                                 .Items(grdVendorWinner)
+                                 .Hidden(true)
+                                 ),
+                   X.Panel()
+                    .Title("e-Invitation")
+                    .TabMenu(m => m.Add(X.Menu()
+                        .Items(
+                        
+                            X.MenuItem()
+                                .Text("Pre-Tender")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F05')"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Aanwijzing")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F06')"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Bid Opening")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F07')"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Clarification")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F08')"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Result-Winner")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F10')"),
+                            X.MenuSeparator(),
+                            X.MenuItem()
+                                .Text("Result-Participation")
+                                .Listeners(l => l.Click.Handler = "reloadInvitationGrid('F11')"),
+                            X.MenuSeparator()
+                        ))
+                    )
+                    .Items(grdInvitation, X.TextField().ID("HiddenFID").Hidden(true)).Listeners(x=>x.BeforeRender.Handler= "GetValueFID()"),
+                   X.Panel()
+                    .Title("e-Catalog")
+                    .TabMenu(m => m.Add(X.Menu()
+                        .Items(
+                            X.MenuItem()
+                                .Text("Upload Item")
+                                .Listeners(l => l.Click.Handler = "App.pnlMyTask3.show();App.pnlMyTask2.hide();App.pnlMyTask.hide();")
+                        ))
+                    )
+                    .Items(grdCatalogTask)
+                 )
+
+    )

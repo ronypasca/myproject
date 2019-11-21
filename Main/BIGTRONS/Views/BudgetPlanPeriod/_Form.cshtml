@@ -1,0 +1,218 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanPeriodVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var sPanelVendorPaddingSpec = "10 0 0 20";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    
+    <script>
+
+        loadBudgetPlanByVersion = function ( combo, record, eOpts) {
+            console.log(record[0].data.BudgetPlanID);
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("Detail", "BudgetPlanPeriod"))',
+                params: {
+                    Caller : "ComboBoxVersion",
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanVersion.Name": record[0].data.BudgetPlanVersion,
+                    "@BudgetPlanVersionVM.Prop.BudgetPlanID.Name": App.BudgetPlanID.getValue()
+                    }
+            });
+        };
+
+        afterrender = function () {
+            if (App.StatusDesc.getValue() != "Approved")
+            App.ButtonUpdateDetail.setDisabled(true);
+        }
+
+    </script>
+
+}
+@(
+            X.Panel()
+            .ID("PBudgetPlanForm")
+            .Frame(true)
+            .Listeners(ln => ln.AfterRender.Fn = "afterrender")
+            .Items(
+                X.FormPanel()
+                .ID("FBudgetPlan")
+                .Padding(iBodyPadding)
+                .Items(
+                    X.Container()
+                    .Layout(LayoutType.Column)
+                    .Items(
+                            X.Panel()
+                            .Cls("fullOnSmall")
+                            .ColumnWidth(0.5)
+                            .ID("pnlBudgetPlanLeft")
+                            .Items(
+                                X.TextFieldFor(model => model.BudgetPlanID)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.BudgetPlanID.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                X.TextFieldFor(model => model.Description)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.Description.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.LastIQVersionPeriodID)
+                                    .Hidden(true),
+                                    X.TextFieldFor(model => model.BudgetPlanTemplateDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.BudgetPlanTemplateDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.BudgetPlanTypeDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.BudgetPlanTypeID.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.CompanyDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.CompanyDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.RegionDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.RegionDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.LocationDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.LocationDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.DivisionDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.DivisionDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth)
+                                ),
+                            X.Panel()
+                            .Cls("fullOnSmall")
+                            .ColumnWidth(0.5)
+                            .ID("pnlBudgetPlanRight")
+                            .Items(
+                                X.TextFieldFor(model => model.ProjectDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.ProjectDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                X.TextFieldFor(model => model.ClusterDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.ClusterDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.UnitTypeDesc)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.UnitTypeDesc.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                    X.TextFieldFor(model => model.Area)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.Area.Desc)
+                                    .ReadOnly(true)
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth),
+                                X.ComboBoxFor(model => model.BudgetPlanVersion)
+                                    .FieldLabel(BudgetPlanPeriodVM.Prop.BudgetPlanVersion.Desc)
+                                    .Editable(false)
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonDetail))
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iFieldWidth)
+                                    .DisplayField(BudgetPlanPeriodVM.Prop.BudgetPlanVersion.Name)
+                                    .ValueField(BudgetPlanPeriodVM.Prop.BudgetPlanVersion.Name)
+                                    .EmptyValue("")
+                                    .Store(
+                                        X.Store()
+                                        .AutoLoad(true)
+                                        .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("../BudgetPlan/GetListBudgetPlanVersion"))
+                                            .Reader(X.JsonReader()
+                                            .RootProperty("data"))
+                                        )
+                                        .SorterFor(Model, model => model.BudgetPlanVersion, Ext.Net.SortDirection.ASC)
+                                        .Parameters(ps =>
+                                        {
+                                            ps.Add(new StoreParameter(BudgetPlanPeriodVM.Prop.BudgetPlanID.Name, "App.BudgetPlanID.getValue()", ParameterMode.Raw));
+                                        }
+                                        )
+                                    .Model(Html.X().Model()
+                                        .Name("ModelBudgetPlanPeriodVersion_")
+                                        .Fields(
+                                            X.ModelField(Model, model => model.BudgetPlanVersion).Mapping(Model.BudgetPlanVersion.ToString())
+                                            )
+                                        )
+                                    )
+                                    .Listeners(ls =>
+                                        ls.Select.Fn = "loadBudgetPlanByVersion"
+                                        )
+                        ,
+                X.DateFieldFor(model => model.CreatedDate)
+                .FieldLabel(BudgetPlanPeriodVM.Prop.CreatedDate.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Format(global_asax.DefaultDateFormat),
+                X.DateFieldFor(model => model.ModifiedDate)
+                .FieldLabel(BudgetPlanPeriodVM.Prop.ModifiedDate.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Format(global_asax.DefaultDateFormat),
+                X.TextFieldFor(model => model.StatusDesc)
+                .FieldLabel(BudgetPlanPeriodVM.Prop.StatusDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+            )
+
+                 ),
+         X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.325)
+                    .ID("pnlBudgetPlanVersionPeriod")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    .Items(
+                     X.Panel()
+                         .ID("pnlPeriod")
+                         .Title("Period")
+                         .Collapsible(true)
+                         .ItemsFromPartial("Period/_List", Model.ListBudgetPlanVersionPeriodVM, ViewData)
+                           
+                       ),
+                     X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.675)
+                    .ID("pnlBudgetPlanVersionVendor")
+                    .PaddingSpec(sPanelVendorPaddingSpec)
+                    .Items(
+                     X.Panel()
+                         .ID("pnlVendor")
+                         .Title("Vendor")
+                         .Collapsible(true)
+                         .ItemsFromPartial("Vendor/_List", Model.ListBudgetPlanVersionVendorVM, ViewData)
+                       )
+
+                   )
+         )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+
+
+        )
+    )
+)
+

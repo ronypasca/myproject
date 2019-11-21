@@ -1,0 +1,297 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdFPT.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("Lang", "App.CBLang.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("type", "App.CBType.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+
+    Button.Builder btnDownload = X.Button()
+    .ID("ButtonDownloadHome")
+    .Text("Download").DirectEvents(events =>
+    {
+        events.Click.Url = Url.Action("Download");
+        events.Click.IsUpload = true;
+        events.Click.ExtraParams.AddRange(oParamList);
+    });
+    
+
+    Button.Builder btnEmail = global_asax.Button(Buttons.ButtonGenerate, sPageName, "Generate Email", "GenerateEmail", true, paramList: oParamList);
+
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdFPT()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdFPT();
+        });
+
+        resizeGrdFPT = function () {
+            if (App.grdFPT != null)
+                App.grdFPT.setHeight($(window).height() - App.grdFPT.getY() - (App.grdFPT.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDownloadHome.setDisabled(length < 1);
+            App.ButtonGenerateHome.setDisabled(length < 1);
+            
+        };
+
+        getSelectedRow = function(){
+            var selected = App.grdFPT.getRowsValues({selectedOnly:true})[0];
+            selected.Vendor = null;
+            return selected;
+
+        };
+
+        RendererBR = function(records){
+            var newchar = '<br>';
+            retval = records.split('$').join(newchar);
+            return retval;
+        };
+
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdFPT")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.CreatedDate, Ext.Net.SortDirection.DESC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(FPTVM.Prop.FPTID.Desc)
+        .DataIndex(Model, model => model.FPTID)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(FPTVM.Prop.Descriptions.Desc)
+        .DataIndex(Model, model => model.Descriptions)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(FPTVM.Prop.Projects.Desc)
+        .DataIndex(Model, model => model.Projects)
+        .Flex(3)
+        .Renderer("RendererBR")
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(FPTVM.Prop.BudgetPlans.Desc)
+        .DataIndex(Model, model => model.BudgetPlans)
+        .Flex(3)
+        .Renderer("RendererBR")
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(FPTVM.Prop.Vendors.Desc)
+        .DataIndex(Model, model => model.Vendors)
+        .Flex(3)
+        .Renderer("RendererBR")
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.DateColumn()
+        .Text(FPTVM.Prop.Schedule.Desc)
+        .DataIndex(Model, model => model.ScheduleDateFPT)
+        .Flex(3)
+        .Format(global_asax.DefaultDateFormat)
+
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(FPTVM.Prop.LastStatus.Desc)
+        .DataIndex(Model, model => model.LastStatus)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.DateColumn()
+        .Text(FPTVM.Prop.CreatedDate.Desc)
+        .DataIndex(Model, model => model.CreatedDate)
+        .Flex(3)
+        .Format(global_asax.DefaultDateFormat)
+        .Hidden(true)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )
+
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            X.ComboBox()
+            .ID("CBLang")
+            .Width(100)
+            .Editable(false)
+            .QueryMode(DataLoadMode.Local)
+            .EmptyText("Language")
+            .Items(
+            new ListItem("English", "EN"),
+            new ListItem("Indonesia", "ID")
+            ),
+            X.ComboBox()
+            .ID("CBType")
+            .Editable(false)
+            .QueryMode(DataLoadMode.Local)
+            .EmptyText("Report type")
+            .Items(
+                new ListItem("Berita acara negosiasi pengadaan", "1"),
+                new ListItem("Berita acara negosiasi pekerjaan", "2"),
+                new ListItem("Rekomendasi", "3"),
+                //new ListItem("SP tender", "3"),
+                new ListItem("SP tender pemasangan", "4"),
+                new ListItem("SP tender pengadaan", "5"),
+                new ListItem("SP nsc pemasangan", "6"),
+                new ListItem("SP nsc pengadaan", "7"),
+                new ListItem("Thank you letter", "8")
+            )
+            ,btnDownload.Disabled(true)
+            ,btnEmail.Disabled(true)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

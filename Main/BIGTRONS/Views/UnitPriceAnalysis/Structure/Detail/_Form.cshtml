@@ -1,0 +1,954 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionChildVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var formulaButtonWidth = 30;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    string page = "Child";
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.ItemID.Name, ItemVersionChildVM.Prop.ChildItemID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.ItemDesc.Name, ItemVersionChildVM.Prop.ChildItemDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.ItemTypeDesc.Name, ItemVersionChildVM.Prop.ItemTypeDesc.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.ItemGroupDesc.Name, ItemVersionChildVM.Prop.ItemGroupDesc.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.VersionDesc.Name, ItemVersionChildVM.Prop.VersionDesc.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.Version.Name, ItemVersionChildVM.Prop.Version.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.ItemTypeID.Name, ItemVersionChildVM.Prop.ItemTypeID.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemVersionChildVM.Prop.UoMDesc.Name, ItemVersionChildVM.Prop.UoMDesc.Name + page, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterAHS", true.ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItem = global_asax.Button(Buttons.ButtonBrowse, "UnitPriceAnalysis", "", "../UnitPriceAnalysis/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlAlternativeItem", "grdAlternativeItem", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseAlternativeItem = global_asax.Button(Buttons.ButtonAdd, "AlternativeUnitPriceAnalysis", null, "../UnitPriceAnalysis/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItem = global_asax.Button(Buttons.ButtonErase, "UnitPriceAnalysis", "", "", true);
+
+    /* Item Version Browse */
+    <script>
+        var bPreventGetItemVersion = false;
+
+        getItemVersion = function (ItemID, ItemDesc, exact) {
+            if (App.ChildItemID.isDirty() || App.ChildItemDesc.isDirty()) {
+                App.ChildItemID.originalValue = App.ChildItemID.getValue();
+                App.ChildItemDesc.originalValue = App.ChildItemDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItemVersion", "UnitPriceAnalysis"))',
+                    params: {
+                        ControlItemID: App.ChildItemID.id,
+                        ControlItemDesc: App.ChildItemDesc.id,
+                        ControlItemGroupDesc: App.ItemGroupDescChild.id,
+                        ControlItemTypeDesc: App.ItemTypeDescChild.id,
+                        ControlVersionDesc: App.VersionDescChild.id,
+                        ControlVersion: App.VersionChild.id,
+                        ControlItemTypeID: App.ItemTypeIDChild.id,
+                        ControlUoMDesc: App.UoMDescChild.id,
+                        FilterItemID: ItemID,
+                        FilterItemDesc: ItemDesc,
+                        Exact: exact
+                    },
+                    success: getItemVersionSuccess,
+                    failure: getItemVersionFailed
+                });
+            }
+        };
+
+        getItemVersionSuccess = function () {
+            if (!App.ChildItemID.isDirty() && !App.ChildItemDesc.isDirty()) {
+                App.ChildItemID.originalValue = "";
+                App.ChildItemDesc.originalValue = "";
+            }
+            bPreventGetItemVersion = false;
+            checkBehaviorFormula(App.ItemTypeIDChild.value);
+        };
+
+        getItemVersionFailed = function () {
+            eraseItem();
+        };
+
+        ItemVersionIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemVersion = true;
+                getItemVersion(field.getValue(), "", false);
+            }
+        };
+
+        ItemVersionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemVersion = true;
+                getItemVersion("", field.getValue(), false);
+            }
+        };
+
+        ItemVersionIDBlur = function (ItemID) {
+            if (!bPreventGetItemVersion) {
+                bPreventGetItemVersion = true;
+                if (ItemID.trim() == "")
+                    getItemVersionFailed();
+                else
+                    getItemVersion(ItemID, "", true);
+            }
+            bPreventGetItemVersion = false;
+        };
+
+        ItemVersionDescBlur = function (ItemDesc) {
+            if (!bPreventGetItemVersion) {
+                bPreventGetItemVersion = true;
+                if (ItemDesc.trim() == "")
+                    getItemVersionFailed();
+                else
+                    getItemVersion("", ItemDesc, true);
+            }
+            bPreventGetItemVersion = false;
+        };
+
+        eraseItem = function () {
+            App.ChildItemID.clear();
+            App.ChildItemDesc.clear();
+            App.ItemGroupDescChild.clear();
+            App.ItemTypeDescChild.clear();
+            App.ItemTypeIDChild.clear();
+            App.UoMDescChild.clear();
+            App.VersionDescChild.clear();
+            App.VersionChild.clear();
+            App.ChildItemID.originalValue = "";
+            App.ChildItemDesc.originalValue = "";
+        };
+    </script>
+
+    /* Main */
+    <script>
+
+        var formatHours = function (v) {
+            if (v < 1) {
+                return Math.round(v * 60) + " mins";
+            } else if (Math.floor(v) !== v) {
+                var min = v - Math.floor(v);
+                return Math.floor(v) + "h " + Math.round(min * 60) + "m";
+            } else {
+                return v + " hour" + (v === 1 ? "" : "s");
+            }
+        };
+
+        var handler = function (grid, rowIndex, colIndex, actionItem, event, record, row) {
+            showErrorAlert('Editing' + (record.get('done') ? ' completed task' : ''), record.get('task'));
+        };
+
+        var checkBehaviorFormula = function (ItemTypeID) {
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/FormulaBehavior',
+                method: 'POST',
+                params: {
+                    ItemTypeID: ItemTypeID
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    App.pnlFormulaTree.setVisible(jsonData.data.HasFormula);
+                    App.pnlFormula.setVisible(jsonData.data.HasFormula);
+                    App.pnlAlternativeItem.setVisible(jsonData.data.HasAlternativeItem);
+                    App.CoefficientChild.setVisible(jsonData.data.HasCoefficient);
+                },
+                failure: function (response) {
+                    showErrorAlert("ERROR Checking Behavior Formula", response);
+                }
+            });
+
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/LoadMyChild',
+                method: 'POST',
+                params: {
+                    ChildItemID: App.ChildItemID.value,
+                    ChildVersion: App.VersionChild.value,
+                    Sequence: 0,
+                    SequenceDesc: ""
+                },
+                success: function (response) {
+                    var node = App.treeStructureChild.store.getNodeById("root");
+                    while (node.hasChildNodes()) {
+                        node.removeChild(node.childNodes[0]);
+                    }
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    if (jsonData.children.length > 0) {
+                        for (var i = 0; i < jsonData.children.length; i++) {
+                            node.appendChild(jsonData.children[i]);
+                        }
+
+                        node.collapse();
+                        node.expand();
+                    }
+
+                },
+                failure: function (response) {
+                    showErrorAlert("Unit Price Analysis - Load Child", response);
+                }
+            });            
+        };
+
+        var AddItemVersionChild = function () {
+
+            var nodeExist = App.treeStructure.store.getNodeById("root");
+
+            for (var i = 0; i < nodeExist.childNodes.length; i++) {
+                if (String(nodeExist.childNodes[i].data.childitemid) == String(App.ChildItemID.value)
+                    && String(nodeExist.childNodes[i].data.childversion) == String(App.VersionChild.value)) {
+
+                    showErrorAlert("Unit Price Analysis - Add Structure", "@(General.EnumDesc(MessageLib.Exist))");
+
+                    return false;
+                }
+            }
+            if (App.ChildItemID.value == App.ItemID.value && App.VersionChild.value == App.Version.value) {
+
+                showErrorAlert("Unit Price Analysis - Circular Check", "Circular Structure Detected.");
+                return false;
+            }
+            
+            if (App.CoefficientChild.isVisible() && App.CoefficientChild.value <= 0) {
+                showErrorAlert("Unit Price Analysis - Coefficient", "Coefficient must be greater than 0.");
+                App.CoefficientChild.focus();
+                App.CoefficientChild.selectText();
+                return false;
+            }
+
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/CircularChecking',
+                method: 'POST',
+                params: {
+                    ChildItemID: App.ChildItemID.value,
+                    ChildVersion: App.VersionChild.value,
+                    ParentItemID: App.ItemID.value,
+                    ParentVersion: App.Version.value
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    console.log("respone-circularChecking", jsonData);
+                    if (!jsonData.data) {
+                        App.treeStructure.store.getNodeById("root").appendChild(
+                                {
+                                    itemversionchildid: App.ItemVersionChildID.value,
+                                    childitemtypeid: App.ItemTypeIDChild.value,
+                                    childitemid: App.ChildItemID.value,
+                                    versiondesc: App.VersionDescChild.value,
+                                    childversion: App.VersionChild.value,
+                                    sequence: "",
+                                    sequencedesc: "",
+                                    coefficient: App.CoefficientChild.value == 0 ? null : App.CoefficientChild.value,
+                                    uomdesc: App.UoMDescChild.value,
+                                    formula: App.Formula.value,
+                                    formuladesc: App.FormulaDesc.value,
+                                    iconCls: App.treeStructureChild.store.getNodeById("root").childNodes.length > 0 ? "icon-folder" : "icon-pagewhite",
+                                    alternative: App.grdAlternativeItem.getRowsValues(),
+                                    expandable: App.treeStructureChild.store.getNodeById("root").childNodes.length == 0 ? false : true,
+                                    leaf: App.treeStructureChild.store.getNodeById("root").childNodes.length == 0 ? true : false
+                                });
+                        App.PageContainer.setActiveItem(1);
+                        generateFormulDesc(App.treeStructure.store.getNodeById("root"));
+                        App.treeStructure.getRootNode().expand(false);
+                        /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+                    } else {
+                        showErrorAlert("Unit Price Analysis - Circular Check", "Circular Structure Detected.");
+                    }
+
+                },
+                failure: function (response) {
+                    showErrorAlert("Unit Price Analysis - Circular Check", response);
+                }
+            });
+        };
+
+        var deleteAlternativeItem = function () {
+            if (App.grdAlternativeItem.getSelection().length > 1)
+                Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected records?", "deletingAlternativeItem");
+            else
+                Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected record?", "deletingAlternativeItem");
+        };
+
+        var deletingAlternativeItem = function (title, message, fn, scope) {
+            if (title == "yes") {
+                var selectedRow = App.grdAlternativeItem.getSelection();
+                for (var i = 0; i <= selectedRow.length; i++) {
+                    App.grdAlternativeItem.store.remove(selectedRow[i]);
+                }
+            }
+        };
+
+        var ReplaceItemVersionChild = function () {
+            if (App.CoefficientChild.isVisible() && App.CoefficientChild.value <= 0) {
+                showErrorAlert("Unit Price Analysis - Coefficient", "Coefficient must be greater than 0.");
+                App.CoefficientChild.focus();
+                App.CoefficientChild.selectText();
+                return false;
+            }
+
+            var newdata = App.treeStructure.getSelection()[0];
+            newdata.data.itemversionchildid = App.ItemVersionChildID.value;
+            newdata.data.childitemid = App.ChildItemID.value;
+            newdata.data.versiondesc = App.VersionDescChild.value;
+            newdata.data.childversion = App.VersionChild.value;
+            newdata.data.sequence = "";
+            newdata.data.sequencedesc = "";
+            newdata.data.coefficient = App.CoefficientChild.value == 0 ? null : App.CoefficientChild.value;
+            newdata.data.uomdesc = App.UoMDescChild.value;
+            newdata.data.formula = App.Formula.value;
+            newdata.data.formuladesc = App.FormulaDesc.value;
+            newdata.data.iconCls = App.treeStructureChild.store.getNodeById("root").childNodes.length > 0 ? "icon-folder" : "icon-pagewhite";
+            newdata.data.alternative = App.grdAlternativeItem.getRowsValues();
+            newdata.data.expandable = App.treeStructureChild.store.getNodeById("root").childNodes.length == 0 ? false : true;
+            newdata.data.leaf = App.treeStructureChild.store.getNodeById("root").childNodes.length == 0 ? true : false;
+
+            App.treeStructure.store.getNodeById("root").replaceChild(newdata, App.treeStructure.getSelection()[0]);
+
+            App.PageContainer.setActiveItem(1);
+            generateFormulDesc(App.treeStructure.store.getNodeById("root"));
+            /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+        };
+
+    </script>
+
+    /* Formula */
+    <script>
+        var sTitleFormulaParameter = "Formula Parameter";
+
+        var addVariableFormula = true;
+        var addOperatorFormula = true;
+
+        var oldFormulaOri = "@(Model.Formula)";
+        var oldFormulaTranslate = "@(Model.FormulaDesc)";
+
+        var aFormulaOri = new Array();
+
+        if (oldFormulaOri.length > 0) {
+            aFormulaOri = oldFormulaOri.split(" ");
+        }
+
+        var aFormulaTranslated = new Array();
+
+        if (oldFormulaTranslate.length > 0) {
+            aFormulaTranslated = oldFormulaTranslate.split(" ");
+        }
+
+        createFormula = function (action, valueOri, valueTranslated) {
+            if (action.toLowerCase() == "detail")
+                return;
+
+            var sFormulaOri = "";
+            var sFormulaTranslated = "";
+
+            if (valueTranslated.trim() != "")
+                valueOri = "[" + valueOri + "]";
+            else
+                valueTranslated = valueOri;
+
+            if (valueTranslated.toLowerCase() == "clear") {
+                aFormulaOri.length = 0;
+                aFormulaTranslated.length = 0;
+                /*App.FormulaTranslated.setValue();
+                App.Formula.setValue();*/
+            }
+            else if (valueTranslated.toLowerCase() == "undo") {
+                aFormulaOri.pop();
+                aFormulaTranslated.pop();
+            }
+            else {
+                aFormulaOri.push(valueOri == undefined ? valueTranslated : valueOri);
+                aFormulaTranslated.push(valueTranslated);
+            }
+            aFormulaOri.forEach(function (value, index) {
+                var separator = "";
+                if (isNaN(parseFloat(aFormulaOri[index - 1])) || isNaN(parseFloat(value)))
+                    separator = " ";
+                sFormulaOri += separator + value;
+            });
+            aFormulaTranslated.forEach(function (value, index) {
+                var separator = "";
+                if (isNaN(parseFloat(aFormulaTranslated[index - 1])) || isNaN(parseFloat(value)))
+                    separator = " ";
+                sFormulaTranslated += separator + value;
+            });
+            App.Formula.setValue(sFormulaOri.trim());
+            App.FormulaDesc.setValue(sFormulaTranslated.trim());
+        };
+    </script>
+
+    /* tree Formula */
+    <script>
+        var allowRefreshTreeFormula = false;
+
+        var FormulaRowDblClick = function (view, record, element, rowIndex, e, eOpts) {
+            createFormula('@ViewData[General.EnumDesc(Params.Action)].ToString()', record.data.itemversionchildid, "[" + record.data.childitemid + "-" + record.data.childversion + "-" + record.data.sequencedesc + "]");
+            return false;
+        };
+
+        var FormulaItemInsert = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+            view.collapse();
+            view.expand();
+        };
+
+        var FormulaItemAppend = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+            if (allowRefreshTreeFormula) {
+                view.collapse();
+                view.expand();
+                allowRefreshTreeFormula = false;
+            }
+        };
+
+        var FormulaBeforeItemExpand = function (view, node) {
+            if (view.childNodes.length > 0) {
+                return;
+            }
+
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/LoadMyChild',
+                method: 'POST',
+                params: {
+                    ChildItemID: view.data.childitemid,
+                    ChildVersion: view.data.childversion,
+                    Sequence: view.data.sequence,
+                    SequenceDesc: view.data.sequencedesc
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    if (jsonData.children.length > 0) {
+                        for (var i = 0; i < jsonData.children.length; i++) {
+                            jsonData.children[i].formuladesc = jsonData.children[i].formula;
+                            for (var j = 0; j < jsonData.children.length; j++) {
+                                jsonData.children[i].formuladesc = jsonData.children[i].formuladesc.replace(jsonData.children[j].itemversionchildid, jsonData.children[j].childitemid + '-' + jsonData.children[j].childversion + '-' + jsonData.children[j].sequencedesc);
+                            }
+                        }
+                        for (var i = 0; i < jsonData.children.length; i++) {
+                            if (jsonData.children[i].formuladesc.length > 0) {
+
+                            }
+                            view.appendChild(ReplaceHaveCode(view, jsonData.children[i]));
+                        }
+                    }
+                    else {
+                        view.data.expandable = false;
+                        view.data.expanded = false;
+                        view.data.leaf = true;
+                    }
+                },
+                failure: function (response) {
+                    showErrorAlert("ERROR Load Child", response);
+                }
+            });
+        };
+
+        var ReplaceHaveCode = function (view, data) {
+            var parentNode = view.parentNode;
+            while (parentNode != null) {
+                for (var i = 0; i < parentNode.childNodes.length; i++) {
+                    var child = parentNode.childNodes[i];
+                    if (data.formuladesc == "") {
+                        data.formuladesc = data.formula.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                    } else {
+                        data.formuladesc = data.formuladesc.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                    }
+                }
+                parentNode = parentNode.parentNode;
+            }
+            return data;
+        };
+    </script>
+
+    /* tree Structure Child */
+    <script>
+
+        var allowRefreshTreeChild = false;
+
+        var StructureChildItemInsert = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+            view.collapse();
+            view.expand();
+        };
+
+        var StructureChildItemAppend = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+        };
+
+        var StructureChildBeforeItemExpand = function (view, node) {
+            if (view.childNodes.length > 0) {
+                return;
+            }
+            if (view.data.childitemid==undefined) {
+                return false;
+            }
+
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/LoadMyChild',
+                method: 'POST',
+                params: {
+                    ChildItemID: view.data.childitemid,
+                    ChildVersion: view.data.childversion,
+                    Sequence: view.data.sequence,
+                    SequenceDesc: view.data.sequencedesc
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    if (jsonData.children.length > 0) {
+                        for (var i = 0; i < jsonData.children.length; i++) {
+                            view.appendChild(jsonData.children[i]);
+                        }
+
+                        view.commit();
+                    }
+                    else {
+                        view.data.expandable = false;
+                        view.data.expanded = false;
+                        view.data.leaf = true;
+
+                        view.commit();
+                    }
+                },
+                failure: function (response) {
+                    showErrorAlert("ERROR Load Child", response);
+                }
+            });
+        };
+
+        var ReplaceHaveCode = function (view, data) {
+            var parentNode = view.parentNode;
+            while (parentNode != null) {
+                for (var i = 0; i < parentNode.childNodes.length; i++) {
+                    var child = parentNode.childNodes[i];
+                    if (data.formuladesc == "") {
+                        data.formuladesc = data.formula.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                    } else {
+                        data.formuladesc = data.formuladesc.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                    }
+                }
+                parentNode = parentNode.parentNode;
+            }
+            return data;
+        };
+    </script>
+}
+@(
+        X.Panel()
+        .ID("PItemVersionChildForm")
+        .Frame(true)
+        .Items(
+            X.FormPanel()
+            .ID("FItemVersionChild")
+            .Padding(iBodyPadding)
+            .Items(
+                X.FieldContainer()
+                    .FieldLabel("")
+                    .LabelWidth(0)
+                    .Width(iFieldWidth)
+                    .Layout(LayoutType.Column)
+                    .Items(
+                        X.TextFieldFor(model => model.ChildItemID)
+                            .FieldLabel(ItemVersionChildVM.Prop.ChildItemID.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.SpecialKey.Handler = "ItemVersionIDSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "ItemVersionIDBlur(this.getValue());";
+                            })
+                            .LabelWidth(iLabelWidth)
+                            .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                        X.TextFieldFor(model => model.ChildItemDesc)
+                            .FieldLabel("")
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.SpecialKey.Handler = "ItemVersionDescSpecialKey(item, e);";
+                                oListeners.Blur.Handler = "ItemVersionDescBlur(this.getValue());";
+                            })
+                            .LabelWidth(0)
+                            .Width((iFieldWidth - iLabelWidth) / 2)
+                            .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                            .RightButtons(
+                                btnBrowseItem
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate)),
+                                btnEraseItem.Handler("eraseItem")
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                            )
+                    ),
+                X.TextFieldFor(model => model.VersionDesc)
+                    .ID(ItemVersionChildVM.Prop.VersionDesc.Name + page)
+                    .FieldLabel(ItemVersionChildVM.Prop.VersionDesc.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.ItemVersionChildID)
+                    .Hidden(true),
+                X.TextFieldFor(model => model.ItemTypeID)
+                    .ID(ItemVersionChildVM.Prop.ItemTypeID.Name + page)
+                    .Hidden(true),
+                X.TextFieldFor(model => model.NodeID)
+                    .ID("NodeID")
+                    .Hidden(true),
+                X.TextFieldFor(model => model.ItemTypeDesc)
+                    .FieldLabel(ItemVersionChildVM.Prop.ItemTypeDesc.Desc)
+                    .ID(ItemVersionChildVM.Prop.ItemTypeDesc.Name + page)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.ItemGroupDesc)
+                    .ID(ItemVersionChildVM.Prop.ItemGroupDesc.Name + page)
+                    .FieldLabel(ItemVersionChildVM.Prop.ItemGroupDesc.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.Version)
+                    .ID(ItemVersionChildVM.Prop.Version.Name + page)
+                    .FieldLabel(ItemVersionChildVM.Prop.Version.Desc)
+                    .ReadOnly(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.UoMDesc)
+                    .ID(ItemVersionChildVM.Prop.UoMDesc.Name + page)
+                    .Hidden(true)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.TextFieldFor(model => model.Coefficient)
+                    .Hidden(Model.ItemTypeID == null ? true : Model.FormulaBehavior.HasCoefficient ? false : true)
+                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                    .ID(ItemVersionChildVM.Prop.Coefficient.Name + page)
+                    .FieldLabel(ItemVersionChildVM.Prop.Coefficient.Desc)
+                    .LabelWidth(iLabelWidth)
+                    .Width(iFieldWidth),
+                X.Container()
+                    .Layout(LayoutType.Column)
+                    .Items(
+                    X.Panel()
+                        .ID("pnlFormulaTree")
+                        .Hidden(Model.ItemTypeID == null ? true : Model.FormulaBehavior.HasFormula ? false : true)
+                        .ColumnWidth(0.6)
+                        .Collapsible(true)
+                        .MarginSpec("20px 0px 0px 0px")
+                        .Title("Formula Item")
+                        .Items(
+                            X.TreePanel()
+                                        .ID("treeFormula")
+                                        .WidthSpec("100%")
+                                        .Height(200)
+                                        .UseArrows(true)
+                                        .RootVisible(false)
+                                        .MultiSelect(false)
+                                        .Expand(true)
+                                        .FolderSort(false)
+                                        .RowLines(true)
+                                        .Fields(
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.ItemVersionChildID.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.ChildItemID.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.ChildVersion.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.VersionDesc.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.Sequence.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.SequenceDesc.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.Coefficient.Name.ToLower()).Type(ModelFieldType.Float),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.UoMDesc.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.Formula.Name.ToLower()),
+                                            X.ModelField().Name(ItemVersionChildVM.Prop.FormulaDesc.Name.ToLower())
+                                        )
+                                        .ColumnModel(
+                                            X.TreeColumn()
+                                                .Sortable(false)
+                                                .Text(ItemVersionChildVM.Prop.ChildItemID.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.ChildItemID.Name.ToLower()),
+                                            X.Column()
+                                                .Sortable(false)
+                                                .Text(ItemVersionChildVM.Prop.VersionDesc.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.VersionDesc.Name.ToLower()),
+                                            X.Column()
+                                                .Sortable(false)
+                                                .Text(ItemVersionChildVM.Prop.ChildVersion.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.ChildVersion.Name.ToLower()),
+                                            X.Column()
+                                                .Sortable(false)
+                                                .Text(ItemVersionChildVM.Prop.SequenceDesc.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.SequenceDesc.Name.ToLower()),
+                                            X.Column()
+                                                .Sortable(false)
+                                                .Hidden(true)
+                                                .Text(ItemVersionChildVM.Prop.Sequence.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.Sequence.Name.ToLower()),
+                                            X.Column()
+                                                .Sortable(false)
+                                                .Hidden(true)
+                                                .Text(ItemVersionChildVM.Prop.ItemVersionChildID.Desc)
+                                                .Flex(1)
+                                                .DataIndex(ItemVersionChildVM.Prop.ItemVersionChildID.Name.ToLower())
+                                        )
+                                        .Listeners(listener =>
+                                        {
+                                            listener.BeforeItemExpand.Fn = "FormulaBeforeItemExpand";
+                                            listener.ItemInsert.Fn = "FormulaItemInsert";
+                                            listener.ItemAppend.Fn = "FormulaItemAppend";
+                                            listener.RowDblClick.Fn = "FormulaRowDblClick";
+                                        })
+                                        .Root(
+                                            (Node)Model.FormulaItem
+                                        )
+                            ),
+
+                    X.Panel()
+                        .ID("pnlFormula")
+                        .Hidden(Model.ItemTypeID == null ? true : Model.FormulaBehavior.HasFormula ? false : true)
+                        .ColumnWidth(0.4)
+                        .MarginSpec("20px 0px 0px 10px")
+                        .Items(
+                            X.HiddenFor(model => model.Formula),
+                            X.TextAreaFor(model => model.FormulaDesc)
+                                .ColumnWidth(1)
+                                .FieldLabel("Formula")
+                                .WidthSpec("100%")
+                                .ReadOnly(true)
+                                .LabelAlign(LabelAlign.Top)
+                                .Height(200),
+                            X.Container()
+                                .Height(80)
+                                .Items(
+                                    X.SegmentedButton()
+                                        .AllowToggle(false)
+                                        .Items(
+                                            X.Button().Text("1").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '1', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("2").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '2', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("3").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '3', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("4").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '4', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("5").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '5', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("6").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '6', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("7").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '7', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("8").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '8', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("9").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '9', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("0").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '0', '')").Width(formulaButtonWidth)
+                                    ),
+                                    X.SegmentedButton()
+                                        .AllowToggle(false)
+                                        .Items(
+                                            X.Button().Text("(").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '(', '')").Width(formulaButtonWidth),
+                                            X.Button().Text(")").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', ')', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("+").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '+', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("-").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '-', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("*").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '*', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("/").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', '/', '')").Width(formulaButtonWidth),
+                                            X.Button().Text("Clear").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', 'clear', '')").Width(formulaButtonWidth * 2),
+                                            X.Button().Text("Undo").Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                                .Handler("createFormula('" + ViewData[General.EnumDesc(Params.Action)].ToString() + "', 'undo', '')").Width(formulaButtonWidth * 2)
+                                        )
+                                )
+                        ),
+                    X.Panel()
+                    .ID("pnlTreeStructureChild")
+                    .ColumnWidth(1)
+                    .WidthSpec("20px 0px 0px 0px")
+                    .Collapsible(true)
+                    .Title("Structure")
+                    .Items(
+                        X.TreePanel()
+                            .ID("treeStructureChild")
+                            .WidthSpec("100%")
+                            .Height(300)
+                            .UseArrows(true)
+                            .RootVisible(false)
+                            .MultiSelect(false)
+                            .Expand(true)
+                            .FolderSort(false)
+                            .RowLines(true)
+                            .Fields(
+                                X.ModelField().Name(ItemVersionChildVM.Prop.ItemVersionChildID.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.ChildItemID.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.ChildVersion.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.VersionDesc.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.Sequence.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.SequenceDesc.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.Coefficient.Name.ToLower()).Type(ModelFieldType.Float),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.UoMDesc.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.Formula.Name.ToLower()),
+                                X.ModelField().Name(ItemVersionChildVM.Prop.FormulaDesc.Name.ToLower())
+                            )
+                            .ColumnModel(
+                                X.TreeColumn()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.ChildItemID.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.ChildItemID.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.VersionDesc.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.VersionDesc.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.ChildVersion.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.ChildVersion.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.SequenceDesc.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.SequenceDesc.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Hidden(true)
+                                    .Text(ItemVersionChildVM.Prop.Sequence.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.Sequence.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.Coefficient.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.Coefficient.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.UoMDesc.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.UoMDesc.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Hidden(true)
+                                    .Text(ItemVersionChildVM.Prop.Formula.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.Formula.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Text(ItemVersionChildVM.Prop.FormulaDesc.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.FormulaDesc.Name.ToLower()),
+                                X.Column()
+                                    .Sortable(false)
+                                    .Hidden(true)
+                                    .Text(ItemVersionChildVM.Prop.ItemVersionChildID.Desc)
+                                    .Flex(1)
+                                    .DataIndex(ItemVersionChildVM.Prop.ItemVersionChildID.Name.ToLower())
+                            )
+                            .Listeners(listener =>
+                            {
+                                listener.BeforeItemExpand.Fn = "StructureChildBeforeItemExpand";
+                                listener.AfterRender.Handler = "this.expandAll();";
+                                listener.ItemInsert.Fn = "StructureChildItemInsert";
+                                listener.ItemAppend.Fn = "StructureChildItemAppend";
+                            })
+                            .Root(
+                                (Node)Model.ChildStructure
+                            )
+                    ),
+                     X.Panel()
+                    .ID("pnlAlternativeItem")
+                    .ColumnWidth(1)
+                    .Hidden(Model.ItemTypeID == null ? true : Model.FormulaBehavior.HasAlternativeItem ? false : true)
+                .WidthSpec("20px 0px 0px 0px")
+                .Collapsible(true)
+                .Title("Alternative Item")
+                .Items(
+                     X.GridPanel()
+                        .ID("grdAlternativeItem")
+                        .MinHeight(200)
+                        .SelectionModel(
+                            X.RowSelectionModel()
+                            .Mode(SelectionMode.Multi)
+                            .AllowDeselect(true)
+                        )
+                        .ColumnModel(
+                            X.Column()
+                                .Text("ID")
+                                .DataIndex(Model, model => model.ItemID)
+                                .Flex(1)
+                                .Sortable(true),
+                            X.Column()
+                                .Text("Description")
+                                .DataIndex(Model, model => model.ItemDesc)
+                                .Flex(2)
+                                .Sortable(true),
+                            X.Column()
+                                .Text("Version")
+                                .DataIndex(Model, model => model.Version)
+                                .Flex(1)
+                                .Sortable(true),
+                            X.Column()
+                                .Text("Item Type")
+                                .DataIndex(Model, model => model.ItemTypeID)
+                                .Flex(1)
+                                .Sortable(true)
+                        )
+                        .Store(
+                             X.Store()
+                                .AutoLoad(true)
+                                .RemoteSort(false)
+                                .RemotePaging(true)
+                                .RemoteFilter(true)
+                                .PageSize(30)
+                                .DataSource(Model.AlternativeItem)
+                                .Model(
+                                    X.Model()
+                                    .Name("ModelAlternativeItem")
+                                    .Fields(
+                                        X.ModelField().Name(Model, model => model.ItemID),
+                                        X.ModelField().Name(Model, model => model.ItemDesc),
+                                        X.ModelField().Name(Model, model => model.Version),
+                                        X.ModelField().Name(Model, model => model.ItemTypeID)
+                                    )
+                                )
+                         )
+                        .TopBar(
+                            X.Toolbar()
+                            .MarginSpec("0px 0px 0px 0px")
+                            .Items(
+                                btnBrowseAlternativeItem.Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                X.Button()
+                                    .ID(General.EnumName(Buttons.ButtonDelete) + "AlternativeItem")
+                                    .Icon(Icon.Delete)
+                                    .Text(General.EnumDesc(Buttons.ButtonDelete))
+                                    .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    .Handler("deleteAlternativeItem();")
+                            )
+                        )
+                        .BottomBar(
+                            X.PagingToolbar()
+                                .DisplayInfo(true)
+                                .BaseCls("paging")
+                                .DisplayMsg("Displaying {0} - {1} of {2}")
+                                .EmptyMsg("No records to display")
+                        )
+                )
+            )
+        ).TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("Structure/Detail/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

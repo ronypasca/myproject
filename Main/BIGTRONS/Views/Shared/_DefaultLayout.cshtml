@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>BIGTRONS :: Bidding, Tender, & Online Negotiation System</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+        Ext.override(Ext.data.proxy.Ajax, { timeout: 300000 });
+    </script>
+    @Styles.Render(System.Web.Optimization.BundleTable.Bundles.ResolveBundleUrl("~/Content/css", true))
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render(System.Web.Optimization.BundleTable.Bundles.ResolveBundleUrl("~/bundles/script", true))
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/signalr")
+    @RenderSection("head", required: false)
+    @using com.SML.Lib.Common
+    @using com.SML.BIGTRONS.Enum
+</head>
+<body>
+    @Html.X().ResourceManager()
+    @{
+        var X = Html.X();
+        MvcResourceManager.RegisterGlobalIcon(Icon.Exclamation);
+        MvcResourceManager.RegisterGlobalIcon(Icon.Information);
+    }
+    <div id="wrapper">
+        <div class="overlay"></div>
+        @{ Html.RenderPartial("_Menu"); }
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <header>
+                <div class="topHeader">
+                    <div class="menu">
+                        <button type="button" class="hamburger is-closed" data-toggle="offcanvas">
+                            <span class="hamb-top"></span>
+                            <span class="hamb-middle"></span>
+                            <span class="hamb-bottom"></span>
+                        </button>
+                    </div>
+                    <div class="logoHeader hasMenu">
+                        <img src="~/Content/Images/applogo.png" class="logoApp" alt="Application Logo" />
+                        <img src="~/Content/Images/companylogo.png" class="logoCompany hidden-xs" alt="Company Logo" />
+                    </div>
+                </div>
+            </header>
+            <div class="contentRow headerRow">
+                <div class="col-sm-3">
+                    <div class="greetings">
+                        <h3>
+                            Welcome, <span id="loggedinname">
+                                @(global_asax.LoggedInFullName)
+                            </span>
+                        </h3>
+                    </div>
+                </div>
+                <div class="col-sm-9">
+                    <div class="title">
+                        <h3>@RenderSection("title")</h3>
+                    </div>
+                </div>
+            </div>
+            <div id="message" class="message">
+                @{ Html.RenderPartial("_InfoPanel"); }
+            </div>
+            <div class="contentRow mainContent">
+                <div class="col-sm-12">
+                    <div class="content">
+                        @RenderSection("body")
+                    </div>
+                </div>
+            </div>
+            <footer class="footer">
+                <div class="container">
+                    <span>Corporate IT Sinar Mas Land © 2017 :: Bidding, Tender & Online Negotiation System</span>
+                </div>
+            </footer>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+
+    @Scripts.Render("~/bundles/prefixfree")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script>
+        $(document).ready(function () {
+            var link = window.location.pathname.substring(1);
+            $('a[href="/' + link + '"]').parent().addClass('active');
+            $('a[href="/' + link + '"]').parent().parent().parent().addClass('open');
+        });
+    </script>
+</body>
+</html>

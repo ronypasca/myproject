@@ -1,0 +1,63 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanBidOpeningVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdBudgetPlanBidOpening.store.reload()");
+
+
+    <script>
+
+
+    </script>
+}
+@(
+     X.Panel()
+    .ID("PBidOpeningTRMLeadForm")
+    .Frame(true)
+    .Items(
+         X.FormPanel()
+            .ID("FBudgetPlanTRMLead")
+            .Padding(iBodyPadding)
+            .Items(
+                
+                X.Panel()
+                         .ID("pnlBudgetPlan")
+                         .Title("Budget Plan")
+                         .Collapsible(true)
+                         .ItemsFromPartial("BudgetPlan/_Form", Model.BudgetPlanVM, ViewData)
+                        
+                         ,
+
+                
+                    X.Panel()
+                        .ID("FPBidOpeningTRMLead")
+                        .PaddingSpec(sPanelPaddingSpec)
+                        .Loader(
+                            X.ComponentLoader()
+                            .ID("CLBidOpeningTRMLead")
+                            .AutoLoad(true)
+                            .LoadMask(l => l.ShowMask = true)
+                            .Url(Url.Action("GetPanel"))
+                            .Params(new { Vendors = ViewData["Vendors"].ToString(), BudgetPlanID = ViewData["BudgetPlanID"].ToString(), BudgetPlanVersion = ViewData["BudgetPlanVersion"].ToString() })
+                            .Mode(LoadMode.Component)
+                        )
+
+                    
+            )
+    ).TopBar(
+        X.Toolbar()
+        .Items(
+            btnList
+            )
+            )
+)

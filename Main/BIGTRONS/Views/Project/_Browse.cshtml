@@ -1,0 +1,200 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ProjectVM
+@{
+   
+    var X = Html.X();
+    string sPageName = "Project";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectProjectBrowse('" + ViewData["Control" + ProjectVM.Prop.ProjectID.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.ProjectDesc.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.CompanyID.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.CompanyDesc.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.DivisionDesc.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.LocationDesc.Name]
+        + "', '" + ViewData["Control" + ProjectVM.Prop.RegionDesc.Name]
+        + "', '" + ViewData["Control" + RegionVM.Prop.RegionID.Name]
+        + "', App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.CompanyID.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.CompanyDesc.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.ProjectID.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.ProjectDesc.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.DivisionDesc.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.LocationDesc.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + ProjectVM.Prop.RegionDesc.Name + "']"
+        + ", App.grdProjectBrowse.getRowsValues({selectedOnly:true})[0]['" + RegionVM.Prop.RegionID.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdProjectBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdProjectBrowse();
+        });
+
+        resizeGrdProjectBrowse = function () {
+            if (App.grdProjectBrowse != null)
+                App.grdProjectBrowse.setHeight($(window).height() - App.grdProjectBrowse.getY() - (App.grdProjectBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionProjectChange = function (length) {
+            App.ButtonSelectProject.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, projectID, projectDesc) {
+            filter.fields[0].items.items[0].setValue(projectID);
+            filter.fields[1].items.items[0].setValue(projectDesc);
+        };
+
+        selectProjectBrowse = function (ControlProjectID, ControlProjectDesc, ControlCompanyID, ControlCompanyDesc, ControlDivisionDesc, ControlLocationDesc, ControlRegionDesc, ControlRegionID, CompanyID, CompanyDesc, ProjectID, ProjectDesc, DivisionDesc, LocationDesc, RegionDesc, RegionID) {
+            if (Ext.getCmp(ControlProjectID) != undefined) {
+                Ext.getCmp(ControlProjectID).setValue(ProjectID);
+                Ext.getCmp(ControlProjectID).originalValue = ProjectID;
+            }
+            if (Ext.getCmp(ControlProjectDesc) != undefined) {
+                Ext.getCmp(ControlProjectDesc).setValue(ProjectDesc);
+                Ext.getCmp(ControlProjectDesc).originalValue = ProjectDesc;
+            }
+            if (Ext.getCmp(ControlCompanyID) != undefined) {
+                Ext.getCmp(ControlCompanyID).setValue(CompanyID);
+                Ext.getCmp(ControlCompanyID).originalValue = CompanyID;
+            }
+            if (Ext.getCmp(ControlCompanyDesc) != undefined) {
+                Ext.getCmp(ControlCompanyDesc).setValue(CompanyDesc);
+                Ext.getCmp(ControlCompanyDesc).originalValue = CompanyDesc;
+            }
+            if (Ext.getCmp(ControlDivisionDesc) != undefined) {
+                Ext.getCmp(ControlDivisionDesc).setValue(ProjectDesc);
+                Ext.getCmp(ControlDivisionDesc).originalValue = ProjectDesc;
+            }
+            if (Ext.getCmp(ControlLocationDesc) != undefined) {
+                Ext.getCmp(ControlLocationDesc).setValue(LocationDesc);
+                Ext.getCmp(ControlLocationDesc).originalValue = LocationDesc;
+            }
+            if (Ext.getCmp(ControlRegionDesc) != undefined) {
+                Ext.getCmp(ControlRegionDesc).setValue(RegionDesc);
+                Ext.getCmp(ControlRegionDesc).originalValue = RegionDesc;
+            }
+            if (Ext.getCmp(ControlRegionID) != undefined) {
+                Ext.getCmp(ControlRegionID).setValue(RegionID);
+                Ext.getCmp(ControlRegionID).originalValue = RegionID;
+            }
+
+            App.WinBrowseProject.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseProject")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdProjectBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionProjectChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[ProjectVM.Prop.ProjectID.Name].ToString() + "', '" + ViewData[ProjectVM.Prop.ProjectDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "Project"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(ep =>
+                        ep.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = DivisionVM.Prop.DivisionID.Name,
+                                Value = ViewData[DivisionVM.Prop.DivisionID.Name] == null ? string.Empty : ViewData[DivisionVM.Prop.DivisionID.Name].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                        )
+
+            )
+            .AutoLoad(ViewData[ProjectVM.Prop.ProjectID.Name].ToString() == "" && ViewData[ProjectVM.Prop.ProjectDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ProjectID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ProjectVM.Prop.ProjectID.Desc)
+            .DataIndex(Model, model => model.ProjectID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ProjectVM.Prop.ProjectDesc.Desc)
+            .DataIndex(Model, model => model.ProjectDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

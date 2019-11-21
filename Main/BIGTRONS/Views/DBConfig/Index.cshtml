@@ -1,0 +1,23 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@{
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+@model DBConfigVM
+@{
+    ViewBag.Title = "Database Configuration";
+    var X = Html.X();
+}
+@section title{
+    @ViewBag.Title
+}
+@section body{
+    @(X.Container()
+        .ID(General.EnumDesc(Params.Home))
+        .Loader(X.ComponentLoader()
+            .Url(Url.Action("Form"))
+            .Mode(LoadMode.Script)
+        )
+    )
+}

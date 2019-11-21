@@ -1,0 +1,41 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Update";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonUpdate), ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListNotificationValues", "GetListNotVal()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListRecipient", "GetListRecipients()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListAttachment", "GetListAttachment()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Caller", "Cancellation", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Action", "Add", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnVerify = global_asax.Button(Buttons.ButtonSave, sPageName, null, string.Empty, true);
+
+    //Button.Builder btnReschedule = global_asax.Button(Buttons.ButtonSave, "Schedule", "Save Re-schedule", "../Scheduling/Save", true, false, false, null, oParamList);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, null, true, false, false, null, oParamList, null, "reloadGrid");
+    
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdSchedules.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonUpdate,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? null : "App.grdSchedules.getStore().reload()", null);
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true);
+}
+@(btnVerify.Handler("showMsgConfirmHoliday()"))
+@(btnSave.Hidden(true))
+@(btnCancel)
+@(btnList.Hidden(ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonList)))

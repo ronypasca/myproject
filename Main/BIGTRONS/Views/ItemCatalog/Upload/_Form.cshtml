@@ -1,0 +1,316 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemShowCaseVM>
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 0 10 10";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iMinImageCard = 150;
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    //var isHasUnitPriceAnalysis = Model.HasUnitPriceAnalysis;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "[{ ShowCaseID:App.ImageView.getRowsValues({selectedOnly:true})[0].ShowCaseID }]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDeleteImage = global_asax.Button(Buttons.ButtonDelete, "ItemImage", null, "DeleteItemImage", true, false, false, null, oParamList, null,"afterDeleteImage");
+
+    <style>
+        .images-view .x-panel-body {
+            background: white;
+            font: 11px Arial, Helvetica, sans-serif;
+        }
+
+        .images-view .thumb {
+            background: #dddddd;
+            padding: 3px;
+            padding-bottom: 0;
+        }
+
+        .x-quirks .images-view .thumb {
+            padding-bottom: 3px;
+        }
+
+        .images-view .thumb img {
+            height: 60px;
+            width: 80px;
+        }
+
+        .images-view .thumb-wrap {
+            float: left;
+            margin: 4px;
+            margin-right: 0;
+            padding: 5px;
+        }
+
+            .images-view .thumb-wrap span {
+                display: block;
+                overflow: hidden;
+                text-align: center;
+                width: 86px;
+            }
+
+        .images-view .x-item-over {
+            border: 1px solid #dddddd;
+            background: #efefef url(images/row-over.gif) repeat-x left top;
+            padding: 4px;
+        }
+
+        .images-view .x-item-selected {
+            background: #eff5fb url(images/selected.gif) no-repeat right bottom;
+            border: 1px solid #99bbe8;
+            padding: 4px;
+        }
+
+            .images-view .x-item-selected .thumb {
+                background: transparent;
+            }
+
+        .images-view .loading-indicator {
+            font-size: 11px;
+            background-image: url('images/loading.gif');
+            background-repeat: no-repeat;
+            background-position: left;
+            padding-left: 20px;
+            margin: 10px;
+        }
+
+        .x-view-selector {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            border: 1px dotted;
+            opacity: .5;
+            -moz-opacity: .5;
+            filter: alpha(opacity=50);
+            zoom: 1;
+            background-color: #c3daf9;
+            border-color: #3399bb;
+        }
+
+        .ext-strict .ext-ie .x-tree .x-panel-bwrap {
+            position: relative;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        changeFile = function () {
+            Ext.getCmp(App.btnUploadData.id).fireEvent('click');
+        };
+
+        successGetImageUpload = function (data) {
+            debugger;
+            if (data != undefined) {
+                App.treePanelNegoConfigUpload.store.root.removeAll();
+                App.treePanelNegoConfigUpload.setRootNode(data);
+                var filename = data.fileuploadname;
+                App.FileUpload.setRawValue(filename);
+                /*
+                App.treePanelNegoConfigUpload.store.root.appendChild(data);
+                App.treePanelNegoConfigUpload.store.root.data.expandable = true;
+                App.treePanelNegoConfigUpload.store.root.expand();
+                
+                Ext.Msg.show({
+                    message: "Upload Success!",
+                    title: "Upload Structure",
+                    buttons: Ext.MessageBox.OK
+                });*/
+            }
+        };
+
+        failedGetImageUpload = function (errorMessage) {
+            App.treePanelNegoConfigUpload.store.root.removeAll();
+            Ext.Msg.notify("Error", errorMessage);
+        };
+
+        var prepareData = function (data) {
+            /*data.shortName = Ext.util.Format.ellipsis(data.name, 15);
+            data.sizeString = Ext.util.Format.fileSize(data.size);
+            data.dateString = Ext.Date.format(data.lastmod, "m/d/Y g:i a");*/
+
+            return data;
+        };
+
+        var selectionChanged = function (selModel, selected) {
+            var l = selected.length, s = l != 1 ? 's' : '';
+            /*App.ImagePanel.setTitle('Simple DataView (' + l + ' item' + s + ' selected)');*/
+        };
+
+        var dblClickItemCatalog = function (el) {
+            debugger;
+
+            Ext.define('myWindow', {
+                extend: 'Ext.window.Window',
+                alias: 'widget.myWindow',
+                title: el.selection.data.Filename,
+                modal: true,
+                layout: 'fit',
+                maximizable: true,
+                items: [
+                    {
+                        xtype: 'image',
+                        src: "data:image/jpg;base64," + el.selection.data.RawData,
+                        height: 400,
+                        width: 600,
+                        mode: 'image',
+                        listeners: {
+                            load: function() {
+                                this.up('window').doLayout();
+                            }
+                        }
+                    }
+                    ],
+                initComponent: function () {
+                    var me = this;
+                    me.callParent(arguments);
+                    me.mon(Ext.getBody(), 'click', function (el, e) {
+                        me.close(me.closeAction);
+                    }, me, {
+                        delegate: '.x-mask'
+                    });
+                }
+            });
+
+            Ext.create('myWindow', { width: 600, height: 400 }).show()
+            /*var popup = new Ext.Panel({
+                floating: true,
+                centered: true,
+                modal: true,
+                width: 600,
+                height: 400,
+                itemId: 'mapWindow',
+                closable: true,
+                styleHtmlContent: true,
+                items: [
+                    {
+                        xtype: 'image',
+                        src: "data:image/jpg;base64," + el.selection.data.RawData,
+                        shrinkWrap: true,
+                        mode: 'image',
+                        listeners: {
+                            load: function() {
+                                this.up('window').doLayout();
+                            },
+                            blur: {
+                                element: 'el',
+                                fn: function (wnd) {
+                                    var me = Ext.ComponentQuery.query('window[itemId=mapWindow]')[0];
+                                    me.close();
+                                }
+                            }
+                        }
+                    }
+                    ]
+
+            });
+            popup.show();*/
+        };
+
+        afterDeleteImage = function () {
+            App.ImageView.getStore().remove(App.ImageView.getSelectionModel().getSelection());
+        };
+    </script>
+}
+
+<form id="formFileUpload" enctype="multipart/form-data">
+    @(
+        X.Panel()
+        .ID("PItemPriceUploadForm")
+        //.Frame(true)
+        .Items(
+            X.FormPanel()
+            .ID("FItemPriceUploadForm")
+            //.Padding(iBodyPadding)
+            .Items(
+                X.FieldContainer()
+                .Layout(LayoutType.HBox)
+                    .PaddingSpec(sToolbarPaddingSpec).Items(
+                        X.FileUploadField()
+                       .ID(ItemPriceVM.Prop.FileUpload.Name)
+                        .FieldLabel(ItemPriceVM.Prop.FileUpload.Desc)
+                        .LabelWidth(iLabelWidth)
+                        .Text("")
+                        .Width(iFieldWidth)
+                        .Listeners(d => { d.Change.Fn = "changeFile";d.AfterRender.Handler = "this.fileInputEl.set({ multiple: true });"; })
+                        ,
+                        btnDeleteImage.MarginSpec("0 0 0 3")
+                    )
+                    .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                    ,
+                 X.Panel()
+                    .ID("ImagePanel")
+                    .Cls("images-view")
+                    .Frame(true)
+                    .MinHeight(iMinImageCard)
+                    .Items(
+                        X.DataView()
+                            .ID("ImageView")
+                            .Store(
+                                X.Store()
+                                    .ID("soImage")
+                                    .PageSize(15)
+                                    .DataSource(Model)
+                                    .Model(
+                                        Html.X().Model()
+                                            .IDProperty("name")
+                                            .Fields(
+                                                Html.X().ModelField().Name(ItemShowCaseVM.Prop.ShowCaseID.Name),
+                                                Html.X().ModelField().Name(ItemShowCaseVM.Prop.RawData.Name),
+                                                Html.X().ModelField().Name(ItemShowCaseVM.Prop.ContentType.Name),
+                                                Html.X().ModelField().Name(ItemShowCaseVM.Prop.Filename.Name)
+                                            //Html.X().ModelField().Name("size").Type(ModelFieldType.Int),
+                                            //Html.X().ModelField().Name("lastmod").Type(ModelFieldType.Date)
+                                            )
+                                    )
+                            )
+                            .MultiSelect(true)
+                            .OverItemCls("x-item-over")
+                            .ItemSelector("div.thumb-wrap")
+                            .EmptyText("No images to display")
+                            .TrackOver(true)
+                            .Tpl(
+                                Html.X().XTemplate()
+                                    .Html(
+                                    @<text>
+                                        <tpl for=".">
+                                            <div class="thumb-wrap" id="{FileName}">
+                                                <div class="thumb"><img src="data:image/jpg;base64,{RawData}" title="{FileName}"></div>
+
+                                               
+                                            </div>
+                                        </tpl>
+                                        <div class="x-clear"></div>
+                                    </text>
+                                    )
+                            )
+                            //.PrepareData("prepareData")
+                    .Listeners(l => {  l.ItemDblClick.Fn = "dblClickItemCatalog";})
+                    )
+                    .BottomBar(
+                        Html.X().PagingToolbar().StoreID("soImage").HideRefresh(true)
+                    )
+             //.Accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"),
+             , X.Button()
+                .ID("btnUploadData")
+                .Width(iLabelWidth)
+                .DirectEvents(events =>
+                {
+                    events.Click.Action = "ReadImageUpload";
+                    events.Click.EventMask.ShowMask = true;
+                    events.Click.ExtraParams.Add(new Parameter { Name = ItemVM.Prop.ItemID.Name, Value = "App.ItemID.value", Mode = ParameterMode.Raw });
+                    events.Click.Success = "successGetImageUpload(result.data)";
+                    events.Click.Failure = "failedGetImageUpload(result.errorMessage);";
+                }).Hidden(true)
+            )
+          )
+    )
+   
+
+</form>

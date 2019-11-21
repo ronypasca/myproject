@@ -1,0 +1,34 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "AddStructure";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonAdd) + "Structure", ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListStructure", "GetStructure()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, "", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeStructure.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() + "Structure" : General.EnumDesc(Params.Home) + "Structure",
+        true, false, false, Buttons.ButtonList, ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null);
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home) + "Structure", true);
+}
+@(
+    btnSave
+    .Listeners(listener =>
+    {
+        listener.Click.Fn = "ReplaceItemVersionChild";
+    }
+    )
+)
+@(btnCancel)
+@(btnList.Hidden(ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonList)))

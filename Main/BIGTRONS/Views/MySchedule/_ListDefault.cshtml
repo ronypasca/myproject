@@ -1,0 +1,349 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model EventModelCollection
+
+@*@{
+    ViewBag.Title = "Calendar - Ext.NET MVC Examples";
+    Layout = "~/Views/Shared/_BaseLayoutNoMgr.cshtml";
+}*@
+
+@{
+   
+   
+    <script>
+        /* var CompanyX = {
+           getCalendar : function () {
+               return CompanyX.CalendarPanel1;
+           },
+
+           getStore : function () {
+               return CompanyX.EventStore1;
+           },
+
+           getWindow : function () {
+               return CompanyX.EventWindow1;
+           },
+
+           viewChange : function (p, vw, dateInfo) {
+                var win = this.getWindow();
+
+                if (win) {
+                    win.hide();
+                }
+
+                if (dateInfo) {
+                     will be null when switching to the event edit form, so ignore
+                    this.DatePicker1.setValue(dateInfo.activeDate);
+                    this.updateTitle(dateInfo.viewStart, dateInfo.viewEnd);
+                }
+            },
+
+            updateTitle : function (startDt, endDt) {
+                var msg = '',
+                    fmt = Ext.Date.format;
+
+                if (Ext.Date.clearTime(startDt).getTime() == Ext.Date.clearTime(endDt).getTime()) {
+                    msg = fmt(startDt, 'F j, Y');
+                } else if (startDt.getFullYear() == endDt.getFullYear()) {
+                    if (startDt.getMonth() == endDt.getMonth()) {
+                        msg = fmt(startDt,'F j') + ' - ' + fmt(endDt, 'j, Y');
+                    } else {
+                        msg = fmt(startDt, 'F j') + ' - ' + fmt(endDt, 'F j, Y');
+                    }
+                } else {
+                    msg = fmt(startDt, 'F j, Y') + ' - ' + fmt(endDt, 'F j, Y');
+                }
+
+                this.Panel1.setTitle(msg);
+            },
+
+            setStartDate : function (picker, date) {
+                this.getCalendar().setStartDate(date);
+            },
+
+            rangeSelect : function (cal, dates, callback) {
+                this.record.show(cal, dates);
+                this.getWindow().on('hide', callback, cal, { single : true} );
+            },
+
+            dayClick : function (cal, dt, allDay, el) {
+                this.record.show.call(this, cal, {
+                    StartDate : dt,
+                    IsAllDay  : allDay
+                }, el);
+            },
+
+            record : {
+                addFromEventDetailsForm : function (win, rec) {
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was added');
+                },
+
+                add : function (win, rec) {
+                    win.hide();
+                    CompanyX.getStore().add(rec);
+                    CompanyX.getStore().sync();
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was added');
+                },
+
+                updateFromEventDetailsForm : function (win, rec) {
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was updated');
+                },
+
+                update : function (win, rec) {
+                    win.hide();
+                    rec.commit();
+                    CompanyX.getStore().sync();
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was updated');
+                },
+
+                removeFromEventDetailsForm : function (win, rec) {
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was deleted');
+                },
+
+                remove : function (win, rec) {
+                    CompanyX.getStore().remove(rec);
+                    CompanyX.getStore().sync();
+                    win.hide();
+                    CompanyX.ShowMsg('Event ' + rec.data.Title + ' was deleted');
+                },
+
+                edit : function (win, rec) {
+                    win.hide();
+                    rec.commit();
+                    CompanyX.getCalendar().showEditForm(rec);
+                },
+
+                resize : function (cal, rec) {
+                    rec.commit();
+                    CompanyX.ShowMsg('Event '+ rec.data.Title + ' was updated');
+                },
+
+                move : function (cal, rec) {
+                    rec.commit();
+                    CompanyX.ShowMsg('Event '+ rec.data.Title + ' was moved to ' + Ext.Date.format(rec.data.StartDate, 'F jS' + (rec.data.IsAllDay ? '' : ' \\a\\t g:i a')));
+                },
+
+                show : function (cal, rec, el) {
+                    CompanyX.getWindow().show(rec, el);
+                },
+
+                saveAll : function () {
+                    CompanyX.getStore().submitData({
+                        mappings : false
+                    }, CompanyX.getStore().submitDataUrl);
+                }
+            }
+        };*/
+    </script>
+    @*<style>
+                    body {
+                margin: 20px;
+            }
+
+            h1 {
+                margin-bottom: 15px;
+                font-size: 16px;
+            }
+
+            .app-header {
+                text-align: center;
+                font-family: arial;
+            }
+
+            .app-center .x-panel-header {
+                font-size    : 13px;
+                text-align   : center;
+                padding-left : 178px;
+                font-family  : helvetica, arial, sans-serif;
+                color        : #455C6F;
+            }
+
+            .app-west {
+                border-right : 1px solid #99BBE8;
+            }
+
+            .app-west .x-panel-body {
+                background : #D0DEF0;
+            }
+
+            .app-header-content h1 {
+                float     : left;
+                margin    : 8px 5px;
+                font-size : 18px;
+                color     : #455C6F;
+            }
+
+            #app-logo {
+                float  : left;
+                margin : 5px 10px;
+                width  : 30px;
+            }
+
+            #app-logo .logo-top,
+            #app-logo .logo-bottom {
+                height   : 0;
+                overflow : hidden;
+                margin   : 0 1px;
+                border-color     : #9F2727;
+                border-top-width : 1px;
+                border-top-style : solid;
+            }
+
+            .ext-border-box #app-logo .logo-top,
+            .ext-border-box #app-logo .logo-bottom {
+                height : 1px;
+            }
+
+            #logo-body {
+                margin       : 0;
+                text-align   : center;
+                overflow     : hidden;
+                border-width : 3px 1px 0;
+                border-style : solid;
+                border-color : #9F2727;
+                background   : #fff;
+                font-weight  : bold;
+                padding      : 1px 0 2px;
+                font-size    : 18px;
+                line-height  : 18px;
+                color        : #455C6F;
+            }
+
+            #app-msg {
+                color         : #c8a52e;
+                padding       : 2px 10px;
+                font-weight   : bold;
+                font-size     : 13px;
+                border-radius : 3px;
+                -moz-border-radius    : 3px;
+                -webkit-border-radius : 3px;
+            }
+
+            .event {
+                margin  : 8px 12px;
+                border  : solid 1px #999;
+                background-color : #EFEFEF;
+            }
+
+            .event table {
+                width : 100%;
+            }
+
+            .event caption {
+                color   : #fff;
+                padding : 3px;
+                font-weight      : bold;
+                background-color : #999;
+            }
+
+            .event th, .event td {
+                padding : 2px 5px;
+            }
+
+            .event th {
+                width       : 100px;
+                font-weight : bold;
+            }
+        /*______*/
+        .ext-color-4,
+        .ext-ie .ext-color-4-ad,
+        .ext-opera .ext-color-4-ad {
+            color: #7F0000;
+        }
+
+            .ext-cal-day-col .ext-color-4,
+            .ext-dd-drag-proxy .ext-color-4,
+            .ext-color-4-ad,
+            .ext-color-4-ad .ext-cal-evm,
+            .ext-color-4 .ext-cal-picker-icon,
+            .ext-color-4-x dl,
+            .ext-color-4-x .ext-cal-evb {
+                background: #7F0000;
+            }
+
+        .ext-color-4-x .ext-cal-evb,
+        .ext-color-4-x dl {
+            border-color: #7C3939;
+        }
+    </style>*@
+}
+@*@Html.X().ResourceManager().Namespace("CompanyX")*@
+@(
+    Html.X().CalendarPanel()
+        .ID("CalendarPanel1")
+        .Region(Region.Center)
+        .ActiveIndex(2)
+        .Border(false)
+        .Height(900)
+        .EventStore(Html.X().EventStore()
+            .ID("EventStore1")
+            //.Listeners(events =>
+            //    events.BeforeSync.Handler = @"Ext.Msg.alert('Sync', 'The EventStore initiates a sync request after that action. The EventStore synchronization is not implemented in that example.');
+            //                                  this.commitChanges();
+            //                                  return false;"
+            //)
+            .Events(events => events.AddRange(Model))
+            .CustomConfig(cc => cc.Add(new { submitDataUrl = Url.Action("SubmitData") }))
+        )
+        .CalendarStore(Html.X().CalendarStore()
+            .ID("CalendarStore1")
+            .Calendars(
+            //new CalendarModel() { CalendarId = 1, Title = "Home" },
+            //new CalendarModel() { CalendarId = 2, Title = "Work" },
+            //new CalendarModel() { CalendarId = 3, Title = "School" },
+            //new CalendarModel() { CalendarId = 4, Title = "Other" }
+            )
+        )
+        // Setting enableFx to false is a workaround for #833
+        .MonthView(Html.X().MonthView()
+            .ShowHeader(true)
+            .ShowWeekLinks(true)
+            .ShowWeekNumbers(true)
+            .EnableFx(false)
+        )
+        .WeekView(Html.X().WeekView()
+            .CustomConfig(cc => cc.Add(new { enableFx = false }))
+        )
+        .DayView(Html.X().DayView()
+            .CustomConfig(cc => cc.Add(new { enableFx = false }))
+        )
+        .Listeners(events =>
+        {
+            //events.ViewChange.Fn = "CompanyX.viewChange";
+            //events.ViewChange.Scope = "CompanyX";
+            //events.EventClick.Fn = "CompanyX.record.show";
+            //events.EventClick.Scope = "CompanyX";
+            //events.DayClick.Fn = "CompanyX.dayClick";
+            //events.DayClick.Scope = "CompanyX";
+            //events.RangeSelect.Fn = "CompanyX.rangeSelect";
+            //events.RangeSelect.Scope = "CompanyX";
+            //events.EventMove.Fn = "CompanyX.record.move";
+            //events.EventMove.Scope = "CompanyX";
+            //events.EventResize.Fn = "CompanyX.record.resize";
+            //events.EventResize.Scope = "CompanyX";
+            //events.EventAdd.Fn = "CompanyX.record.addFromEventDetailsForm";
+            //events.EventAdd.Scope = "CompanyX";
+            //events.EventUpdate.Fn = "CompanyX.record.updateFromEventDetailsForm";
+            //events.EventUpdate.Scope = "CompanyX";
+            //events.EventDelete.Fn = "CompanyX.record.removeFromEventDetailsForm";
+            //events.EventDelete.Scope = "CompanyX";
+        })
+    )
+
+    @*@(Html.X().EventWindow()
+        .ID("EventWindow1")
+        .Hidden(true)
+        .CalendarStoreID("CalendarStore1")
+        .Listeners(events =>
+        {
+            //events.EventAdd.Fn = "CompanyX.record.add";
+            //events.EventAdd.Scope = "CompanyX";
+            //events.EventUpdate.Fn = "CompanyX.record.update";
+            //events.EventUpdate.Scope = "CompanyX";
+            //events.EditDetails.Fn = "CompanyX.record.edit";
+            //events.EditDetails.Scope = "CompanyX";
+            //events.EventDelete.Fn = "CompanyX.record.remove";
+            //events.EventDelete.Scope = "CompanyX";
+        })
+    )*@

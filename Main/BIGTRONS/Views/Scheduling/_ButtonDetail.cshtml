@@ -1,0 +1,17 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Detail";
+    List<Parameter> oParamList;
+    Parameter oParam;
+    //oParamList = new List<Parameter>();
+    //oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdSchedules.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    //oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonDetail);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonDetail);
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true,false,false,null,null,null,"reloadGrid");
+}
+@(btnAdd)
+@(btnUpdate)
+@(btnList)

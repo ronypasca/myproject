@@ -1,0 +1,160 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<PreBuiltRecipientVM>
+@{
+    string sPageName = "HomeRecipient";
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 250;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+
+    oParamList = new List<Parameter>();
+    //oParam = new Parameter();
+    //oParam = new Parameter("Control" + ItemVM.Prop.UoMID.Name, ItemVM.Prop.UoMID.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + ItemVM.Prop.UoMDesc.Name, ItemVM.Prop.UoMDesc.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "BrowseRecipient", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseRecipient", null, "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    <script>
+        deleteSuccess = function () {
+            App.grdTCMember.getStore().reload();
+        };
+
+        deleteRowRecipient = function () {
+            showMsgDeleteConfirmRecipient();
+        };
+
+        showMsgDeleteConfirmRecipient = function () {
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "deleteConfirmRecipient"
+            });
+            return;
+        };
+
+        deleteConfirmRecipient = function (btn) {
+            if (btn == "yes") {
+                App.grdPreBuiltRecipients.getStore().remove(App.grdPreBuiltRecipients.getSelectionModel().getSelection());
+            }
+        };
+
+        selectionChangeRecipient = function (length) {
+            App.ButtonDeleteHomeRecipient.setDisabled(length < 1);
+        };
+
+
+        editRecipient = function (editor, e) {
+
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        beforeEditRecipient = function (editor, e) {
+            if ("@isDetailButton" == "True")
+                return false;
+
+            App.grdPreBuiltRecipients.getSelectionModel().select(e.record);
+        };
+    </script>
+
+}
+@(
+        X.GridPanel()
+            .ID("grdPreBuiltRecipients")
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+            )
+            .Listeners(oListener =>
+            {
+                //oListener.ViewReady.Fn = "viewReady";
+                oListener.SelectionChange.Handler = (!isDetailButton ? "selectionChangeRecipient(selected.length)" : "");
+            })
+            .Store(
+                X.Store()
+                .AutoLoad(true)
+                .RemoteSort(false)
+                .RemotePaging(true)
+                .RemoteFilter(false)
+                .DataSource(Model)
+                .Model(
+                    X.Model()
+                    .Name("ModelPreBuiltRecipients")
+                    .Fields(
+                        X.ModelField().Name(Model, model => model.PreBuildRecID),
+                        X.ModelField().Name(Model, model => model.EmployeeID),
+                        X.ModelField().Name(Model, model => model.EmployeeName),
+                        X.ModelField().Name(Model, model => model.MailAddress),
+                        X.ModelField().Name(Model, model => model.RecipientTypeID),
+                        X.ModelField().Name(Model, model => model.RecipientTypeDesc)
+
+                    )
+                )
+            )
+            .ColumnModel(
+            X.Column()
+            .Text(PreBuiltRecipientVM.Prop.EmployeeID.Desc)
+            .Hidden(true)
+            .DataIndex(Model, model => model.EmployeeID)
+            .Flex(4),
+            X.Column()
+            .Text(EmployeeVM.Prop.EmployeeName.Desc)
+            .DataIndex(Model, model => model.EmployeeName)
+            .Flex(4),
+            X.Column()
+            .Text(EmployeeVM.Prop.Email.Desc)
+            .DataIndex(Model, model => model.MailAddress)
+            .Flex(4),
+            X.Column()
+            .Text(PreBuiltRecipientVM.Prop.RecipientTypeDesc.Desc)
+            .DataIndex(Model, model => model.RecipientTypeDesc)
+            .Flex(4)
+            .Editor(
+                Html.X().ComboBox()
+                    .TypeAhead(true)
+                    .SelectOnTab(true)
+                    .Items(
+                        "TO",
+                        "CC",
+                        "BCC"
+                    )
+            )
+            )
+            .Plugins(
+                    Html.X().CellEditing().ClicksToEdit(1)
+                    .Listeners(ls => ls.Edit.Fn = "editRecipient")
+                    .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditRecipient")
+                )
+            .BottomBar(
+                X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+            )
+            .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd.Disabled(isDetailButton),
+                btnDelete.Disabled(isDetailButton).Handler("deleteRowRecipient")
+        )
+    )
+
+
+)

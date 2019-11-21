@@ -1,0 +1,723 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MailNotificationsVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    //Button FPT
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + FPTVM.Prop.FPTID.Name, FPTVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlDescriptions", "FPTDesc", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseFPT = global_asax.Button(Buttons.ButtonBrowse, "FPT", "", "../FPT/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseFPT = global_asax.Button(Buttons.ButtonErase, "FPT", "", "", true);
+
+    //Button Function
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, FunctionsVM.Prop.FunctionDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    //oParam = new Parameter("Filter" + FPTVM.Prop.FPTID.Name, "App.FPTID.value", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    Button.Builder btnBrowseFunctions = global_asax.Button(Buttons.ButtonBrowse, "Function", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseFunctions = global_asax.Button(Buttons.ButtonErase, "Functions", "", "", true);
+
+    //Button NotificationTemplates
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateID.Name, NotificationTemplateVM.Prop.NotificationTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, NotificationTemplateVM.Prop.NotificationTemplateDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterTemplateFunctionID" /*+ FunctionsVM.Prop.FunctionID.Name*/, "App.FunctionID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseNotificationTemplates = global_asax.Button(Buttons.ButtonBrowse, "NotifTemplate", "", "../NotifTemplate/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseNotificationTemplates = global_asax.Button(Buttons.ButtonErase, "NotifTemplate", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GrdScheduleRecipient", "grdRecipientsTOVM,grdRecipientsCCVM,grdRecipientsBCCVM", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnPreBuilRec = global_asax.Button(Buttons.ButtonList, "BrowsePreBuild", "Pre-Build Recipients", "../PreBuiltRecipient/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+
+
+
+    //FPT
+    <script>
+
+        afterRenderTextArea = function () {
+        for (name in CKEDITOR.instances) {
+            CKEDITOR.instances[name].destroy(true);
+        }
+
+        CKEDITOR.addCss('span > .cke_placeholder { background-color: #ffeec2; }');
+        CKEDITOR.focusManager._.blurDelay = 10;
+        /*   config.enterMode = 2; //disabled <p> completely */
+        CKEDITOR.config.enterMode = CKEDITOR.ENTER_BR; /*pressing the ENTER KEY input <br/>*/
+        CKEDITOR.config.shiftEnterMode = CKEDITOR.ENTER_P; /*pressing the SHIFT + ENTER KEYS input <p>*/
+        CKEDITOR.config.autoParagraph = false; /* stops automatic insertion of <p> on focus*/
+        CKEDITOR.replace('@MailNotificationsVM.Prop.Contents.Name', {
+            toolbar: [
+
+                    { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat'] },
+                    { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+                    { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+                    { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'PageBreak'] },
+                    '/',
+                    { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                    { name: 'colors', items: ['TextColor', 'BGColor'] },
+                    { name: 'tools', items: ['Maximize'] },
+                    { name: 'document', items: ['Source', 'Preview'] }
+                    /*{ name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] },*/
+
+
+            ],
+            height: 250,
+            removeDialogTabs: 'image:advanced;link:advanced;link:target',
+            on: {
+                instanceReady: function (evt) {
+                    ed = evt.editor;
+                    ed.setData('');
+                },
+
+                loaded: function (evt) {
+                    resizeContainer();
+
+                },
+                blur: function (evt) {
+                    value = evt.editor.getData();
+
+                    debugger;
+                    if (App.grdTemplateTagsVM.selModel.selected.length > 0) {
+                        rowIndex = App.grdTemplateTagsVM.getSelectionModel().selectionStartIdx;
+                        var record = App.grdTemplateTagsVM.store.getAt(rowIndex);
+                        record.set('Value', value);
+
+                        record.commit();
+                    }
+                    
+                }
+
+            }
+        });
+    };
+
+    blurEditor = function ( el, event, eOpts) {
+        debugger;
+        if (App.grdEntryValues.selModel.selected.length > 0) {
+            rowIndex = App.grdEntryValues.getSelectionModel().selectionStartIdx;
+            var record = App.grdEntryValues.store.getAt(rowIndex);
+            record.set('Value', value);
+
+            record.commit();
+        }
+        if (App.grdNotificationValues.selModel.selected.length > 0) {
+            rowIndex = App.grdNotificationValues.getSelectionModel().selectionStartIdx;
+            var record = App.grdNotificationValues.store.getAt(rowIndex);
+            record.set('Value', value);
+
+            record.commit();
+        }
+    };
+
+
+        var bPreventGetFPT = false;
+
+        getFPT = function (FPTID, FPTDesc, exact) {
+            if (App.FPTID.isDirty() || App.FPTDesc.isDirty()) {
+                App.FPTID.originalValue = App.FPTID.getValue();
+                App.FPTDesc.originalValue = App.FPTDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetFPT", "FPT"))',
+                    params: {
+                        ControlFPTID: App.FPTID.id,
+                        ControlFPTDesc: App.FPTDesc.id,
+                        FilterFPTID: FPTID,
+                        FilterFPTDesc: FPTDesc,
+                        Exact: exact
+                    },
+                    success: getFPTSuccess,
+                    failure: getFPTFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getFPTSuccess = function () {
+            if (!App.FPTID.isDirty() && !App.FPTDesc.isDirty()) {
+                App.FPTID.originalValue = "";
+                App.FPTDesc.originalValue = "";
+            }
+            bPreventGetFPT = false;
+        };
+
+        getFPTFailed = function () {
+            eraseFPT();
+        };
+
+        FPTIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFPT = true;
+                getFPT(field.getValue(), "", false);
+            }
+        };
+
+        FPTDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFPT = true;
+                getFPT("", field.getValue(), false);
+            }
+        };
+
+        FPTIDBlur = function (FPTID) {
+            console.log(bPreventGetFPT);
+            if (!bPreventGetFPT) {
+                bPreventGetFPT = true;
+                if (FPTID.trim() == "")
+                    getFPTFailed();
+                else
+                    getFPT(FPTID, "", true);
+            }
+            bPreventGetFPT = false;
+        };
+
+        FPTDescBlur = function (FPTDesc) {
+            if (!bPreventGetFPT) {
+                bPreventGetFPT = true;
+                if (FPTDesc.trim() == "")
+                    getFPTFailed();
+                else
+                    getFPT("", FPTDesc, true);
+            }
+            bPreventGetFPT = false;
+        };
+        FPTIDChange = function (field, e, eOpts) {
+            FPTID = field.getValue();
+            if (!bPreventGetFPT) {
+                bPreventGetFPT = true;
+                if (FPTID.trim() == "")
+                    getFPTFailed();
+                else {
+
+                    if (FPTID != field.originalValue) {
+                        eraseFunctions();
+                    }
+                }
+            }
+            bPreventGetFPT = false;
+        };
+
+        FPTDescChange = function (field, e, eOpts) {
+            FPTDesc = field.getValue();
+            if (!bPreventGetFPT) {
+                bPreventGetFPT = true;
+                if (FPTDesc.trim() == "")
+                    getFPTFailed();
+                else {
+
+                    if (FPTDesc != field.originalValue) {
+                        eraseFunctions();
+                    }
+                }
+            }
+            bPreventGetFPT = false;
+        };
+        eraseFPT = function () {
+            App.FPTID.clear();
+            App.FPTDesc.clear();
+            App.FPTID.originalValue = "";
+            App.FPTDesc.originalValue = "";
+        };
+    </script>
+    //Functions
+    <script>
+        var bPreventGetFunctions = false;
+
+        getFunctions = function (FunctionID, FunctionDesc, exact) {
+            if (App.FunctionID.isDirty() || App.FunctionDesc.isDirty()) {
+                App.FunctionID.originalValue = App.FunctionID.getValue();
+                App.FunctionDesc.originalValue = App.FunctionDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetFunctions", "Functions"))',
+                    params: {
+                        ControlFunctionID: App.FunctionID.id,
+                        ControlFunctionDesc: App.FunctionDesc.id,
+                        FilterFunctionID: FunctionID,
+                        FilterFunctionDesc: FunctionDesc,
+                        Exact: exact
+                    },
+                    success: getFunctionsSuccess,
+                    failure: getFunctionsFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getFunctionsSuccess = function () {
+            if (!App.FunctionID.isDirty() && !App.FunctionDesc.isDirty()) {
+                App.FunctionID.originalValue = "";
+                App.FunctionDesc.originalValue = "";
+            }
+            bPreventGetFunctions = false;
+            eraseNotificationTemplates();
+            
+        };
+
+        getFunctionsFailed = function () {
+            App.FunctionID.clear();
+            App.FunctionDesc.clear();
+            App.FunctionID.originalValue = "";
+            App.FunctionDesc.originalValue = "";
+        };
+
+        FunctionIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFunctions = true;
+                getFunctions(field.getValue(), "", false);
+            }
+        };
+
+        FunctionDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetFunctions = true;
+                getFunctions("", field.getValue(), false);
+            }
+        };
+
+        FunctionIDBlur = function (FunctionID) {
+            console.log(bPreventGetFunctions);
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionID.trim() == "")
+                    getFunctionsFailed();
+                else
+                    getFunctions(FunctionID, "", true);
+            }
+            bPreventGetFunctions = false;
+        };
+
+        FunctionDescBlur = function (FunctionDesc) {
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionDesc.trim() == "")
+                    getFunctionsFailed();
+                else
+                    getFunctions("", FunctionDesc, true);
+            }
+            bPreventGetFunctions = false;
+        };
+        FunctionIDChange = function (field, e, eOpts) {
+            FunctionID = field.getValue();
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionID.trim() == "")
+                    getFunctionsFailed();
+                else {
+
+                    if (FunctionID != field.originalValue) {
+                        eraseNotificationTemplates();
+                    }
+                }
+            }
+            bPreventGetFunctions = false;
+        };
+
+        FunctionDescChange = function (field, e, eOpts) {
+            FunctionDesc = field.getValue();
+            if (!bPreventGetFunctions) {
+                bPreventGetFunctions = true;
+                if (FunctionDesc.trim() == "")
+                    getFunctionsFailed();
+                else {
+
+                    if (FunctionDesc != field.originalValue) {
+                        eraseNotificationTemplates();
+                    }
+                }
+            }
+            bPreventGetFunctions = false;
+        };
+        eraseFunctions = function () {
+            App.FunctionID.clear();
+            App.FunctionDesc.clear();
+            App.FunctionID.originalValue = "";
+            App.FunctionDesc.originalValue = "";
+            eraseNotificationTemplates();
+        };
+    </script>
+    //NotificationTemplates
+    <script>
+        var bPreventGetNotificationTemplates = false;
+
+        getNotificationTemplates = function (NotificationTemplateID, NotificationTemplateDesc, exact) {
+            if (App.NotificationTemplateID.isDirty() || App.NotificationTemplateDesc.isDirty()) {
+                App.NotificationTemplateID.originalValue = App.NotificationTemplateID.getValue();
+                App.NotificationTemplateDesc.originalValue = App.NotificationTemplateDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetNotificationTemplates", "NotificationTemplates"))',
+                    params: {
+                        ControlNotificationTemplateID: App.NotificationTemplateID.id,
+                        ControlNotificationTemplateDesc: App.NotificationTemplateDesc.id,
+                        FilterNotificationTemplateID: NotificationTemplateID,
+                        FilterNotificationTemplateDesc: NotificationTemplateDesc,
+                        Exact: exact
+                    },
+                    success: getNotificationTemplatesSuccess,
+                    failure: getNotificationTemplatesFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getNotificationTemplatesSuccess = function () {
+            if (!App.NotificationTemplateID.isDirty() && !App.NotificationTemplateDesc.isDirty()) {
+                App.NotificationTemplateID.originalValue = "";
+                App.NotificationTemplateDesc.originalValue = "";
+            }
+            bPreventGetNotificationTemplates = false;
+            
+        };
+
+        getNotificationTemplatesFailed = function () {
+            App.NotificationTemplateID.clear();
+            App.NotificationTemplateDesc.clear();
+            App.NotificationTemplateID.originalValue = "";
+            App.NotificationTemplateDesc.originalValue = "";
+        };
+
+        NotificationTemplateIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetNotificationTemplates = true;
+                getNotificationTemplates(field.getValue(), "", false);
+            }
+        };
+
+        NotificationTemplateDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetNotificationTemplates = true;
+                getNotificationTemplates("", field.getValue(), false);
+            }
+        };
+
+        NotificationTemplateIDBlur = function (NotificationTemplateID) {
+            console.log(bPreventGetNotificationTemplates);
+            if (!bPreventGetNotificationTemplates) {
+                bPreventGetNotificationTemplates = true;
+                if (NotificationTemplateID.trim() == "")
+                    getNotificationTemplatesFailed();
+                else
+                    getNotificationTemplates(NotificationTemplateID, "", true);
+            }
+            bPreventGetNotificationTemplates = false;
+        };
+
+        NotificationTemplateDescBlur = function (NotificationTemplateDesc) {
+            if (!bPreventGetNotificationTemplates) {
+                bPreventGetNotificationTemplates = true;
+                if (NotificationTemplateDesc.trim() == "")
+                    getNotificationTemplatesFailed();
+                else
+                    getNotificationTemplates("", NotificationTemplateDesc, true);
+            }
+            bPreventGetNotificationTemplates = false;
+        };
+        NotificationTemplatesChange = function () {
+            
+        };
+        NotificationTemplateIDChange = function (field, e, eOpts) {
+
+            NotificationTemplateID = field.getValue();
+            if (!bPreventGetNotificationTemplates) {
+                bPreventGetNotificationTemplates = true;
+                if (NotificationTemplateID.trim() == "")
+                    getNotificationTemplatesFailed();
+                else {
+
+                    if (NotificationTemplateID != field.originalValue) {
+                        
+                    }
+                }
+            }
+            bPreventGetNotificationTemplates = false;
+        };
+
+        NotificationTemplateDescChange = function (field, e, eOpts) {
+
+            NotificationTemplateDesc = field.getValue();
+            if (!bPreventGetNotificationTemplates) {
+                bPreventGetNotificationTemplates = true;
+                if (NotificationTemplateDesc.trim() == "")
+                    getNotificationTemplatesFailed();
+                else {
+
+                    if (NotificationTemplateDesc != field.originalValue) {
+                        
+                    }
+                }
+            }
+            bPreventGetNotificationTemplates = false;
+        };
+        eraseNotificationTemplates = function () {
+            App.NotificationTemplateID.clear();
+            App.NotificationTemplateDesc.clear();
+            App.NotificationTemplateID.originalValue = "";
+            App.NotificationTemplateDesc.originalValue = "";
+        };
+    </script>
+    
+
+
+}
+
+@(
+    //Start PMailNotificationsForm
+    X.Panel().ID("PMailNotificationsForm").Frame(true)
+        //Start PMailNotificationsForm items
+        .Items(
+        //Start FMailNotifications
+        X.FormPanel().ID("FMailNotifications").Padding(iBodyPadding)
+            //Start FMailNotifications Items
+            .Items(
+                X.Container()
+                .Layout(LayoutType.Column)
+                .Items(
+                    //start pnlMailNotificationsLeft
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlMailNotificationsLeft")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    //start pnlMailNotificationsLeft item
+                    .Items(
+                            //Start FieldContainer 1
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 1 items
+                            .Items(
+                                X.HiddenFor(model => model.MailNotificationID),
+                                X.TextFieldFor(model => model.FPTID)
+                                .FieldLabel("FPT")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FPTDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseFPT
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseFPT.Handler("eraseFPT")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                            )
+                            //END FieldContainer 1 items
+                            //End FieldContainer 1
+                            ,
+
+                            //Start FieldContainer 2
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 2 items
+                            .Items(
+                                X.TextFieldFor(model => model.FunctionID)
+                                .FieldLabel("Functions")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "FunctionIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "FunctionIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "FunctionIDChange";
+                                })
+                                    .LabelWidth(iLabelWidth)
+                                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.FunctionDesc)
+                                    .FieldLabel("")
+                                    .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    //.ReadOnly(true)
+                                    .Listeners(oListeners =>
+                                    {
+                                        oListeners.SpecialKey.Handler = "FunctionDescSpecialKey(item, e);";
+                                        oListeners.Blur.Handler = "FunctionDescBlur(this.getValue());";
+                                        oListeners.Change.Fn = "FunctionDescChange";
+                                    })
+                                    .LabelWidth(0)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                    .RightButtons(
+                                        btnBrowseFunctions
+                                        //.Disabled(true),
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                        btnEraseFunctions.Handler("eraseFunctions")
+                                        //.Disabled(true)
+                                        .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    )
+                            )
+                            //End FieldContainer 2 items
+                            //End FieldContainer 2
+                            ,
+
+                            //Start FieldContainer 3
+                            X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 3 items
+                            .Items(
+                                X.TextFieldFor(model => model.NotificationTemplateID)
+                                .FieldLabel("NotificationTemplates")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "NotificationTemplateIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "NotificationTemplateIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "NotificationTemplateIDChange";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.NotificationTemplateDesc)
+                                .FieldLabel("")
+                                //.ReadOnly(true)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "NotificationTemplateDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "NotificationTemplateDescBlur(this.getValue());";
+                                    oListeners.Change.Fn = "NotificationTemplateDescChange";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseNotificationTemplates
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseNotificationTemplates.Handler("eraseNotificationTemplates")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ))
+                                //End FieldContainer 3 items
+                                //End FieldContainer 3
+                                )
+                    //end pnlMailNotificationsLeft item
+                    //end pnlMailNotificationsLeft
+                    ,
+                    //start pnlMailNotificationsRight
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlMailNotificationsRight")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    //start pnlMailNotificationsRight item
+                    .Items(
+                        X.TextFieldFor(model => model.CreatedDate)
+                        .FieldLabel("Date Created")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.TaskStatusDesc)
+                        .FieldLabel("Approval Status")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.StatusDesc)
+                        .FieldLabel("Mailing Status")
+                        .ReadOnly(isDisableButton)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                    )
+                    //end pnlMailNotificationsRight item
+                    //end pnlMailNotificationsRight
+                    ))
+        //END FMailNotifications Items 
+        .TopBar(X.Toolbar().PaddingSpec(sToolbarPaddingSpec).ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData))
+         , X.Panel().ID("pnlPrebuilt")
+             .Items(btnPreBuilRec.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == "Detail").Icon(Icon.UserAdd))
+             .Padding(iBodyPadding)
+        , X.FormPanel().ID("pnlRecipientsto")
+             .Title("Mail Recipient TO")
+             .Collapsible(true)
+             .ItemsFromPartial("Recipient/_List", Model.RecipientsVM.Where(x => x.RecipientTypeID == ((int)RecipientTypes.TO).ToString()).ToList() , ViewData)
+             .Padding(iBodyPadding)
+       , X.FormPanel().ID("pnlRecipientscc")
+             .Title("Mail Recipient CC")
+             .Collapsible(true)
+             .ItemsFromPartial("CC/_List", Model.RecipientsVM.Where(x => x.RecipientTypeID == ((int)RecipientTypes.CC).ToString()).ToList(), ViewData)
+             .Padding(iBodyPadding)
+        , X.FormPanel().ID("pnlRecipientsbcc")
+             .Title("Mail Recipient BCC")
+             .Collapsible(true)
+             .ItemsFromPartial("BCC/_List", Model.RecipientsVM.Where(x => x.RecipientTypeID == ((int)RecipientTypes.BCC).ToString()).ToList(), ViewData)
+             .Padding(iBodyPadding)
+         ,X.Container().Layout(LayoutType.Column)
+         .Items(
+              X.Panel().ID("pnlParameters")
+             .Title("Parameter Value")
+             .ColumnWidth(0.3)
+             .Collapsible(true)
+             .ItemsFromPartial("Parameter/_List", Model.TemplateTagsVM, ViewData)
+             .Padding(iBodyPadding)
+       , X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.7)
+                    .ID("pnlContent")
+                    .PaddingSpec(sPanelPaddingSpec)
+                    .Items(
+                     X.TextArea()
+                     .ID(MinutesTemplateVM.Prop.Contents.Name)
+                     .Name(MinutesTemplateVM.Prop.Contents.Name)
+                     .Listeners(ls => { ls.AfterRender.Fn = "afterRenderTextArea"; ls.Blur.Handler = "blurEditor"; })
+                     .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                   )
+             )
+
+       , X.FormPanel().ID("pnlAttachment")
+             .Title("Attachment List")
+             .Collapsible(true)
+             .ItemsFromPartial("Attachment/_List", Model.NotificationAttachmentVM, ViewData)
+             .Padding(iBodyPadding)
+        )
+
+//END PMailNotificationsForm item
+//END PMailNotificationsForm
+)

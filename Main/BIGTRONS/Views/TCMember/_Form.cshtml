@@ -1,0 +1,637 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model TCMembersVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + EmployeeVM.Prop.EmployeeID.Name, EmployeeVM.Prop.EmployeeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + EmployeeVM.Prop.EmployeeName.Name, EmployeeVM.Prop.EmployeeName.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + EmployeeVM.Prop.Email.Name, EmployeeVM.Prop.Email.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "Employee", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseEmployee = global_asax.Button(Buttons.ButtonErase, "Employee", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + EmployeeVM.Prop.EmployeeID.Name, TCMembersVM.Prop.SuperiorID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + EmployeeVM.Prop.EmployeeName.Name, TCMembersVM.Prop.SuperiorName.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCMembersVM.Prop.TCTypeID.Name, "App.TCTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Filter" + TCTypesVM.Prop.TCTypeParentID.Name, "App.TCTypeParentID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseSuperior = global_asax.Button(Buttons.ButtonBrowse, "Superior", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseSuperior = global_asax.Button(Buttons.ButtonErase, "Superior", "", "", true);
+
+    //oParamList = new List<Parameter>();
+    //oParam = new Parameter();
+    //oParam = new Parameter("Control" + TCMembersVM.Prop.TCMemberID.Name, TCMembersVM.Prop.DelegateTo.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Control" + TCMembersVM.Prop.EmployeeName.Name, TCMembersVM.Prop.DelegateName.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    //oParam = new Parameter("Filter" + TCMembersVM.Prop.SuperiorID.Name, "App.EmployeeID.getValue()", ParameterMode.Raw, false);
+    //oParamList.Add(oParam);
+    //Button.Builder btnBrowseDelegate = global_asax.Button(Buttons.ButtonBrowse, "Delegate", "", General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    //Button.Builder btnEraseDelegate = global_asax.Button(Buttons.ButtonErase, "Delegate", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + TCMembersVM.Prop.TCTypeID.Name, TCMembersVM.Prop.TCTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + TCMembersVM.Prop.TCTypeDesc.Name, TCMembersVM.Prop.TCTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseTCType = global_asax.Button(Buttons.ButtonBrowse, "Type", "", "../TCType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseTCType = global_asax.Button(Buttons.ButtonErase, "Type", "", "", true);
+
+    //Button SBU
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Control" + BusinessUnitVM.Prop.BusinessUnitID.Name, BusinessUnitVM.Prop.BusinessUnitID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BusinessUnitVM.Prop.BusinessUnitDesc.Name, BusinessUnitVM.Prop.BusinessUnitDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBusinessUnit = global_asax.Button(Buttons.ButtonBrowse, "BusinessUnit", "", "../BusinessUnit/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBusinessUnit = global_asax.Button(Buttons.ButtonErase, "BusinessUnit", "", "", true);
+
+
+    <script>
+        /*Employee*/
+        var bPreventGetEmployee = false;
+
+        getEmployee = function (EmployeeID, EmployeeName, exact) {
+            if (App.EmployeeID.isDirty() || App.EmployeeName.isDirty()) {
+                App.EmployeeID.originalValue = App.EmployeeID.getValue();
+                App.EmployeeName.originalValue = App.EmployeeName.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetEmployee", "Employee"))',
+                    params: {
+                        ControlEmployeeID: App.EmployeeID.id,
+                        ControlEmployeeName: App.EmployeeName.id,
+                        FilterEmployeeID: EmployeeID,
+                        FilterEmployeeName: EmployeeName,
+                        Exact: exact
+                    },
+                    success: getEmployeeSuccess,
+                    failure: getEmployeeFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getEmployeeSuccess = function () {
+            if (!App.EmployeeID.isDirty() && !App.EmployeeName.isDirty()) {
+                App.EmployeeID.originalValue = "";
+                App.EmployeeName.originalValue = "";
+            }
+            bPreventGetEmployee = false;
+        };
+
+        getEmployeeFailed = function () {
+            eraseEmployee();
+        };
+
+        EmployeeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetEmployee = true;
+                getEmployee(field.getValue(), "", false);
+            }
+        };
+
+        EmployeeNameSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetEmployee = true;
+                getEmployee("", field.getValue(), false);
+            }
+        };
+
+        EmployeeIDBlur = function (EmployeeID) {
+            console.log(bPreventGetEmployee);
+            if (!bPreventGetEmployee) {
+                bPreventGetEmployee = true;
+                if (EmployeeID.trim() == "")
+                    getEmployeeFailed();
+                else
+                    getEmployee(EmployeeID, "", true);
+            }
+            bPreventGetEmployee = false;
+        };
+
+        EmployeeNameBlur = function (EmployeeName) {
+            if (!bPreventGetEmployee) {
+                bPreventGetEmployee = true;
+                if (EmployeeName.trim() == "")
+                    getEmployeeFailed();
+                else
+                    getEmployee("", EmployeeName, true);
+            }
+            bPreventGetEmployee = false;
+        };
+
+        eraseEmployee = function () {
+            App.EmployeeID.clear();
+            App.EmployeeName.clear();
+            App.EmployeeID.originalValue = "";
+            App.EmployeeName.originalValue = "";
+        };
+        /*End Employee*/
+
+        /*Superior*/
+        var bPreventGetSuperior = false;
+
+        getSuperior = function (SuperiorID, SuperiorName, exact) {
+            if (App.SuperiorID.isDirty() || App.SuperiorName.isDirty()) {
+                App.SuperiorID.originalValue = App.SuperiorID.getValue();
+                App.SuperiorName.originalValue = App.SuperiorName.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetSuperior", "Superior"))',
+                    params: {
+                        ControlSuperiorID: App.SuperiorID.id,
+                        ControlSuperiorName: App.SuperiorName.id,
+                        FilterSuperiorID: SuperiorID,
+                        FilterSuperiorName: SuperiorName,
+                        Exact: exact
+                    },
+                    success: getSuperiorSuccess,
+                    failure: getSuperiorFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getSuperiorSuccess = function () {
+            if (!App.SuperiorID.isDirty() && !App.SuperiorName.isDirty()) {
+                App.SuperiorID.originalValue = "";
+                App.SuperiorName.originalValue = "";
+            }
+            bPreventGetSuperior = false;
+        };
+
+        getSuperiorFailed = function () {
+            eraseSuperior();
+        };
+
+        SuperiorIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetSuperior = true;
+                getSuperior(field.getValue(), "", false);
+            }
+        };
+
+        SuperiorNameSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetSuperior = true;
+                getSuperior("", field.getValue(), false);
+            }
+        };
+
+        SuperiorIDBlur = function (SuperiorID) {
+            console.log(bPreventGetSuperior);
+            if (!bPreventGetSuperior) {
+                bPreventGetSuperior = true;
+                if (SuperiorID.trim() == "")
+                    getSuperiorFailed();
+                else
+                    getSuperior(SuperiorID, "", true);
+            }
+            bPreventGetSuperior = false;
+        };
+
+        SuperiorNameBlur = function (SuperiorName) {
+            if (!bPreventGetSuperior) {
+                bPreventGetSuperior = true;
+                if (SuperiorName.trim() == "")
+                    getSuperiorFailed();
+                else
+                    getSuperior("", SuperiorName, true);
+            }
+            bPreventGetSuperior = false;
+        };
+
+        eraseSuperior = function () {
+            App.SuperiorID.clear();
+            App.SuperiorName.clear();
+            App.SuperiorID.originalValue = "";
+            App.SuperiorName.originalValue = "";
+        };
+        /*End Superior*/
+
+        /*TCType*/
+        var bPreventGetTCType = false;
+
+        getTCType = function (TCTypeID, TCTypeDesc, exact) {
+            if (App.TCTypeID.isDirty() || App.TCTypeDesc.isDirty()) {
+                App.TCTypeID.originalValue = App.TCTypeID.getValue();
+                App.TCTypeDesc.originalValue = App.TCTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetTCType", "TCType"))',
+                    params: {
+                        ControlTCTypeID: App.TCTypeID.id,
+                        ControlTCTypeName: App.TCTypeDesc.id,
+                        FilterTCTypeID: TCTypeID,
+                        FilterTCTypeName: TCTypeDesc,
+                        Exact: exact
+                    },
+                    success: getTCTypeSuccess,
+                    failure: getTCTypeFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getTCTypeSuccess = function () {
+            if (!App.TCTypeID.isDirty() && !App.TCTypeDesc.isDirty()) {
+                App.TCTypeID.originalValue = "";
+                App.TCTypeDesc.originalValue = "";
+            }
+            bPreventGetTCType = false;
+        };
+
+        getTCTypeFailed = function () {
+            eraseTCType();
+        };
+
+        TCTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetTCType = true;
+                getTCType(field.getValue(), "", false);
+            }
+        };
+
+        TCTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetTCType = true;
+                getTCType("", field.getValue(), false);
+            }
+        };
+
+        TCTypeIDBlur = function (TCTypeID) {
+            console.log(bPreventGetTCType);
+            if (!bPreventGetTCType) {
+                bPreventGetTCType = true;
+                if (TCTypeID.trim() == "")
+                    getTCTypeFailed();
+                else
+                    getTCType(TCTypeID, "", true);
+            }
+            bPreventGetTCType = false;
+        };
+
+        TCTypeDescBlur = function (TCTypeDesc) {
+            if (!bPreventGetTCType) {
+                bPreventGetTCType = true;
+                if (TCTypeDesc.trim() == "")
+                    getTCTypeFailed();
+                else
+                    getTCType("", TCTypeDesc, true);
+            }
+            bPreventGetTCType = false;
+        };
+
+        eraseTCType = function () {
+            App.TCTypeID.clear();
+            App.TCTypeDesc.clear();
+            App.TCTypeID.originalValue = "";
+            App.TCTypeDesc.originalValue = "";
+        };
+        /*end TCType*/
+
+        selectTCTypeID = function (combo, record, eOpts) {
+
+            if (App.TCTypeID.originalValue != record[0].data.TCTypeID) {
+                App.TCTypeID.originalValue = record[0].data.TCTypeID;
+                App.SuperiorID.setValue("");
+                App.SuperiorName.setValue("");
+            }
+
+            App.TCTypeParentID.setValue('-');
+            if (!Ext.isEmpty(record[0].data.TCTypeParentID))
+                App.TCTypeParentID.setValue(record[0].data.TCTypeParentID);
+
+
+        };
+
+
+        /*BusinessUnit*/
+        var bPreventGetBusinessUnit = false;
+
+        getBusinessUnit = function (BusinessUnitID, BusinessUnitDesc, exact) {
+            if (App.BusinessUnitID.isDirty() || App.BusinessUnitDesc.isDirty()) {
+                App.BusinessUnitID.originalValue = App.BusinessUnitID.getValue();
+                App.BusinessUnitDesc.originalValue = App.BusinessUnitDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBusinessUnit", "BusinessUnit"))',
+                    params: {
+                        ControlBusinessUnitID: App.BusinessUnitID.id,
+                        ControlBusinessUnitDesc: App.BusinessUnitDesc.id,
+                        FilterBusinessUnitID: BusinessUnitID,
+                        FilterBusinessUnitDesc: BusinessUnitDesc,
+                        Exact: exact
+                    },
+                    success: getBusinessUnitSuccess,
+                    failure: getBusinessUnitFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getBusinessUnitSuccess = function () {
+            if (!App.BusinessUnitID.isDirty() && !App.BusinessUnitDesc.isDirty()) {
+                App.BusinessUnitID.originalValue = "";
+                App.BusinessUnitDesc.originalValue = "";
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        getBusinessUnitFailed = function () {
+            eraseBusinessUnit();
+        };
+
+        BusinessUnitIDSpecialKey = function (field, event) {
+            debugger;
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBusinessUnit = true;
+                getBusinessUnit(field.getValue(), "", false);
+            }
+        };
+
+        BusinessUnitDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBusinessUnit = true;
+                getBusinessUnit("", field.getValue(), false);
+            }
+        };
+
+        BusinessUnitIDBlur = function (BusinessUnitID) {
+            console.log(bPreventGetBusinessUnit);
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitID.trim() == "")
+                    getBusinessUnitFailed();
+                else
+                    getBusinessUnit(BusinessUnitID, "", true);
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        BusinessUnitDescBlur = function (BusinessUnitDesc) {
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitDesc.trim() == "")
+                    getBusinessUnitFailed();
+                else
+                    getBusinessUnit("", BusinessUnitDesc, true);
+            }
+            bPreventGetBusinessUnit = false;
+        };
+        businessUnitIDChange = function (field, e, eOpts) {
+            BusinessUnitID = field.getValue();
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitID.trim() == "")
+                    getBusinessUnitFailed();
+                else {
+
+                    if (BusinessUnitID != field.originalValue) {
+                        eraseDivision();
+                    }
+                }
+            }
+            bPreventGetBusinessUnit = false;
+        };
+
+        businessUnitDescChange = function (field, e, eOpts) {
+            BusinessUnitDesc = field.getValue();
+            if (!bPreventGetBusinessUnit) {
+                bPreventGetBusinessUnit = true;
+                if (BusinessUnitDesc.trim() == "")
+                    getBusinessUnitFailed();
+                else {
+
+                    if (BusinessUnitDesc != field.originalValue) {
+                        eraseDivision();
+                    }
+                }
+            }
+            bPreventGetBusinessUnit = false;
+        };
+        eraseBusinessUnit = function () {
+            App.BusinessUnitID.clear();
+            App.BusinessUnitDesc.clear();
+            App.BusinessUnitID.originalValue = "";
+            App.BusinessUnitDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PTCMembersForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FTCMembers")
+        .Padding(iBodyPadding)
+        .Items(
+
+            X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlLeft")
+                  .Items(
+                       X.HiddenFor(model => model.Email),
+                      X.HiddenFor(model => model.TCMemberID),
+                    X.DateFieldFor(model => model.PeriodStart)
+                        .FieldLabel(TCMembersVM.Prop.PeriodStart.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Format(global_asax.DefaultDateFormat),
+                    X.DateFieldFor(model => model.PeriodEnd)
+                        .FieldLabel(TCMembersVM.Prop.PeriodEnd.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Format(global_asax.DefaultDateFormat),
+                     X.HiddenFor(model => model.TCTypeParentID),
+                     X.ComboBoxFor(model => model.TCTypeID)
+                        .FieldLabel(TCMembersVM.Prop.TCTypeDesc.Desc)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .DisplayField(TCMembersVM.Prop.TCTypeDesc.Name)
+                        .ValueField(TCMembersVM.Prop.TCTypeID.Name)
+                        .EmptyValue("")
+                        .Editable(false)
+                        .QueryMode(DataLoadMode.Local)
+                        .TriggerAction(TriggerAction.All)
+                        .Store(
+                            X.StoreForModel()
+                            .Proxy(X.AjaxProxy()
+                                .Url(Url.Action("/GetTCTypeList"))
+                                .Reader(X.JsonReader().RootProperty("data"))
+                            )
+                            .AutoLoad(true)
+                        ).Listeners(ls =>
+                                ls.Select.Fn = "selectTCTypeID"
+                            )
+                     , 
+                     X.FieldContainer()
+                            .FieldLabel("")
+                            .LabelWidth(0)
+                            .Width(iFieldWidth)
+                            .Layout(LayoutType.Column)
+                            //Start FieldContainer 1 items
+                            .Items(
+                                X.TextFieldFor(model => model.BusinessUnitID)
+                                .FieldLabel("SBU")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "BusinessUnitIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "BusinessUnitIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                                X.TextFieldFor(model => model.BusinessUnitDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                //.ReadOnly(true)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "BusinessUnitDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "BusinessUnitDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                btnBrowseBusinessUnit
+                                //.Disabled(true),
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                btnEraseBusinessUnit.Handler("eraseBusinessUnit")
+                                //.Disabled(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                
+                            )
+
+                            )
+                            )
+                     ,
+
+
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlRight")
+                  .Items(
+
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.EmployeeID)
+                                .FieldLabel(TCMembersVM.Prop.EmployeeName.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "EmployeeIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "EmployeeIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.EmployeeName)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "EmployeeNameSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "EmployeeNameBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseEmployee
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd)),
+                                    btnEraseEmployee.Handler("eraseEmployee")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                )
+                        ),
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.SuperiorID)
+                                .FieldLabel(TCMembersVM.Prop.SuperiorName.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "SuperiorIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "SuperiorIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.SuperiorName)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "SuperiorNameSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "SuperiorNameBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseSuperior
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                    btnEraseSuperior.Handler("eraseSuperior")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                        )
+                      )
+          )
+          ,
+            X.Panel()
+                .ID("pnlMemberDelegation")
+                .Title("Delegation")
+                .Collapsible(true)
+                .ItemsFromPartial("Delegation/_List", Model.ListTCMembersDelegationVM, ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+       ,
+             X.Panel()
+                .ID("pnlFunction")
+                .Title("Functions")
+                .Collapsible(true)
+                .ItemsFromPartial("Functions/_List", new List<FunctionsVM>(), ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

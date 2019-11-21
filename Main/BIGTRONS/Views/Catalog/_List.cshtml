@@ -1,0 +1,938 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemPriceVendorPeriodVM>
+@{
+
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "10 10 10 10";
+    int iPageSize = 30;
+    var sPanelPaddingSpec = "0 10 0 0";
+    var sPanelVendorPaddingSpec = "10 0 0 20";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+
+    string parameterModel = @"{ItemPriceID: App.ImageView.getRowsValues({selectedOnly:true})[0].ItemPriceID, 
+                                                                            VendorID: App.ImageView.getRowsValues({ selectedOnly:true })[0].VendorID, 
+                                                                            ValidFrom : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidFrom, 
+                                                                            Amount : App.ImageView.getRowsValues({selectedOnly:true})[0].Amount, 
+                                                                            ClusterID : App.ImageView.getRowsValues({selectedOnly:true})[0].ClusterID, 
+                                                                            CurrencyDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].CurrencyDesc, 
+                                                                            CurrencyID : App.ImageView.getRowsValues({selectedOnly:true})[0].CurrencyID, 
+                                                                            DisplayPrice : App.ImageView.getRowsValues({selectedOnly:true})[0].DisplayPrice, 
+                                                                            IsDefault : App.ImageView.getRowsValues({selectedOnly:true})[0].IsDefault, 
+                                                                            ItemDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemDesc, 
+                                                                            ItemGroupDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemGroupDesc, 
+                                                                            ItemID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemID, 
+                                                                            ItemPriceID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemPriceID, 
+                                                                            ItemTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemTypeID, 
+                                                                            ListItemPrice : App.ImageView.getRowsValues({selectedOnly:true})[0].ListItemPrice, 
+                                                                            ListMyTask : App.ImageView.getRowsValues({selectedOnly:true})[0].ListMyTask, 
+                                                                            ListVendor : App.ImageView.getRowsValues({selectedOnly:true})[0].ListVendor, 
+                                                                            Price : App.ImageView.getRowsValues({selectedOnly:true})[0].Price, 
+                                                                            PriceTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].PriceTypeID, 
+                                                                            ProjectID : App.ImageView.getRowsValues({selectedOnly:true})[0].ProjectID, 
+                                                                            RegionDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].RegionDesc, 
+                                                                            RegionID : App.ImageView.getRowsValues({selectedOnly:true})[0].RegionID, 
+                                                                            RowNo : App.ImageView.getRowsValues({selectedOnly:true})[0].RowNo, 
+                                                                            TaskID : App.ImageView.getRowsValues({selectedOnly:true})[0].TaskID, 
+                                                                            UnitTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].UnitTypeID, 
+                                                                            UoMDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].UoMDesc, 
+                                                                            UoMID : App.ImageView.getRowsValues({selectedOnly:true})[0].UoMID, 
+                                                                            ValidFrom : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidFrom, 
+                                                                            ValidTo : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidTo, 
+                                                                            VendorDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].VendorDesc, 
+                                                                            VendorID : App.ImageView.getRowsValues({selectedOnly:true})[0].VendorID, 
+                                                                            Visible : App.ImageView.getRowsValues({selectedOnly:true})[0].Visible
+                                            }";
+
+    string parameterList = @"[{ItemPriceID: App.ImageView.getRowsValues({selectedOnly:true})[0].ItemPriceID, 
+                                                                            VendorID: App.ImageView.getRowsValues({ selectedOnly:true })[0].VendorID, 
+                                                                            ValidFrom : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidFrom, 
+                                                                            Amount : App.ImageView.getRowsValues({selectedOnly:true})[0].Amount, 
+                                                                            ClusterID : App.ImageView.getRowsValues({selectedOnly:true})[0].ClusterID, 
+                                                                            CurrencyDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].CurrencyDesc, 
+                                                                            CurrencyID : App.ImageView.getRowsValues({selectedOnly:true})[0].CurrencyID, 
+                                                                            DisplayPrice : App.ImageView.getRowsValues({selectedOnly:true})[0].DisplayPrice, 
+                                                                            IsDefault : App.ImageView.getRowsValues({selectedOnly:true})[0].IsDefault, 
+                                                                            ItemDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemDesc, 
+                                                                            ItemGroupDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemGroupDesc, 
+                                                                            ItemID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemID, 
+                                                                            ItemPriceID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemPriceID, 
+                                                                            ItemTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].ItemTypeID, 
+                                                                            ListItemPrice : App.ImageView.getRowsValues({selectedOnly:true})[0].ListItemPrice, 
+                                                                            ListMyTask : App.ImageView.getRowsValues({selectedOnly:true})[0].ListMyTask, 
+                                                                            ListVendor : App.ImageView.getRowsValues({selectedOnly:true})[0].ListVendor, 
+                                                                            Price : App.ImageView.getRowsValues({selectedOnly:true})[0].Price, 
+                                                                            PriceTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].PriceTypeID, 
+                                                                            ProjectID : App.ImageView.getRowsValues({selectedOnly:true})[0].ProjectID, 
+                                                                            RegionDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].RegionDesc, 
+                                                                            RegionID : App.ImageView.getRowsValues({selectedOnly:true})[0].RegionID, 
+                                                                            RowNo : App.ImageView.getRowsValues({selectedOnly:true})[0].RowNo, 
+                                                                            TaskID : App.ImageView.getRowsValues({selectedOnly:true})[0].TaskID, 
+                                                                            UnitTypeID : App.ImageView.getRowsValues({selectedOnly:true})[0].UnitTypeID, 
+                                                                            UoMDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].UoMDesc, 
+                                                                            UoMID : App.ImageView.getRowsValues({selectedOnly:true})[0].UoMID, 
+                                                                            ValidFrom : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidFrom, 
+                                                                            ValidTo : App.ImageView.getRowsValues({selectedOnly:true})[0].ValidTo, 
+                                                                            VendorDesc : App.ImageView.getRowsValues({selectedOnly:true})[0].VendorDesc, 
+                                                                            VendorID : App.ImageView.getRowsValues({selectedOnly:true})[0].VendorID, 
+                                                                            Visible : App.ImageView.getRowsValues({selectedOnly:true})[0].Visible
+                                            }]";
+
+    /*bool IsDetailPage = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    */
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterList, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnAddToCart = global_asax.Button(Buttons.ButtonAdd, sPageName, "Add To Cart", "../Cart/Add", true, false, false, Buttons.ButtonList, oParamList).Icon(Icon.CartPut);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterList, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnAddToComparison = global_asax.Button(Buttons.ButtonAdd, "AddToComparison", "Add To Comparison", "../itemcomparison/AddToComparison", true, false, false, Buttons.ButtonList, oParamList).Icon(Icon.ApplicationSideExpand);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCart = global_asax.Button(Buttons.ButtonUpdate, "Cart", "Cart", "../Cart/Checkout", true, false, false, Buttons.ButtonList, oParamList).Icon(Icon.Cart);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnComparison = global_asax.Button(Buttons.ButtonUpdate,"Comparison", "Comparison", "../ItemComparison/checkout", true, false, false, Buttons.ButtonList, oParamList).Icon(Icon.ApplicationDouble);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteFinish(true)", "deleteFinish(false, result.errorMessage)");
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDownload = global_asax.Button(Buttons.ButtonDownload, sPageName, "Download Template", string.Empty, true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), parameterModel, ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpload = global_asax.Button(Buttons.ButtonRollUp, sPageName, "Upload", "/Upload", true, false, false,Buttons.ButtonList, oParamList);
+
+    CycleButton btnView = X.CycleButton()
+                        .ShowText(true)
+                        .PrependText("")
+                        .Menu(X.Menu()
+                            .Items(
+                                X.CheckMenuItem()
+                                    .Text("Card")
+                                    .Icon(Icon.ApplicationViewTile),
+                                X.CheckMenuItem()
+                                    .Text("List")
+                                    .Icon(Icon.ApplicationViewList)
+                            )
+                        );
+
+    CycleButton btnSortAmount = X.CycleButton()
+                .ShowText(true)
+                .PrependText("Sort by ")
+                .Listeners(ls => ls.Change.Fn = "sortPrice")
+                .Menu(X.Menu()
+                    .Items(
+                        X.CheckMenuItem()
+                            .Text("Lowest Price")
+                            .Icon(Icon.SortAscending),
+                        X.CheckMenuItem()
+                            .Text("Highest Price")
+                            .Icon(Icon.SortDescending)
+                    )
+                );
+
+    //.Reorderable(true)
+    //.CustomConfig(c => c.Add(new ConfigItem("sortData", "{property:'Price',direction:'ASC'}", ParameterMode.Raw)));
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        
+
+        $(document).ready(function () {
+        setTimeout("resizePnlResultCatalog()", 1);
+    });
+
+        var resizePnlResultCatalog = function(){
+            /*App.pnlCatalogLeft.setWidth($(window).width()-10);*/
+            var dom = Ext.dom.Query.select('div.content');
+    var el = Ext.get(dom[0]);
+    App.ImagePanel.setHeight(el.getHeight()-54);
+            App.pnlSearch.setHeight(el.getHeight()-54);
+        };
+
+        var prepareData = function (data) {
+            data.Description = Ext.util.Format.ellipsis(data.ItemDesc, 300);
+            data.Amount = Ext.util.Format.number(data.Amount, integerNumberFormat);
+            data.dateString = Ext.Date.format(data.lastmod, "m/d/Y g:i a");
+
+            return data;
+        };
+
+        var selectionChanged = function (selModel, selected) {
+            var l = selected.length, s = l != 1 ? 's' : '';
+            /* App.ImagePanel.setTitle('Simple DataView (' + l + ' item' + s + ' selected)');*/
+        };
+
+        var afterCollapsePnlLeft = function(a,b){  
+            var dom = Ext.dom.Query.select('div.content');
+    var el = Ext.get(dom[0]);
+    a.up().columnWidth=0.03;
+            App.pnlCatalogRight.columnWidth = 0.97;
+            App.pnlSearch.setHeight(el.getHeight()-50);
+            a.up().updateLayout();
+    App.pnlCatalogRight.updateLayout();
+        };
+        var afterExpandPnlLeft = function(a,b){
+            a.up().columnWidth=0.2;
+            App.pnlCatalogRight.columnWidth = 0.8;
+            a.up().updateLayout();
+    App.pnlCatalogRight.updateLayout();
+        };
+
+        var afterRenderFilter = function(dom){
+            dom.store.load();
+        };
+
+        var doFilter = function(el){
+            myStore = App.ImageView.store;
+            myStore.filter([
+                {
+                    property : 'ItemDesc',
+                    value    : App.ItemDesc.getValue()
+                },
+                {
+                    property : 'ItemGroupID',
+                    value    : App.multiselectItemGroup.getRowsValues({selectedOnly:true}).map(function(item) {return item['ItemGroupID'];}).join(',')
+                },
+                {
+                    property : 'VendorID',
+                    value    : App.multiselectVendor.getRowsValues({selectedOnly:true}).map(function(item) {return item['VendorID'];}).join(',')
+                },
+                {
+                    property : 'RegionID',
+                    value    : App.multiselectRegion.getRowsValues({selectedOnly:true}).map(function(item) {return item['RegionID'];}).join(',')
+                },
+            ]);
+            App.ImageView.store.load();
+                
+
+        };
+
+        var loadCardItemPrice = function(el){
+            debugger;
+            dataSource = el.data.items;
+            console.log(dataSource);
+            for (var i = 0; i < dataSource.length; i++) {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetLisItemImages", "Catalog"))',
+                    params: {
+                        ItemID: dataSource[i].ItemID,
+                        VendorID: dataSource[i].VendorID,
+                    },
+                    success: getItemImagesSuccess,
+                    failure: getItemImagesFailed
+                });
+            }
+        };
+
+        var getItemImagesSuccess = function(data){
+            data.Url =  "data:image/jpg;base64, "+data.RawData;
+
+        };
+
+        var getItemImagesFailed = function(){
+            return;
+        };
+
+
+        var  sortPrice = function(el){
+            sorter = App.ImageView.store.sorters.getAt(0);
+            sorter.setDirection('DESC');
+            if(el.activeItem.itemIndex==0){
+                sorter.setDirection('ASC');
+            }
+            doFilter();
+        };
+
+        var getRecordItemGroupFilter = function () {
+            var f = [];
+
+    f.push({
+                filter: function (record) {
+        return filterString(App.searchItemGroup.getValue()||"", "ItemGroupDesc", record);
+    }
+            });
+        
+            var len = f.length;
+    debugger;
+            return function (record) {
+        for (var i = 0; i < len; i++) {
+            if (!f[i].filter(record)) {
+                return false;
+            }
+        }
+        return true;
+    };
+        };
+
+        var getRecordRegionFilter = function () {
+            var f = [];
+
+    f.push({
+                filter: function (record) {
+        return filterString(App.searchRegion.getValue()||"", "RegionDesc", record);
+    }
+            });
+        
+            var len = f.length;
+    debugger;
+            return function (record) {
+        for (var i = 0; i < len; i++) {
+            if (!f[i].filter(record)) {
+                return false;
+            }
+        }
+        return true;
+    };
+        };
+
+        var getRecordVendorFilter = function () {
+            var f = [];
+
+    f.push({
+                filter: function (record) {
+        return filterString(App.searchVendor.getValue()||"", "VendorDesc", record);
+    }
+            });
+        
+            var len = f.length;
+    debugger;
+            return function (record) {
+        for (var i = 0; i < len; i++) {
+            if (!f[i].filter(record)) {
+                return false;
+            }
+        }
+        return true;
+    };
+        };
+
+        var applyFilter = function (grid,field,dataIndex) {
+            var store = Ext.getCmp(grid).getStore();
+            if(dataIndex=="VendorDesc")
+                store.filterBy(getRecordVendorFilter());
+            else if(dataIndex=="ItemGroupDesc")
+                store.filterBy(getRecordItemGroupFilter());
+            else 
+                store.filterBy(getRecordRegionFilter());
+        };
+
+        var clearFilter = function (field,grid) {
+            Ext.getCmp(field).reset();
+    Ext.getCmp(grid).store.clearFilter();
+        };
+
+        var filterString = function (value, dataIndex, record) {
+            var val = record.get(dataIndex);
+        
+            if (typeof val != "string") {
+                return value.length == 0;
+            }
+        
+            return val.toLowerCase().indexOf(value.toLowerCase()) > -1;
+        };
+        
+    </script>
+    <style>
+        .product-view {
+            background-color: #fff;
+            text-shadow: #fff 0 1px 0;
+            position: relative;
+            display: block;
+            height: auto;
+        }
+
+        .product-view div.product img {
+        margin-bottom: 1px;
+    }
+
+        .product-view div.product {
+            float: left;
+        padding: 20px 20px;
+        margin: 5px;
+        /*    margin: 10px 0 0 25px;*/
+        text-align: center;
+        line-height: 14px;
+        color: #333;
+            font-size: 11px;
+        font-family: "Helvetica Neue",sans-serif;
+        height: 288px;
+        width: 200px;
+        overflow: hidden;
+        border-top: 1px solid transparent;
+        cursor: pointer;
+    }
+
+        .x-ie6 .product-view div.product,
+        .x-ie7 .product-view div.product,
+        .x-ie8 .product-view div.product {
+        border-top: none;
+    padding: 3px 2px;
+    margin: 2px;
+    }
+
+       
+
+        .product-view .x-item-selected {
+            background-color: #D3E1F1 !important;
+        }
+
+        .product-view div.product strong {
+    color: #000;
+            display: block;
+    }
+
+        .product-view div.product span {
+    color: #999;
+        }
+
+        .product-view div.product:hover{
+    cursor: pointer;
+        box-shadow:0px 5px 30px #CCC;
+            transition: all 0.3s;
+        -o-transition: all 0.3s;
+        -moz-transition: all 0.3s;
+        -webkit-transition: all 0.3s;
+    transform: scale(1.1);
+        -moz-transform: scale(1.1);
+        -o-transform: scale(1.1);
+        -webkit-transform: scale(1.1);
+        z-index: 1;
+        border-radius: 5px;
+    display:block;
+    }
+
+        .mybuttonoverlap{
+	        position: absolute;
+            z-index: 2;
+            top: 100px;
+            display: none;
+            left: 20px;	
+        }
+
+    </style>
+    <style>
+        .images-view .x-panel-body {
+            background: white;
+            font: 11px Arial, Helvetica, sans-serif;
+        }
+        .images-view .thumb {
+            background: #dddddd;
+            padding: 3px;
+            padding-bottom: 0;
+        }
+
+        .x-quirks .images-view .thumb {
+            padding-bottom: 3px;
+        }
+
+        .images-view .thumb img {
+        height: 60px;
+        width: 80px;
+    }
+
+        .images-view .thumb-wrap {
+            float: left;
+            margin: 4px;
+            margin-right: 0;
+            padding: 5px;
+        }
+
+        .images-view .thumb-wrap span {
+        display: block;
+        overflow: hidden;
+        text-align: center;
+        width: 86px;
+    }
+
+        .images-view .x-item-over{
+            border: 1px solid #dddddd;
+            background: #efefef url(images/row-over.gif) repeat-x left top;
+            padding: 4px;
+        }
+
+        .images-view .x-item-selected{
+            background: #eff5fb url(images/selected.gif) no-repeat right bottom;
+            border: 1px solid #99bbe8;
+            padding: 4px;
+        }
+
+        .images-view .x-item-selected .thumb{
+            background: transparent;
+        }
+
+        .images-view .loading-indicator {
+            font-size: 11px;
+            background-image : url('images/loading.gif');
+    background-repeat: no-repeat;
+            background-position: left;
+            padding-left: 20px;
+            margin: 10px;
+        }
+
+        .x-view-selector {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            border: 1px dotted;
+    opacity: .5;
+            -moz-opacity: .5;
+            filter: alpha(opacity=50);
+    zoom: 1;
+            background-color: #c3daf9;
+            border-color: #3399bb;
+        }
+
+        .ext-strict .ext-ie .x-tree .x-panel-bwrap {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product .product-box, .list-other-products .product-box{
+	        background:#FFF;
+	        border:1px solid #DDD;
+	        border-radius:5px;
+	        min-height:380px;
+	        position: relative;
+	        z-index: -1;
+        }
+        .product li:nth-child(5n) .product-box{
+        margin-right: 0px;
+        }
+        .product-box .img-box{
+	        height: 190px;
+	        width: 100%;
+	        position: relative;
+	        border-radius: 3px 3px 0 0;
+        }
+        .product-box .img-box img {
+        max-width: calc(100% - 20px);
+        max-height: calc(100% - 20px);
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+        .product-view .product-name{
+	        font-size:11px;
+	        color: #898989;
+	        padding:15px 15px 0;
+	        text-align: center;
+        }
+        .product-view .product-name h4{
+        display: -webkit-box;
+        height: 40px;
+        line-height: 20px;
+	        -webkit-line-clamp: 2;
+	        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+        .product-view .product-name h4 a{
+	        color: #000;
+        }
+        .product-view .product-name p{
+        display: none;
+    }
+        .product-view .product-name .rating{
+	        color:#FFF;
+	        text-shadow:0px 0px 1px #fff000;
+        }
+        .product-view .product-price {
+            color: #f58220;
+            width: 100%;
+            font-weight: 600;
+            margin-right: 4px;
+            display: inline-block;
+
+            padding: 10px 15px;
+            font-size: 12px;
+	        text-align: center;
+        }
+        .product-view .product-price span{
+        font-weight: bold;
+    }
+        .product-view .product-price span:last-child{
+	        display: block;
+        }
+        .product-view .product-price small{
+        font-size: 11px;
+        font-weight: bold;
+    }
+        .product-view .product-price span:before {
+            content: 'Rp. ';
+            font-size: 10px;
+        }
+        .product-box .other-type{
+	        padding:0 15px;
+        }
+        .product-dissable {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #264f6b;
+            color: #fff;
+            padding: 2px 7px;
+            z-index: 2;
+            font-size: 14px;
+        }
+        .background-product-dissable {
+            background: rgba(219, 219, 219, .4);
+    position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .product-view .product-vendor {
+            font-size: 11px;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: 5px;
+        }
+
+    </style>
+
+}
+
+@(
+        X.FormPanel()
+        .ID("FCatalog")
+        .Padding(iBodyPadding)
+        .Items(
+            X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                    X.Panel()
+                    //.Cls("fullOnSmall")
+                    .ColumnWidth(0.2)
+                    .ID("pnlCatalogLeft")
+                    .Region(Region.West)
+                    .Items(
+                        X.Panel()
+                        .ID("pnlSearch")
+                        .Title("Filter")
+                        .MinWidth(260)
+                        .MaxWidth(400)
+                        .Frame(true)
+                        .Collapsible(true)
+                        .BodyPadding(iBodyPadding)
+                        .CollapseDirection(Direction.Left)
+                        .Listeners(d=> { d.BeforeCollapse.Fn = "afterCollapsePnlLeft"; d.Expand.Fn = "afterExpandPnlLeft"; })
+                        .Items(
+
+                            X.TextField()
+                            .ID(ItemVM.Prop.ItemDesc.Name)
+                            .IndicatorIcon(Icon.Magnifier)
+                            .PaddingSpec("0 0 10 0")
+                            .Width(240)
+                            .MaxWidth(260)
+                            .Listeners(ls=> { ls.Change.Fn = "doFilter"; ls.Change.Buffer = 500; }),
+
+                            //accordion
+                            X.Panel()
+                            .Layout(LayoutType.Fit)
+                            .Layout(LayoutType.Accordion)
+                            .Items(
+                                X.Panel()
+                                    .Collapsed(true)
+                                    .Icon(Icon.FolderMagnify)
+                                    .Title("Category")
+                                    .MaxHeight(210)
+                                    .Layout(LayoutType.Fit)
+                                    .Scrollable(ScrollableOption.Vertical)
+                                    .Items(
+                                    X.TextField().MaxWidth(220).MaxHeight(20).IndicatorIcon(Icon.Magnifier)
+                                                        .ID("searchItemGroup")
+                                                        .Listeners(oListener =>
+                                                        {
+        oListener.Change.Handler = "applyFilter('multiselectItemGroup',this,'ItemGroupDesc')";
+        oListener.Change.Buffer = 250;
+    }).Plugins(X.ClearButton().Listeners(l=>l.Clear.Handler = "clearFilter('searchItemGroup','multiselectItemGroup')")),
+                                          X.GridPanel()
+                                        .ID("multiselectItemGroup")
+                                        .Border(false)
+                                        .MaxWidth(240)
+                                        .MinHeight(150)
+                                        .SelectionModel(
+                                            X.CheckboxSelectionModel()
+                                                .Mode(SelectionMode.Simple)
+                                                .AllowDeselect(true)
+                                                .ShowHeaderCheckbox(false)
+                                            )
+                                        .ColumnModel(
+                                            X.Column().Flex(1).DataIndex(ItemGroupVM.Prop.ItemGroupDesc.Name)
+
+                                         )
+                                        .Listeners(ls => { ls.AfterRender.Fn = "afterRenderFilter"; ls.SelectionChange.Fn = "doFilter"; })
+
+                                        .Store(X.Store()
+                                        .Model(
+                                            X.Model()
+                                                .IDProperty("IdGroup")
+                                                .Fields(
+                                                    X.ModelField().Name(ItemGroupVM.Prop.ItemGroupID.Name).Type(ModelFieldType.String),
+                                                    X.ModelField().Name(ItemGroupVM.Prop.ItemGroupDesc.Name).Type(ModelFieldType.String)
+                                                )
+                                                )
+                                            .Sorters(ItemGroupVM.Prop.ItemGroupDesc.Name, Ext.Net.SortDirection.ASC)
+                                            .AutoLoad(false)
+                                            .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("/GetItemGroups"))
+                                            .Reader(X.JsonReader().RootProperty("data"))))
+                                            )
+
+                                    ,
+
+                                X.Panel()
+                                    .Collapsed(true)
+                                    .Icon(Icon.UserTick)
+                                    .Scrollable(ScrollableOption.Vertical)
+                                    .Title("Vendors")
+                                    .MaxHeight(210)
+                                    .Layout(LayoutType.Fit)
+                                    .Items(
+                                    X.TextField().MaxWidth(220).MaxHeight(20).IndicatorIcon(Icon.Magnifier)
+                                                        .ID("searchVendor")
+                                                        .Listeners(oListener =>
+                                                        {
+        oListener.Change.Handler = "applyFilter('multiselectVendor',this,'VendorDesc')";
+        oListener.Change.Buffer = 250;
+    }).Plugins(X.ClearButton().Listeners(l => l.Clear.Handler = "clearFilter('searchVendor','multiselectVendor')")),
+                                    X.GridPanel()
+                                        .ID("multiselectVendor")
+                                        .Border(false)
+                                        .MaxWidth(240)
+                                        .MinHeight(150)
+                                        .SelectionModel(
+                                            X.CheckboxSelectionModel()
+                                                .Mode(SelectionMode.Simple)
+                                                .AllowDeselect(true)
+                                                .ShowHeaderCheckbox(false)
+                                            )
+                                        .ColumnModel(
+                                            X.Column().Flex(2).DataIndex(ItemPriceVendorVM.Prop.VendorDesc.Name)
+                                         )
+                                        .Listeners(ls => { ls.AfterRender.Fn = "afterRenderFilter"; ls.SelectionChange.Fn = "doFilter"; })
+                                        .Store(X.Store()
+                                        .Model(
+                                            X.Model()
+                                                .IDProperty("IdVendor")
+                                                .Fields(
+                                                    X.ModelField().Name(ItemPriceVendorVM.Prop.VendorID.Name).Type(ModelFieldType.String),
+                                                    X.ModelField().Name(ItemPriceVendorVM.Prop.VendorDesc.Name).Type(ModelFieldType.String)
+                                                )
+                                                )
+                                            .Sorters(ItemPriceVendorVM.Prop.VendorDesc.Name, Ext.Net.SortDirection.ASC)
+                                            .AutoLoad(false)
+                                            .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("/GetVendors"))
+                                            .Reader(X.JsonReader().RootProperty("data"))))
+                                    ),
+
+                                X.Panel()
+                                    .Collapsed(true)
+                                    .Icon(Icon.FolderFind)
+                                    .Scrollable(ScrollableOption.Vertical)
+                                    .Title("Region")
+                                    .MaxHeight(210)
+                                    .Layout(LayoutType.Fit)
+                                    .Items(
+                                       X.TextField().MaxWidth(220).MaxHeight(20).IndicatorIcon(Icon.Magnifier)
+                                                        .ID("searchRegion")
+                                                        .Listeners(oListener =>
+                                                        {
+        oListener.Change.Handler = "applyFilter('multiselectRegion',this,'RegionDesc')";
+        oListener.Change.Buffer = 250;
+    }).Plugins(X.ClearButton().Listeners(l => l.Clear.Handler = "clearFilter('searchRegion','multiselectRegion')")),
+                                    X.GridPanel()
+                                        .ID("multiselectRegion")
+                                        .Border(false)
+                                        .MaxWidth(240)
+                                        .MinHeight(150)
+                                        .SelectionModel(
+                                            X.CheckboxSelectionModel()
+                                                .Mode(SelectionMode.Simple)
+                                                .AllowDeselect(true)
+                                                .ShowHeaderCheckbox(false)
+                                            )
+                                        .ColumnModel(
+                                            X.Column().Flex(2).DataIndex(RegionVM.Prop.RegionDesc.Name)
+                                         )
+                                        .Listeners(ls => { ls.AfterRender.Fn = "afterRenderFilter"; ls.SelectionChange.Fn = "doFilter"; })
+                                        .Store(X.Store()
+                                        .Model(
+                                            X.Model()
+                                                .IDProperty("IdRegion")
+                                                .Fields(
+                                                    X.ModelField().Name(RegionVM.Prop.RegionID.Name).Type(ModelFieldType.String),
+                                                    X.ModelField().Name(RegionVM.Prop.RegionDesc.Name).Type(ModelFieldType.String)
+                                                )
+                                                )
+                                            .Sorters(RegionVM.Prop.RegionDesc.Name, Ext.Net.SortDirection.ASC)
+                                            .AutoLoad(false)
+                                            .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("/GetRegions"))
+                                            .Reader(X.JsonReader().RootProperty("data"))))
+                                    //X.MultiSelect()
+                                    //     .ID("multiselectRegion")
+                                    //     .ShowCheckbox(true)
+                                    //     .Border(false)
+                                    //     .DisplayField(RegionVM.Prop.RegionDesc.Name)
+                                    //     .ValueField(RegionVM.Prop.RegionID.Name)
+                                    //     .Listeners(ls => { ls.AfterRender.Fn = "afterRenderFilter"; ls.Change.Fn = "doFilter"; })
+                                    //     .Store(X.StoreForModel()
+                                    //         .AutoLoad(false)
+                                    //         .Proxy(X.AjaxProxy()
+                                    //         .Url(Url.Action("/GetRegions"))
+                                    //         .Reader(X.JsonReader().RootProperty("data"))))
+                                    )
+                            )
+                            )
+                            ),
+                    X.Panel()
+                    //.Cls("fullOnSmall")
+                    .ColumnWidth(0.8)
+                    .ID("pnlCatalogRight")
+                    .PaddingSpec("0 0 0 10")
+                    .Items(
+                        X.Panel()
+                        .ID("ImagePanel")
+                        .Cls("images-view")
+                        .Frame(true)
+                        //.Title("Simple DataView (0 items selected)")
+                        .Region(Region.Center)
+                        .Layout(LayoutType.Fit)
+                        //.MaxHeight(450)
+                        .Scrollable(ScrollableOption.Both)
+                        .BodyPadding(iBodyPadding)
+                        .Items(
+                            X.DataView()
+                                .ItemSelector("div.product")
+                                .OverItemCls("product-hover")
+                                .ID("ImageView")
+                                .LoadMask(false)
+                                .Store(
+                                    X.Store()
+                                        .ID("storeItem")
+                                        .PageSize(iPageSize)
+                                        .AutoLoad(false)
+                                        .RemoteSort(true)
+                                        .RemotePaging(true)
+                                        .RemoteFilter(true)
+                                        .SorterFor(Model, model => model.Amount, Ext.Net.SortDirection.ASC)
+                                        .Proxy(
+                                                X.AjaxProxy()
+                                                .Url(Url.Action("Read"))
+                                                .Reader(X.JsonReader().RootProperty("data"))
+                                            )
+                                        .Model(
+                                            X.Model()
+                                                .Fields(
+                                                    X.ModelField().Name(Model, model => model.ItemPriceID),
+                                                    X.ModelField().Name(Model, model => model.ItemDesc),
+                                                    X.ModelField().Name(Model, model => model.ItemID),
+                                                    X.ModelField().Name(Model, model => model.VendorID),
+                                                    X.ModelField().Name(Model, model => model.VendorDesc),
+                                                    X.ModelField().Name(Model, model => model.RegionID),
+                                                    X.ModelField().Name(Model, model => model.RegionDesc),
+                                                    X.ModelField().Name(Model, model => model.Amount),
+                                                    X.ModelField().Name(Model, model => model.Price),
+                                                    X.ModelField().Name(Model, model => model.UoMID),
+                                                    X.ModelField().Name(Model, model => model.UoMDesc),
+                                                    X.ModelField().Name(Model, model => model.ValidFrom),
+                                                    X.ModelField().Name(Model, model => model.Url)
+                                                )
+                                        )
+                                     //.Listeners(ls => ls.Load.Fn = "loadCardItemPrice")
+                                     )
+                            .SimpleSelect(true)
+                            //.OverItemCls("x-item-over")
+                            //.ItemSelector("div.thumb-wrap")
+                            .AutoScroll(true)
+                            .EmptyText("No data to display")
+                            .TrackOver(false)
+                            .Cls("product-view")
+                            .Tpl(
+                                X.XTemplate()
+                                    .Html(
+                                    @<text>
+                                        <tpl for=".">
+                                            <div class="product">
+                                                <tpl if="!Ext.isIE6">
+                                                    <img width="160" height="160" src="{Url}" />
+                                                </tpl>
+                                                <tpl if="Ext.isIE6">
+                                                    <div style="width:74px;height:74px;filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{Url}',sizingMethod='scale' );"></div>
+                                                </tpl>
+                                                <strong>{Description}</strong>
+                                                <div class="product-price">Rp. {Amount}</div>
+                                                <div class="product-vendor">
+                                                    <div><svg-icon><img src="/content/svg/si-glyph-pin-location.svg" style="width:18px;height:11px;" />{RegionDesc}</div> 
+                                                    {VendorDesc}
+                                                </div>
+                                                @*<span>{price:usMoney} ({reviews} Review{[values.reviews == 1 ? "" : "s"]})</span>*@
+                                            </div>
+                                        </tpl>
+                                        <div class="x-clear"></div>
+                                    </text>
+                                    )
+                            )
+                            .PrepareData("prepareData")
+                            .Listeners(l =>
+                            {
+                                l.SelectionChange.Fn = "selectionChanged";
+                            })
+                         )
+                .BottomBar(
+                    X.PagingToolbar().StoreID("storeItem").HideRefresh(true)
+                ).TopBar(
+                      X.Toolbar()
+                        .PaddingSpec(sToolbarPaddingSpec)
+                        .Items(
+                          btnAddToCart,
+                          btnAddToComparison,
+                          btnDetail,
+                          btnCart,
+                          btnComparison,
+                          X.Component().Flex(1),
+                          btnSortAmount
+                          //,
+                          //btnView
+                          )
+                    )
+                )
+            )
+        )
+
+)
+
+

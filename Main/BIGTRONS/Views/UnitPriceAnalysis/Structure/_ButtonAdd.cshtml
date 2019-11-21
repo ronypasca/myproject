@@ -1,0 +1,43 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Structure";
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Structure", "GetStructure()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, General.EnumDesc(Buttons.ButtonAdd) + sPageName, true, false, false, Buttons.ButtonList, oParamList, "ItemIDCheck");
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeStructure.getSelectedNodes()[0].attributes", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Structure", "GetStructure()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("nodeID", "App.treeStructure.getSelectedNodes()[0].nodeID", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, General.EnumDesc(Buttons.ButtonDetail) + sPageName, true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeStructure.getSelectedNodes()[0].attributes", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Structure", "GetStructure()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("nodeID", "App.treeStructure.getSelectedNodes()[0].nodeID", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, General.EnumDesc(Buttons.ButtonUpdate) + sPageName, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.treeStructure.getSelectedNodes()[0].attributes", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, "", true, false, false, null, oParamList);
+}
+@(btnAdd)
+@(btnDetail)
+@(btnUpdate)
+@(btnDelete
+    .Handler("deleteStructureConfirm")
+)

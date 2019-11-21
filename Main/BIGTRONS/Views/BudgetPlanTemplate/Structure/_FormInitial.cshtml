@@ -1,0 +1,648 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Controllers
+@model List<BudgetPlanTemplateStructureVM>
+@{
+    ViewBag.Title = "Parameter";
+    var X = Html.X();
+    int iTreeMinHeight = 200;
+    string sPageName = "_SubItemGroup";
+    string sToolbarPaddingSpec = "10 10 10 0";
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    string HandlerSelection = isDisableButton ? "" : "getSelectionRow(selected.length)";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "getfordelete()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    //Button.Builder btnDeleteversion = global_asax.Button(Buttons.ButtonDelete, "Version", "Delete", "../BudgetPlanTemplate/" + General.EnumDesc(Buttons.ButtonDelete) + "Node", true, false, false, null, oParamList, null, "setsuccesDelete()");
+    Button.Builder btnDeleteversion = global_asax.Button(Buttons.ButtonDelete, "Version", null, "", true, false, false, null, oParamList);
+    // Button.Builder btnCollapseExpandAll = global_asax.Button(Buttons.ButtonExpand, sPageName, General.EnumDesc(Buttons.ButtonExpand), string.Empty, true);
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("SelectedRow_", "getforAdd()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlFromBudgetStructure", "true", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlTreePanel", Model[0].BudgetPlanTemplateID, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAddVersion = global_asax.Button(Buttons.ButtonAdd, "Version", "Add", "../UnitPriceAnalysis/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+
+        var iTreeInitHeight = -1;
+
+        $(document).ready(function () {
+            setTimeout("resizeTreeGrid()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeTreeGrid();
+            resizeContainer();
+        });
+
+        var viewReady = function (grid, eOpts) {
+            setTimeout("afterFirstLoadTree()", 1);
+        };
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelBudgetTemplate.getHeight();
+            resizeTreeBudgetPlanTemplate();
+            resizeContainer();
+        };
+
+        var resizeTreeBudgetPlanTemplate = function () {
+            if (App.treePanelBudgetTemplate != null) {
+                var iHeight = $(window).height() - (App.treePanelBudgetTemplate.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelBudgetTemplate.setHeight(iHeight);
+            }
+        };
+
+        resizeTreeGrid = function () {
+            if (App.treePanelBudgetTemplate != null)
+                App.treePanelBudgetTemplate.setHeight($(window).height() - App.treePanelBudgetTemplate.getY() - (App.treePanelBudgetTemplate.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+
+            App.ButtonDeleteHome.setDisabled(length < 1);
+            if(length == 0){
+                App.ButtonAddVersion.setDisabled(false);
+            }
+        };
+
+        deleteSuccess = function () {
+            App.treePanelBudgetTemplate.getStore().reload();
+        };
+
+        deleteRow = function()
+        {
+            App.treePanelBudgetTemplate.getStore().remove(App.treePanelBudgetTemplate.getSelectionModel().getSelection());
+
+        };
+        propAfterRender = function () {
+
+        };
+        setsuccesDelete = function() {
+            App.treePanelBudgetTemplate.getSelection()[0].remove(true);
+        };
+
+
+        var expandAllSequence = function(btn){
+
+            var obj = App.treePanelBudgetTemplate.getRootNode().childNodes;
+            for(var x=0;x<obj.length;x++)
+            {
+                obj[x].expand();};
+        };
+        var collapseAllSequence = function(btn){
+
+            var obj = App.treePanelBudgetTemplate.getRootNode().childNodes;
+            for(var x=0;x<obj.length;x++)
+            {
+                obj[x].collapse();};
+        };
+        var handleCollapseExpandAll = function(btn){
+            btn.setHidden(true);
+            var obj = App.treePanelBudgetTemplate.getRootNode().childNodes;
+            if(btn.id=='@General.EnumName(Buttons.ButtonCollapse)@sPageName'){
+                for(var x=0;x<obj.length;x++)
+                {obj[x].collapse();};
+                /*App.treePanelBudgetTemplate.collapseAll();*/
+                App.ButtonExpand_SubItemGroup.setHidden(false);
+            }else{
+                for(var x=0;x<obj.length;x++)
+                {obj[x].expand();};
+                /*App.treePanelBudgetTemplate.expandAll();*/
+                App.ButtonCollapse_SubItemGroup.setHidden(false);
+            }
+            btn.setHidden(true);
+
+        };
+
+        getfordelete = function(){
+            var ret;
+            if(typeof App.treePanelBudgetTemplate.getSelectedNodes(0)[0] !== 'undefined'){
+                return App.treePanelBudgetTemplate.getSelectedNodes(0)[0].attributes.itemid;
+            }
+            else
+            {
+                ret = "";
+                return ret;
+            }
+
+        };
+        getforAdd = function(){
+            var ret = [];
+
+            /*console.log(App.treePanelBudgetTemplate.getSelectedNodes()[0]);*/
+            if(typeof App.treePanelBudgetTemplate.getSelectedNodes()[0] !== 'undefined' && App.treePanelBudgetTemplate.getSelection()[0].id != "0"){
+                ret.push(App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes.itemtypeid.toString());
+                ret.push(App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes.itemid.toString());
+                ret.push(App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes.version.toString());
+                if(App.treePanelBudgetTemplate.getSelection()[0].childNodes.length>0){
+                    ret.push(App.treePanelBudgetTemplate.getSelection()[0].childNodes[0].data.itemtypeid.toString());
+                }else{
+                    ret.push("");
+                }
+
+                return ret;
+            }
+            else
+            {
+                ret = null;
+                return ret;
+            }
+
+        };
+        getSelectionRow = function (length) {
+            App.ButtonAddVersion.setDisabled(length <1);
+
+            if(typeof App.treePanelBudgetTemplate.getSelectedNodes(0)[0] !== 'undefined' )
+            {
+
+                var setEnableDelete = false;
+                var obj = App.treePanelBudgetTemplate.getSelectedNodes(0);
+                if(obj.length > 1)
+                {
+
+                    for(x=0;x<obj.length;x++)
+                    {
+
+                        if(obj[x].attributes.allowdelete){
+                            setEnableDelete=true;
+                        }
+                        else{
+                            setEnableDelete=false;
+                        }
+
+                        if(!setEnableDelete){break;}
+                    }
+                    App.ButtonDeleteVersion.setDisabled(!setEnableDelete);
+                    App.ButtonAddVersion.setDisabled(true);
+                }
+                else
+                {
+
+                    if(App.treePanelBudgetTemplate.getSelectedNodes(0)[0]["attributes"]["allowdelete"])
+                    {
+                        App.ButtonDeleteVersion.setDisabled(false);
+                    }
+                    else{
+                        App.ButtonDeleteVersion.setDisabled(true);
+                    }
+                    if(App.treePanelBudgetTemplate.getSelectedNodes(0)[0]["attributes"]["haschild"]){
+                        App.ButtonAddVersion.setDisabled(false);
+                    }
+                    else{
+                        App.ButtonAddVersion.setDisabled(true);
+                    }
+                    if(App.treePanelBudgetTemplate.getSelection()[0].id == "0")
+                    {
+                        App.ButtonAddVersion.setDisabled(false);
+                    }
+
+                }
+            }
+            else{App.ButtonAddVersion.setDisabled(false);
+                App.ButtonDeleteVersion.setDisabled(true);}
+        };
+
+        /*saving here*/
+        GetStructure = function(){
+            var childata = App.treePanelBudgetTemplate.getRootNode().childNodes;
+            var dataLength = childata.length;
+            var data = [];
+            var x;
+            for(x in childata)
+            {
+                data.push(childata[x].data);
+                var node_ = childata[x];
+                var setpushA_ = false;
+                if(node_.data.haschild){
+                    setpushA_ = true;}
+                if(node_.childNodes.length > 0){
+                    data = loopStruct(node_,data,setpushA_);
+                };
+            }
+            return data;
+        };
+        var loopStruct = function(node, data,setpush){
+
+            if(setpush){
+                var setpush_ = false;
+                var c;
+                for(c in node.childNodes)
+                {
+                    data.push(node.childNodes[c].data);
+                    var node_ = node.childNodes[c];
+                    if(node_.data.haschild){setpush_ = true;}
+                    if(node_.childNodes.length > 0){
+                        data = loopStruct(node_,data,setpush_);
+                    }
+                }
+            }
+            return data;
+        };
+        var checkAllowDrop = function(targetNode,eventNode,selectedNode){
+
+            var CurrentNodeIsFirstRowHasNotChild = selectedNode.records[0].data.enabledefault;
+            var CurrentNodeHasChild = selectedNode.records[0].data.haschild;
+            var TargetNodeItemType = targetNode.data.itemtypeid;
+            var TargetNodeHasChild = targetNode.data.haschild;
+            var ItemTypeChildTargetNodeHasChild;
+            if(targetNode.childNodes.length> 0){ItemTypeChildTargetNodeHasChild = targetNode.childNodes[0].data.haschild;}
+
+            var ParentTargetNodeHasChild = targetNode.parentNode.data.haschild;
+            var ParentTargetNodeisHasChild = targetNode.parentNode.childNodes;
+
+            var ChildParentwhereHasChildNode;
+            if(targetNode.parentNode.childNodes.length> 0){ChildParentwhereHasChildNode = targetNode.parentNode.childNodes[0].data.haschild;}
+
+            var ItemTypeParentCurrentNode = selectedNode.records[0].parentNode.data.itemtypeid;
+
+            if(eventNode == "before" || eventNode == "after" ){
+
+                if(CurrentNodeHasChild){
+                    if(ParentTargetNodeHasChild && TargetNodeHasChild){
+                        return true;}
+                    else{
+                        return false}
+                }
+                else{
+                    if(CurrentNodeIsFirstRowHasNotChild){
+                        if(selectedNode.records[0].data.isdefault)
+                        {
+                            if(targetNode.parentNode.data.id==selectedNode.records[0].parentNode.data.id){return true;}
+                            else{return false;}
+                        }
+                        else if(ParentTargetNodeHasChild && ParentTargetNodeisHasChild.length<=0)
+                        {return true;}
+                        else if(ParentTargetNodeHasChild && ParentTargetNodeisHasChild.length>0)
+                        {
+                            if(selectedNode.records[0].parentNode == targetNode.parentNode){return true;}
+                            else{
+                                if(!ChildParentwhereHasChildNode || !TargetNodeHasChild){
+                                    var returns = true;
+                                    for(var t=0;t<targetNode.parentNode.childNodes.length;t++){
+                                        if(targetNode.parentNode.childNodes[t].data.itemid == selectedNode.records[0].data.itemid
+                                            && targetNode.parentNode.childNodes[t].data.version ==selectedNode.records[0].data.version){
+                                            returns = false;
+                                            break;
+                                        }
+                                    }
+                                    return returns;}
+                                else{
+                                    return false;}
+                            }
+                        }
+                        else{return false;}
+                    }
+                    else{
+                        return false;}
+                }
+            }
+            else{
+
+                if(CurrentNodeHasChild){
+                    if(targetNode.childNodes.length> 0){
+                        if(ItemTypeChildTargetNodeHasChild)
+                        {return true;}
+                        else
+                        {return false;}
+                    }
+                    else if(targetNode.childNodes.length<=0 && TargetNodeHasChild)
+                    {return true;}
+                    else
+                    {return false;}
+                }
+                else
+                {
+                    if(CurrentNodeIsFirstRowHasNotChild){
+                        if(selectedNode.records[0].data.isdefault){
+                            if(targetNode.data.id==selectedNode.records[0].parentNode.data.id){return true;}
+                            else{return false; }
+                        }
+                        else if(TargetNodeHasChild && targetNode.childNodes <= 0){
+                            return true;
+                        }
+                        else if(TargetNodeHasChild && targetNode.childNodes.length> 0)
+                        {
+                            if(!ItemTypeChildTargetNodeHasChild){
+                                var returns = true;
+                                for(var t=0;t<targetNode.childNodes.length;t++){
+                                    if(targetNode.childNodes[t].data.itemid == selectedNode.records[0].data.itemid
+                                        && targetNode.childNodes[t].data.version ==selectedNode.records[0].data.version){
+                                        returns = false;
+                                        break;
+                                    }
+                                }
+                                return returns;
+                            }
+                            else{
+                                return false;
+                            }
+                        }
+                        else{
+                            return false;
+                        }
+                    }
+                    else{
+                        return false;}
+                }
+            }
+        };
+        GetSequenceNumber = function(this_,newparent){
+            var childata = App.treePanelBudgetTemplate.getRootNode().childNodes;
+            var parentSequence = 0;
+            var parentVersion = 0;
+            var parentItemID = "0";
+            var dataLength = childata.length;
+            var data = 0;
+            var x;
+            for(x in childata)
+            {
+                if(childata[x].childNodes.length>0){childata[x].data.expandable = true;}
+                else{
+                    childata[x].data.expandable = false;
+                    childata[x].data.expand = false;
+                }
+                data++;
+                childata[x].data.sequence = data;
+                var thisItemID = childata[x].data.itemid;
+                var thisSequence = childata[x].data.sequence;
+                var thisVersion = childata[x].data.version;
+                childata[x].data.parentitemid = parentItemID;
+                childata[x].data.parentsequence = parentSequence;
+                childata[x].data.parentversion = parentVersion;
+                var node_ = childata[x];
+                if(node_.childNodes.length > 0){
+                    data = loopSequence(node_,data,thisItemID,thisSequence,thisVersion);
+                };
+            }
+
+        };
+        var loopSequence = function(node, data,parentItemID, parentSequence,parentVersion){
+            if(node.childNodes.length > 0)
+            {
+                var x;
+                for(x in node.childNodes)
+                {
+                    if(node.childNodes[x].childNodes.length>0){node.childNodes[x].data.expandable = true;}
+                    else{
+                        node.childNodes[x].data.expandable = false;
+                    }
+                    data++;
+                    node.childNodes[x].data.sequence = data;
+                    node.childNodes[x].data.parentitemid = parentItemID;
+                    node.childNodes[x].data.parentsequence = parentSequence;
+                    node.childNodes[x].data.parentversion = parentVersion;
+                    var this_ItemID = node.childNodes[x].data.itemid;
+                    var this_Sequence = node.childNodes[x].data.sequence;
+                    var this_Version = node.childNodes[x].data.version;
+                    var node_ = node.childNodes[x];
+                    if(node_.childNodes.length > 0){
+                        data = loopSequence(node_,data,this_ItemID,this_Sequence,this_Version);
+                    }
+                }
+            }
+            return data;
+        };
+        var renderingCheckBox = function(value, metaData, record, rowIndex, colIndex, store, view) {
+            var cssPrefix = Ext.baseCSSPrefix,
+                cls = cssPrefix + 'grid-checkcolumn';
+            var ret = "";
+            if (value) {
+                cls += ' ' + cssPrefix + 'grid-checkcolumn-checked';
+            }
+            if (record.data.enabledefault) {
+                ret = '<span class="' + cls + '" role="button" ></span>';
+            }
+            return ret;
+        };
+        var bindBefore= function(checkcolumn, rowIndex, checked, eOpts) {
+            var row = this.getView().getRow(rowIndex),
+                record = this.getView().getRecord(row);
+
+            return (record.get('enabledefault'));
+        };
+        var bindingCell = function(a,b,c,d){
+            if(c.data.enabledefault){
+                if(d){
+                    for(var x=0;x<c.parentNode.childNodes.length;x++){
+                        if(c.parentNode.childNodes[x].id!==c.data.id){
+                            c.parentNode.childNodes[x].data.isdefault = !d;
+                            c.parentNode.childNodes[x].commit();
+                        }else{
+                            c.data.isdefault = d;
+                            c.commit();
+                        }
+                    }
+                }else{
+                    c.data.isdefault=!d;
+                    c.commit();
+                }
+            }
+        };
+        var reloadsequence = function(this_, oldParent, newParent){
+            GetSequenceNumber(this_,newParent);
+            reloadNumbering();
+
+        };
+
+        var reloadNumbering = function(){
+            var obj = App.treePanelBudgetTemplate.store.root.childNodes;
+            for(var x=0;x<obj.length;x++)
+            {
+                var currentNumber = (x+1).toString();
+                obj[x].data.number = currentNumber;
+
+                if(obj[x].childNodes != undefined){
+                    loopNumbering(currentNumber, obj[x].childNodes);
+                }
+                obj[x].commit();
+            };
+            App.treePanelBudgetTemplate.store.root.commit();
+        };
+
+        var loopNumbering = function(parentNumber, parentChildNode){
+            for(var n=0;n<parentChildNode.length;n++)
+            {
+                var currentNumber = parentNumber+"."+ (n+1).toString();
+                parentChildNode[n].data.number=currentNumber;
+                if(parentChildNode[n].childNodes != undefined){
+                    loopNumbering(currentNumber, parentChildNode[n].childNodes);
+                }
+                parentChildNode[n].commit();
+
+            };
+
+        };
+
+    </script>
+}
+
+@(X.TreePanel()
+        .ID("treePanelBudgetTemplate")
+        .Expand(true)
+        .MultiSelect(false)
+        .MinHeight(iTreeMinHeight)
+        .WidthSpec("100%")
+        .RootVisible(false)
+        .Border(false)
+        .UseArrows(true).RowLines(true)
+        .Animate(true)
+        .Fields(X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemID.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.Version.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.Sequence.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.AllowDelete.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.HasChild.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemGroupDesc.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.IsDefault.Name.ToLower()),
+                   X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.EnableDefault.Name.ToLower()),
+                   X.ModelField().Name("number")
+                 )
+        .ColumnModel(
+                X.Column()
+                   .Text("No.")
+                   .Flex(0).Sortable(false)
+                   .DataIndex("number")
+                   .Draggable(false).Hidden(false),
+               X.TreeColumn().Draggable(true).Text("Item")
+               .Flex(4).Sortable(false).DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower()),
+               X.Column()
+                   .Text("BudgetTemplate ID")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.Column()
+                   .Text("Item Group")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemGroupDesc.Name.ToLower())
+                   .Draggable(true).Hidden(false),
+               X.Column()
+                   .Text("Item ID")
+                   .Flex(2).Sortable(false)
+
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Version")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.Version.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Sequence")
+                   .Flex(2).Sortable(false)
+
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.Sequence.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.Column()
+                   .Text("ParentItemID")
+                   .Flex(2).Sortable(false)
+
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Parent Version")
+                   .Flex(2).Sortable(false)
+
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Parent Sequence")
+                   .Flex(2).Sortable(false)
+
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+                X.CheckColumn()
+                .Text("AllowDelete")
+                .DataIndex(BudgetPlanTemplateStructureVM.Prop.AllowDelete.Name.ToLower())
+                .Editable(true)
+                .StopSelection(false).Sortable(false)
+                .Hidden(true),
+               X.CheckColumn()
+                .Text("HasChild")
+                .DataIndex(BudgetPlanTemplateStructureVM.Prop.HasChild.Name.ToLower())
+                .Editable(false)
+                .Hidden(true)
+                .StopSelection(false).Sortable(false)
+                ,
+               X.Column()
+                   .Text("ItemTypeID")
+                   .Flex(0).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(true),
+               X.Column()
+                   .Text("ParentItemTypeID")
+                   .Flex(0).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(true),
+               X.CheckColumn()
+                   .Text("Default")
+                   .Flex(1).Editable(true)
+                   .Listeners(l =>
+                   {
+                       l.BeforeCheckChange.Fn = "bindBefore";
+                       l.CheckChange.Fn = "bindingCell";
+                   })
+                   .Renderer("renderingCheckBox")
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.IsDefault.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(false)
+                   .Disabled(false)
+
+        )
+        .MultiSelect(true)
+        .View(X.TreeView()//.StripeRows(true)
+        .Plugins(
+                    X.TreeViewDragDrop().AllowParentInserts(false).EnableDrop(!isDisableButton).EnableDrag(!isDisableButton).AllowLeafDrop(!isDisableButton)))
+        .Plugins(
+                    X.CellEditing()
+                )
+
+                .Root(new BudgetPlanTemplateController().GetNodeBudgetPlanTemplate(Model))
+        .Listeners(l =>
+        {
+            l.RemoteActionRefusal.Handler = "Ext.Msg.alert('Action refusal', e.message);";
+            l.SelectionChange.Handler = HandlerSelection;
+            l.NodeDragOver.Fn = "checkAllowDrop";
+            l.ItemInsert.Handler = "reloadsequence()";
+            l.ItemAppend.Handler = "reloadsequence()";
+            l.AfterRender.Fn = "reloadNumbering";
+            l.ViewReady.Fn = "viewReady";
+
+        })
+        .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAddVersion.Disabled(isDisableButton),
+            btnDeleteversion.Disabled(true).Handler("setsuccesDelete()"),
+            btnCollapse.Handler("handleCollapseExpandAll").Hidden(true),
+            btnExpand.Handler("handleCollapseExpandAll")
+        )
+     )
+        .BottomBar(
+        X.StatusBar().AutoClear(1500)
+        )
+)

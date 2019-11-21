@@ -1,0 +1,156 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<NotificationValuesVM>
+@{
+    var X = Html.X();
+    string sPageName = "NotificationValues";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+    
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdNotificationValues()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdNotificationValues();
+        });
+
+        resizeGrdNotificationValues = function () {
+            if (App.grdNotificationValues != null)
+                App.grdNotificationValues.setHeight($(window).height() - App.grdNotificationValues.getY() - (App.grdNotificationValues.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangedNotification = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+            
+            if(FromDetail !== 'Detail'){
+                App.ButtonDeleteRecipient.setDisabled(length<1)
+            }
+        };
+
+
+        onEditNotificationValues = function (editor, e) {
+
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        onBeforeEditNotificationValues = function (editor, e) {
+            if ("@isDetailButton" == "True")
+                return false;
+
+            App.grdNotificationValues.getSelectionModel().select(e.record);
+        };
+
+        beforeSelectNotification=function(){
+            CKEDITOR.focusManager.blur = true;
+            App.grdEntryValues.getSelectionModel().deselectAll();
+        };
+
+        selectMinutesNotification = function( grd, record, index, eOpts){
+            CKEDITOR.instances.Contents.setReadOnly(false);
+            dt = record.data;
+            val="";
+            if(!Ext.isEmpty(dt.Value))
+                val = dt.Value;
+            CKEDITOR.instances.Contents.setData(val);
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdNotificationValues")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Single)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangedNotification(selected.length)";
+        oListener.BeforeSelect.Fn = "beforeSelectNotification";
+        oListener.Select.Fn = "selectMinutesNotification";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(false)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelNotificationValues")
+                .Fields(
+            X.ModelField().Name(Model, model => model.MailNotificationID),
+            X.ModelField().Name(Model, model => model.NotificationValueID),
+            X.ModelField().Name(Model, model => model.FieldTagID),
+            X.ModelField().Name(Model, model => model.TagDesc),
+            X.ModelField().Name(Model, model => model.Value)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(NotificationValuesVM.Prop.NotificationValueID.Desc)
+        .DataIndex(Model, model => model.NotificationValueID)
+        .Flex(1)
+        .Hidden(true),
+        X.Column()
+        .Text(NotificationValuesVM.Prop.MailNotificationID.Desc)
+        .DataIndex(Model, model => model.MailNotificationID)
+        .Flex(1)
+        .Hidden(true),
+        X.Column()
+        .Text(FieldTagReferenceVM.Prop.FieldTagID.Desc)
+        .DataIndex(Model, model => model.FieldTagID)
+        .Flex(1),
+        X.Column()
+        .Text(FieldTagReferenceVM.Prop.TagDesc.Desc)
+        .DataIndex(Model, model => model.TagDesc)
+        .Flex(2)
+        ,
+        X.Column()
+            .Text(NotificationValuesVM.Prop.Value.Desc)
+            .DataIndex(Model, model => model.Value)
+             .Flex(1)
+            .Editor(
+                X.TextArea()
+            )
+            .Hidden(true)
+
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(false),
+        Html.X().CellEditing().ClicksToEdit(1)
+                    .Listeners(ls => ls.Edit.Fn = "onEditNotificationValues")
+                    .Listeners(ls => ls.BeforeEdit.Fn = "onBeforeEditNotificationValues")
+    )
+
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+        .HideRefresh(true)
+    )
+)

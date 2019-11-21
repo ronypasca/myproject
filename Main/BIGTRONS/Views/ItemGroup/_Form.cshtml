@@ -1,0 +1,202 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemGroupVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemGroupVM.Prop.ItemTypeID.Name, ItemGroupVM.Prop.ItemTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemGroupVM.Prop.ItemTypeDesc.Name, ItemGroupVM.Prop.ItemTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItemType = global_asax.Button(Buttons.ButtonBrowse, "ItemType", "", "../ItemType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItemType = global_asax.Button(Buttons.ButtonErase, "ItemType", "", "", true);
+
+    <script>
+        var bPreventGetItemType = false;
+
+        getItemType = function (itemTypeID, itemTypeDesc, exact) {
+            if (App.ItemTypeID.isDirty() || App.ItemTypeDesc.isDirty()) {
+                App.ItemTypeID.originalValue = App.ItemTypeID.getValue();
+                App.ItemTypeDesc.originalValue = App.ItemTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItemTypeMaster", "ItemType"))',
+                    params: {
+                        ControlItemTypeID: App.ItemTypeID.id,
+                        ControlItemTypeDesc: App.ItemTypeDesc.id,
+                        FilterItemTypeID: itemTypeID,
+                        FilterItemTypeDesc: itemTypeDesc,
+                        Exact: exact
+                    },
+                    success: getItemTypeSuccess,
+                    failure: getItemTypeFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getItemTypeSuccess = function () {
+            if (!App.ItemTypeID.isDirty() && !App.ItemTypeDesc.isDirty()) {
+                App.ItemTypeID.originalValue = "";
+                App.ItemTypeDesc.originalValue = "";
+            }
+            bPreventGetItemType = false;
+        };
+
+        getItemTypeFailed = function () {
+            eraseItemType();
+        };
+
+        itemTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemType = true;
+                getItemType(field.getValue(), "", false);
+            }
+        };
+
+        itemTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemType = true;
+                getItemType("", field.getValue(), false);
+            }
+        };
+
+        itemTypeIDBlur = function (itemTypeID) {
+            console.log(bPreventGetItemType);
+            if (!bPreventGetItemType) {
+                bPreventGetItemType = true;
+                if (itemTypeID.trim() == "")
+                    getItemTypeFailed();
+                else
+                    getItemType(itemTypeID, "", true);
+            }
+            bPreventGetItemType = false;
+        };
+
+        itemTypeDescBlur = function (itemTypeDesc) {
+            if (!bPreventGetItemType) {
+                bPreventGetItemType = true;
+                if (itemTypeDesc.trim() == "")
+                    getItemTypeFailed();
+                else
+                    getItemType("", itemTypeDesc, true);
+            }
+            bPreventGetItemType = false;
+        };
+
+        eraseItemType = function () {
+            App.ItemTypeID.clear();
+            App.ItemTypeDesc.clear();
+            App.ItemTypeID.originalValue = "";
+            App.ItemTypeDesc.originalValue = "";
+        };
+        renderIsActive = function (value) {
+            App.HasParameter.setBoxLabel(value == true ? "Yes" : "No");
+        };
+        renderIsActivePrice = function (value) {
+            App.HasPrice.setBoxLabel(value == true ? "Yes" : "No");
+        };
+        </script>
+    }
+@(
+    X.Panel()
+    .ID("PItemGroupForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItemGroup")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ItemGroupID)
+                .MaxLength(3)
+                .FieldLabel(ItemGroupVM.Prop.ItemGroupID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ItemGroupDesc)
+                .FieldLabel(ItemGroupVM.Prop.ItemGroupDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.ItemTypeID)
+
+                        .FieldLabel(ItemGroupVM.Prop.ItemTypeDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "itemTypeIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "itemTypeIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.ItemTypeDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "itemTypeDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "itemTypeDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseItemType
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseItemType.Handler("eraseItemType")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        ),
+
+            X.CheckboxFor(model => model.HasParameter)
+                .FieldLabel(ItemGroupVM.Prop.HasParameter.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Listeners(oListener =>
+                {
+                    oListener.Render.Handler = "renderIsActive(App.HasParameter.getValue());";
+                    oListener.Change.Handler = "renderIsActive(App.HasParameter.getValue());";
+                }),
+             X.CheckboxFor(model => model.HasPrice)
+                .FieldLabel(ItemGroupVM.Prop.HasPrice.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Listeners(oListener =>
+                {
+                    oListener.Render.Handler = "renderIsActivePrice(App.HasPrice.getValue());";
+                    oListener.Change.Handler = "renderIsActivePrice(App.HasPrice.getValue());";
+                })
+                ),
+          X.Panel().ID("panelItemGroupParameter")
+
+             .Title("Parameter")
+             .Collapsible(true)
+                .ItemsFromPartial("ItemGroupParameter/_List", Model.ListItemGroupParameterVM, ViewData)
+                .PaddingSpec("10 0 0 0")
+         )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+
+
+        )
+    )
+)
+

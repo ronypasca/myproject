@@ -1,0 +1,49 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model HolidayVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+
+    <script>
+    </script>
+    
+}
+@(
+    X.Panel()
+    .ID("PHolidayForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FHoliday")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.HolidayID)
+                .FieldLabel(HolidayVM.Prop.HolidayID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Descriptions)
+                .FieldLabel(HolidayVM.Prop.Descriptions.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+              X.DateFieldFor(model => model.HolidayDate)
+                .FieldLabel(HolidayVM.Prop.HolidayDate.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Format(global_asax.DefaultDateFormat)
+
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

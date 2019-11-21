@@ -1,0 +1,581 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVersionVM
+@{
+    ViewBag.Title = "List of Items";
+    var X = Html.X();
+    string sPageName = "UnitPriceAnalysis";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    string ReadBrowse = ViewData["ControlFromBudgetStructure"].ToString() != "" ? "ReadBrowseChild" : "ReadBrowse";
+    string sHandler = "selectItemVersionBrowse('" + ViewData["Control" + ItemVersionVM.Prop.ItemID.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.ItemDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.Version.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.VersionDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.ItemTypeDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.ItemGroupDesc.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.ItemTypeID.Name]
+        + "', '" + ViewData["Control" + ItemVersionVM.Prop.UoMDesc.Name]
+        + "', '" + ViewData["ControlTreePanel"]
+        + "', '" + ViewData["ControlAlternativeItem"]
+        + "', App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemID.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemDesc.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.Version.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.VersionDesc.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemTypeDesc.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemGroupDesc.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.ItemTypeID.Name + "']"
+        + ", App.grdItemVersionBrowse.getRowsValues({selectedOnly:true})[0]['" + ItemVersionVM.Prop.UoMDesc.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemVersionBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdItemVersionBrowse();
+        });
+
+        resizeGrdItemVersionBrowse = function () {
+            if (App.grdItemVersionBrowse != null)
+                App.grdItemVersionBrowse.setHeight($(window).height() - App.grdItemVersionBrowse.getY() - (App.grdItemVersionBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionItemVersionChange = function (length) {
+            App.ButtonSelectUnitPriceAnalysis.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ItemID, ItemDesc) {
+            filter.fields[0].items.items[0].setValue(ItemID);
+            filter.fields[1].items.items[0].setValue(ItemDesc);
+        };
+        getController = function () {
+            var ret = "";
+            if (ViewData["ControlFromBudgetStructure"] !== "") {
+                ret = "ReadBrowseFilter"
+            }
+            else {
+                ret = "ReadBrowse"
+            }
+
+            return ret;
+        };
+
+        selectItemVersionBrowse = function (ControlItemID, ControlItemDesc, ControlVersion, ControlVersionDesc,
+            ControlItemTypeDesc, ControlItemGroupDesc, ControlItemTypeID, ControlUoMDesc, ControlTreePanel, ControlGrd, ItemID, ItemDesc, Version, VersionDesc,
+            ItemTypeDesc, ItemGroupDesc, ItemTypeID, UoMDesc) {
+
+            if (Ext.getCmp(ControlItemID) != undefined) {
+                Ext.getCmp(ControlItemID).setValue(ItemID);
+                Ext.getCmp(ControlItemID).originalValue = ItemID;
+            }
+            if (Ext.getCmp(ControlItemDesc) != undefined) {
+                Ext.getCmp(ControlItemDesc).setValue(ItemDesc);
+                Ext.getCmp(ControlItemDesc).originalValue = ItemDesc;
+            }
+            if (Ext.getCmp(ControlVersion) != undefined) {
+                Ext.getCmp(ControlVersion).setValue(Version);
+                Ext.getCmp(ControlVersion).originalValue = Version;
+            }
+            if (Ext.getCmp(ControlVersionDesc) != undefined) {
+                Ext.getCmp(ControlVersionDesc).setValue(VersionDesc);
+                Ext.getCmp(ControlVersionDesc).originalValue = VersionDesc;
+            }
+            if (Ext.getCmp(ControlItemTypeDesc) != undefined) {
+                Ext.getCmp(ControlItemTypeDesc).setValue(ItemTypeDesc);
+                Ext.getCmp(ControlItemTypeDesc).originalValue = ItemTypeDesc;
+            }
+            if (Ext.getCmp(ControlItemGroupDesc) != undefined) {
+                Ext.getCmp(ControlItemGroupDesc).setValue(ItemGroupDesc);
+                Ext.getCmp(ControlItemGroupDesc).originalValue = ItemGroupDesc;
+            }
+            if (Ext.getCmp(ControlItemTypeID) != undefined) {
+                Ext.getCmp(ControlItemTypeID).setValue(ItemTypeID);
+                Ext.getCmp(ControlItemTypeID).originalValue = ItemTypeID;
+                checkBehaviorFormula(ItemTypeID);
+            }
+            if (Ext.getCmp(ControlUoMDesc) != undefined) {
+                Ext.getCmp(ControlUoMDesc).setValue(UoMDesc);
+                Ext.getCmp(ControlUoMDesc).originalValue = UoMDesc;
+                /*checkBehaviorFormula(ItemTypeID);*/
+            }
+            if (ControlTreePanel.length > 0) {
+
+                if (ControlTreePanel.length > 0 && !(String(ControlTreePanel).indexOf('treePanelAdditional') >= 0)) {
+                    var default_ = '0';
+                    var ParentItemid = default_;
+                    var ParentSequence_ = 0;
+                    var ParentVersion_ = 0;
+                    var ParentTypeID = default_;
+                    var BudgetTempID = ControlTreePanel;
+                    /*var ItemTypeID = default_;*/
+                    var id = "root";
+                    var lastsequence = 0;
+                    var lastnode = App.treePanelBudgetTemplate.getRootNode().lastChild;
+                    var childid = App.treePanelBudgetTemplate.store.getNodeById("root").childNodes.length;
+                    if (App.treePanelBudgetTemplate.getSelectedNodes(0)[0] !== undefined) {
+                        ParentItemid = App.treePanelBudgetTemplate.getSelectedNodes()[0]['attributes']['itemid'];
+
+                        ParentSequence_ = App.treePanelBudgetTemplate.getSelectedNodes()[0]['attributes']['sequence'];
+                        var hasSequenceChild = App.treePanelBudgetTemplate.getSelection()[0].childNodes.length;
+                        lastsequence = ParentSequence_ + hasSequenceChild + 1;
+                        ParentVersion_ = App.treePanelBudgetTemplate.getSelectedNodes()[0]['attributes']['version'];
+                        ParentTypeID = App.treePanelBudgetTemplate.getSelectedNodes()[0]['attributes']['parentitemtypeid'];
+                        /*ItemTypeID = App.treePanelBudgetTemplate.getSelectedNodes()[0]['attributes']['itemtypeid'];*/
+                        id = App.treePanelBudgetTemplate.getSelection()[0].id;
+                        childid = App.treePanelBudgetTemplate.getSelection()[0].childNodes.length;
+
+                    }
+                    else {
+                        if (lastnode !== null) {
+                            var taslim = 2;
+                            lastsequence = getSequence(lastnode, lastsequence);
+                        }
+                        lastsequence++;
+                    }
+                    var nodelength = App.treePanelBudgetTemplate.store.getData().items.length;
+                    /*var koor = nodelength - 1;
+                    var idLast = App.treePanelBudgetTemplate.store.getData().items[koor].id;
+
+                    var finalID = id;*/
+                    var loadNodeFromController = function (objchild, nextNode) {
+                        var x;
+                        for (x in objchild) {
+
+                            var objchild_ = [];
+                            objchild_ = objchild[x].children;
+                            objchild[x].children = null;
+                            console.log(nextNode.id);
+                            debugger;
+                            nextNode.appendChild(objchild[x]);
+                            if (objchild_ != undefined) {
+                                if (objchild_.length > 0) {
+
+                                    /* var nextNode_ = nextNode.childNodes[x];*/
+                                    var nextNode_ = App.treePanelBudgetTemplate.store.getNodeById(nextNode.childNodes[x].id);
+                                    loadNodeFromController(objchild_, nextNode_);
+                                }
+                            }
+                        }
+
+
+                    };
+                    var fordefaultCheck = false;
+                    if (id == "root") { fordefaultCheck = true; }
+                    var childroot = App.treePanelBudgetTemplate.store.getNodeById(id).childNodes.length;
+                    if (childroot > 0) { fordefaultCheck = false; }
+                    else { fordefaultCheck = true; }
+
+                    node = App.treePanelBudgetTemplate.store.getNodeById(id);
+
+
+                    Ext.Ajax.request({
+                        url: '../BudgetPlanTemplate/GetNodeAppendNew',
+                        method: 'POST',
+                        params: {
+                            thisItemDesc: ItemDesc,
+                            thisItem: ItemID,
+                            thisVersion: Version,
+                            thisItemTypeId: ItemTypeID,
+                            ParentItem: ParentItemid,
+                            ParentVersion: ParentVersion_,
+                            ParentItemTypeID: ParentTypeID,
+                            Sequence: lastsequence,
+                            ParentSequence: ParentSequence_,
+                            BudgetTemplateID: BudgetTempID,
+                            isdefaultCheck: fordefaultCheck
+                        },
+                        success: function (response) {
+                            var selectedTrue = App.treePanelBudgetTemplate.getSelection()[0];
+                            var jsonData = Ext.util.JSON.decode(response.responseText);
+                            var nodetoappend = jsonData.data;
+                            var obj_child = [];
+
+                            obj_child = jsonData.data.children;
+                            node.data.expandable = true;
+                            node.data.expanded = true;
+                            var match = false;
+                            var message = "@MessageLib.Exist";
+                            for (var p = 0; p < node.childNodes.length; p++) {
+                                var itmexisting = node.childNodes[p].data.itemid;
+                                var versionexisting = node.childNodes[p].data.version;
+                                console.log(itmexisting + " " + nodetoappend.itemid + " " + versionexisting + " " + nodetoappend.version);
+                                if (itmexisting == nodetoappend.itemid && versionexisting == nodetoappend.version) {
+                                    match = true;
+                                    message = "is " +"@MessageLib.Exist";
+                                    break;
+                                }
+                                if (node.childNodes[p].data.itemtypeid != nodetoappend.itemtypeid ) {
+                                  
+                                    match = true;
+                                    message = " has difference child";
+                                    break;
+                                }
+
+                            };
+
+                            if (node.data.itemid == nodetoappend.itemid && node.data.version == nodetoappend.version) {
+                                match = true;
+                                message = "@MessageLib.CircularApprovalPath";
+                            }
+
+                            if (!match) {
+                                node.appendChild(nodetoappend);
+                            }
+                            else {
+                                showInfoAlert("Budget Plan Template", nodetoappend.itemdesc + " Version[" + nodetoappend.version + "] " + message );
+                             }
+
+                            /*nodetoappend.children = null;
+
+                            node.appendChild(nodetoappend);
+                            var countid = node.childNodes.length - 1;
+                            console.log(node.childNodes[countid].id);
+                            debugger;
+                            var nextn = App.treePanelBudgetTemplate.store.getNodeById(node.childNodes[countid].id);
+                            loadNodeFromController(obj_child,nextn);*/
+                            node.commit();
+
+
+                            App.treePanelBudgetTemplate.store.getRootNode(App.treePanelBudgetTemplate.store.getRootNode());
+
+
+
+                            /*var replace = App.treePanelBudgetTemplate.store.getNodeById(default_).data.ItemDesc.toString().replace("(empty)", "");
+                            App.treePanelBudgetTemplate.store.getNodeById(default_).data.budgetplantemplateid = replace;
+                            */
+                            if (selectedTrue !== undefined) {
+
+                            }
+                            /*App.treePanelBudgetTemplate.store.getNodeById(default_).collapse();
+                            App.treePanelBudgetTemplate.store.getNodeById(default_).expand();*/
+
+                        },
+                        failure: function (response) {
+                            showErrorAlert("ERROR Load Child", response);
+                        }
+                    });
+                    /*
+                    App.treePanelBudgetTemplate.getRootNode().collapse();
+                    App.treePanelBudgetTemplate.getRootNode().expand();*/
+                }
+                else if (String(ControlTreePanel).indexOf('treePanelAdditional') >= 0) {
+
+
+                    var node;
+                    if (App.treePanelAdditional.getSelection().length > 0) {
+                        node = App.treePanelAdditional.getSelection()[0];
+                    } else {
+                        node = App.treePanelAdditional.store.getNodeById("root");
+                    }
+
+                    var errorMsg = [];
+
+                    for (var i = 0; i < App.grdItemVersionBrowse.getSelection().length; i++) {
+
+                        var allowAppend = true;
+
+                        for (var j = 0; j < node.childNodes.length; j++) {
+
+                            if (node.childNodes[j].data.itemid == App.grdItemVersionBrowse.getSelection()[i].data.ItemID
+                                && node.childNodes[j].data.version == App.grdItemVersionBrowse.getSelection()[i].data.Version) {
+
+                                allowAppend = false;
+
+                                break;
+                            }
+
+                        }
+
+                        if (allowAppend) {
+                            node.data.leaf = false;
+                            node.data.iconCls = "icon-folder";
+                            node.data.expandable = true;
+                            node.data.expand = true;
+                            node.data.info = "";
+                            node.data.volume = null;
+
+                            node.appendChild({
+                                itemdesc: App.grdItemVersionBrowse.getSelection()[i].data.ItemDesc,
+                                itemid: App.grdItemVersionBrowse.getSelection()[i].data.ItemID,
+                                version: App.grdItemVersionBrowse.getSelection()[i].data.Version,
+                                sequence: null,
+                                uomdesc: App.grdItemVersionBrowse.getSelection()[i].data.UoMDesc,
+                                info: "",
+                                volume: null,
+                                parentitemid: App.grdItemVersionBrowse.getSelection()[i].data.ItemID,
+                                parentversion: App.grdItemVersionBrowse.getSelection()[i].data.Version,
+                                parentsequence: null,
+                                iconCls: "icon-pagewhite",
+                                expandable: false,
+                                leaf: true
+                            });
+                        } else {
+                            errorMsg.push('Item ID [' + App.grdItemVersionBrowse.getSelection()[i].data.ItemID
+                                + '] Version [' + App.grdItemVersionBrowse.getSelection()[i].data.Version
+                                + '] ' + '@MessageLib.exist');
+                        }
+                    }
+
+                    if (errorMsg.length > 0) {
+                        showInfoAlert('Budget Plan List', errorMsg.join(',<br/>'));
+                    }
+
+                    node.commit();
+                    node.expand();
+
+                }
+            }
+
+            if (Ext.getCmp(ControlGrd) != undefined && ControlGrd.length > 0) {
+
+                if (ControlGrd == "grdAlternativeItem") {
+
+                    var errorMsg = [];
+
+                    for (var i = 0; i < App.grdItemVersionBrowse.getSelection().length; i++) {
+
+                        var addAlternativeItem = true;
+
+                        for (var j = 0; j < App.grdAlternativeItem.getStore().allData.items.length; j++) {
+                            if (App.grdAlternativeItem.getStore().allData.items[j].data.ItemID == App.grdItemVersionBrowse.getSelection()[i].data.ItemID
+                                && App.grdAlternativeItem.getStore().allData.items[j].data.Version == App.grdItemVersionBrowse.getSelection()[i].data.Version) {
+                                addAlternativeItem = false;
+                                break;
+                            }
+                        }
+
+                        if (addAlternativeItem) {
+                            App.grdAlternativeItem.store.add(new ModelAlternativeItem({
+                                ItemID: App.grdItemVersionBrowse.getSelection()[i].data.ItemID,
+                                ItemDesc: App.grdItemVersionBrowse.getSelection()[i].data.ItemDesc,
+                                Version: App.grdItemVersionBrowse.getSelection()[i].data.Version,
+                                ItemTypeID: App.grdItemVersionBrowse.getSelection()[i].data.ItemTypeID
+                            }));
+                        } else {
+                            errorMsg.push('Item ID [' + App.grdItemVersionBrowse.getSelection()[i].data.ItemID
+                                + '] Version [' + App.grdItemVersionBrowse.getSelection()[i].data.Version
+                                + '] ' + '@MessageLib.exist');
+                        }
+                    }
+                    if (errorMsg.length > 0) {
+                        showInfoAlert('Budget Plan List', errorMsg.join(',<br/>'));
+                    }
+                }
+
+            }
+
+            App.WinBrowseItemVersion.close();
+        };
+        getSequence = function (node, seq) {
+
+            if (node.childNodes.length > 0) {
+                seq = getSequence(node.lastChild, seq);
+            }
+            else {
+                seq = node.data.sequence;
+            }
+            return seq;
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseItemVersion")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdItemVersionBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionItemVersionChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '"
+            + ViewData[ItemVersionVM.Prop.ItemID.Name].ToString() + "', '"
+            + ViewData[ItemVersionVM.Prop.ItemDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1; oListener.RowDblClick.Handler = sHandler; oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action(ReadBrowse, "UnitPriceAnalysis"))
+                .Reader(X.JsonReader().RootProperty("data"))
+                .ExtraParams(exParam =>
+                        exParam.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = "FilterInItemType",
+                                Value = ViewData["ValueFilterAHS"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = "SelectedRow_",
+                                Value = ViewData["SelectedRow_"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = "FilterInItemTypeID",
+                                Value = ViewData["ValueFilterInItemTypeID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            }
+                        })
+                    )
+            )
+            .AutoLoad(ViewData[ItemVersionVM.Prop.ItemID.Name].ToString() == "" && ViewData[ItemVersionVM.Prop.ItemDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ItemID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemID.Desc)
+            .DataIndex(Model, model => model.ItemID)
+            .Flex(3)
+            .Hidden(ReadBrowse=="ReadBrowseChild")
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemDesc.Desc)
+            .DataIndex(Model, model => model.ItemDesc)
+            .Flex(4)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.Version.Desc)
+            .DataIndex(Model, model => model.Version)
+            .Hidden(ReadBrowse == "ReadBrowseChild" || ViewData["ControlTreePanel"].ToString().IndexOf("treePanelAdditional") >= 0 ? true : false)
+            //.Hidden( ViewData["ControlTreePanel"].ToString().IndexOf("treePanelAdditional") >= 0 ? true : false )
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.VersionDesc.Desc)
+            .DataIndex(Model, model => model.VersionDesc)
+            .Flex(3)
+            .Hidden(ReadBrowse == "ReadBrowseChild")
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                    )
+                    ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.UoMDesc.Desc)
+            .DataIndex(Model, model => model.UoMDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemVersionVM.Prop.ItemTypeID.Desc)
+            .DataIndex(Model, model => model.ItemTypeID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

@@ -1,0 +1,27 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Update";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonUpdate), ParameterMode.Value);
+    oParamList.Add(oParam);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, null, true, false, false, Buttons.ButtonSave, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdCluster.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonCancel,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? null : "App.grdCluster.getStore().reload()", null);
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdCluster.getStore().reload()");
+}
+@(btnSave)
+@(btnCancel)
+@(btnList.Hidden(ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonList)))

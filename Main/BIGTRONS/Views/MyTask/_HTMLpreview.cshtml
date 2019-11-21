@@ -1,0 +1,21 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model TCMembersVM
+@{
+
+    var X = Html.X();
+    var iWindowWidth = 650;    
+}
+@(
+    X.Window()
+   .CloseAction(CloseAction.Destroy)
+   .ID("WinBrowseTCMembers")
+   .Modal(true)
+   .Title("Preview Mail")
+   .Width(650)
+   .Html((string)ViewData["content"])
+            //Html.Raw(ViewData["content"])
+            
+
+)

@@ -1,0 +1,333 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanTemplateVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    bool isCopyFromPrev = bool.Parse(ViewData["IsCopyFromPrevious"].ToString());
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTypeID.Name, BudgetPlanTemplateVM.Prop.BudgetPlanTypeID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTypeDesc.Name, BudgetPlanTemplateVM.Prop.BudgetPlanTypeDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlanType = global_asax.Button(Buttons.ButtonBrowse, "BudgetPlanType", "", "../BudgetPlanType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBudgetPlanType = global_asax.Button(Buttons.ButtonErase, "BudgetPlanType", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Name, "CFP" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Name, "CFP" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlanTemplate = global_asax.Button(Buttons.ButtonBrowse, "BudgetPlanTemplate", "", "../BudgetPlanTemplate/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseBudgetPlanTemplate = global_asax.Button(Buttons.ButtonErase, "BudgetPlanTemplate", "", "", true);
+
+    oParam = new Parameter(General.EnumDesc(Params.Caller), "GetData", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "{ BudgetPlanTemplateID: App.CFPBudgetPlanTemplateID.getValue() }", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnGetData = global_asax.Button(Buttons.ButtonDetail, "ButtonGetData", "Get Data", "Add", true, false, false, null, oParamList);
+
+    <script>
+        var bPreventGetBudgetPlanType = false;
+
+        getBudgetPlanType = function (budgetPlanTypeID, budgetPlanTypeDesc, exact) {
+            if (App.BudgetPlanTypeID.isDirty() || App.BudgetPlanTypeDesc.isDirty()) {
+                App.BudgetPlanTypeID.originalValue = App.BudgetPlanTypeID.getValue();
+                App.BudgetPlanTypeDesc.originalValue = App.BudgetPlanTypeDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBudgetPlanType", "BudgetPlanType"))',
+                    params: {
+                        ControlBudgetPlanTypeID: App.BudgetPlanTypeID.id,
+                        ControlBudgetPlanTypeDesc: App.BudgetPlanTypeDesc.id,
+                        FilterBudgetPlanTypeID: budgetPlanTypeID,
+                        FilterBudgetPlanTypeDesc: budgetPlanTypeDesc,
+                        Exact: exact
+                    },
+                    success: getBudgetPlanTypeSuccess,
+                    failure: getBudgetPlanTypeFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getBudgetPlanTypeSuccess = function () {
+            if (!App.BudgetPlanTypeID.isDirty() && !App.BudgetPlanTypeDesc.isDirty()) {
+                App.BudgetPlanTypeID.originalValue = "";
+                App.BudgetPlanTypeDesc.originalValue = "";
+            }
+            bPreventGetBudgetPlanType = false;
+        };
+
+        getBudgetPlanTypeFailed = function () {
+            eraseBudgetPlanType();
+        };
+
+        budgetPlanTypeIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanType = true;
+                getBudgetPlanType(field.getValue(), "", false);
+            }
+        };
+
+        budgetPlanTypeDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanType = true;
+                getBudgetPlanType("", field.getValue(), false);
+            }
+        };
+
+        budgetPlanTypeIDBlur = function (budgetPlanTypeID) {
+            console.log(bPreventGetBudgetPlanType);
+            if (!bPreventGetBudgetPlanType) {
+                bPreventGetBudgetPlanType = true;
+                if (budgetPlanTypeID.trim() == "")
+                    getBudgetPlanTypeFailed();
+                else
+                    getBudgetPlanType(budgetPlanTypeID, "", true);
+            }
+            bPreventGetBudgetPlanType = false;
+        };
+
+        budgetPlanTypeDescBlur = function (budgetPlanTypeDesc) {
+            if (!bPreventGetBudgetPlanType) {
+                bPreventGetBudgetPlanType = true;
+                if (budgetPlanTypeDesc.trim() == "")
+                    getBudgetPlanTypeFailed();
+                else
+                    getBudgetPlanType("", budgetPlanTypeDesc, true);
+            }
+            bPreventGetBudgetPlanType = false;
+        };
+        var bPreventGetBudgetPlanTemplate = false;
+        getBudgetPlanTemplate = function (budgetPlanTemplateID, budgetPlanTemplateDesc, exact) {
+            if (App.BudgetPlanTemplateID.isDirty() || App.BudgetPlanTemplateDesc.isDirty()) {
+                App.BudgetPlanTemplateID.originalValue = App.BudgetPlanTemplateID.getValue();
+                App.BudgetPlanTemplateDesc.originalValue = App.BudgetPlanTemplateDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetBudgetPlanTemplate", "BudgetPlanTemplate"))',
+                    params: {
+                        ControlBudgetPlanTemplateID: App.BudgetPlanTemplateID.id,
+                        ControlBudgetPlanTemplateDesc: App.BudgetPlanTemplateDesc.id,
+                        ControlBudgetPlanTypeDesc: App.BudgetPlanTypeDesc.id,
+                        FilterBudgetPlanTemplateID: budgetPlanTemplateID,
+                        FilterBudgetPlanTemplateDesc: budgetPlanTemplateDesc,
+                        Exact: exact
+                    },
+                    success: getBudgetPlanTemplateSuccess,
+                    failure: getBudgetPlanTemplateFailed
+                });
+            }
+        };
+
+        getBudgetPlanTemplateSuccess = function () {
+            if (!App.BudgetPlanTemplateID.isDirty() && !App.BudgetPlanTemplateDesc.isDirty()
+                && !App.BudgetPlanTypeDesc.isDirty()) {
+                App.BudgetPlanTemplateID.originalValue = "";
+                App.BudgetPlanTemplateDesc.originalValue = "";
+                App.BudgetPlanTypeDesc.originalValue = "";
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        getBudgetPlanTemplateFailed = function () {
+            eraseBudgetPlanTemplate();
+        };
+
+        budgetPlanTemplateIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanTemplate = true;
+                getBudgetPlanTemplate(field.getValue(), "", false);
+                getListBudgetPlanTemplateStructure();
+            }
+        };
+
+        budgetPlanTemplateDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetBudgetPlanTemplate = true;
+                getBudgetPlanTemplate("", field.getValue(), false);
+            }
+        };
+
+        budgetPlanTemplateIDBlur = function (budgetPlanTemplateID) {
+            console.log(bPreventGetBudgetPlanTemplate);
+            if (!bPreventGetBudgetPlanTemplate) {
+                bPreventGetBudgetPlanTemplate = true;
+                if (budgetPlanTemplateID.trim() == "")
+                    getBudgetPlanTemplateFailed();
+                else {
+                    getBudgetPlanTemplate(budgetPlanTemplateID, "", true);
+                    getListBudgetPlanTemplateStructure();
+                }
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        budgetPlanTemplateDescBlur = function (budgetPlanTemplateDesc) {
+            if (!bPreventGetBudgetPlanTemplate) {
+                bPreventGetBudgetPlanTemplate = true;
+                if (budgetPlanTemplateDesc.trim() == "")
+                    getBudgetPlanTemplateFailed();
+                else
+                    getBudgetPlanTemplate("", budgetPlanTemplateDesc, true);
+            }
+            bPreventGetBudgetPlanTemplate = false;
+        };
+
+        eraseBudgetPlanType = function () {
+            App.BudgetPlanTypeID.clear();
+            App.BudgetPlanTypeDesc.clear();
+            App.BudgetPlanTypeID.originalValue = "";
+            App.BudgetPlanTypeDesc.originalValue = "";
+        };
+        eraseBudgetPlanTemplate = function () {
+            
+        };
+    </script>
+}
+@(
+    X.FormPanel()
+    .ID("PBudgetPlanTemplateForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FCopyFromPrevious")
+        .Collapsible(true)
+        .Collapse()
+        .Title("Copy From Previous")
+        .Padding(iBodyPadding)
+        .Hidden(isCopyFromPrev)
+        .Items(
+             X.FieldContainer()
+            .FieldLabel("")
+            .LabelWidth(0)
+            .Width(iFieldWidth)
+            .Layout(LayoutType.Column)
+            .PaddingSpec(sPanelPaddingSpec)
+            .Items(
+                    X.TextField().ID("CFP" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Name)
+                    .FieldLabel(BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Desc)
+                    .Listeners(oListeners =>
+                    {
+                        oListeners.SpecialKey.Handler = "budgetPlanTemplateIDSpecialKey(item, e);";
+                        oListeners.Blur.Handler = "budgetPlanTemplateIDBlur(this.getValue());";
+                    })
+                    .LabelWidth(iLabelWidth)
+                    .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                X.TextField().ID("CFP" + BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Name)
+                    .FieldLabel("")
+                    .Listeners(oListeners =>
+                    {
+                        oListeners.SpecialKey.Handler = "budgetPlanTemplateDescSpecialKey(item, e);";
+                        oListeners.Blur.Handler = "budgetPlanTemplateDescBlur(this.getValue());";
+                    })
+                    .LabelWidth(0)
+                    .Width((iFieldWidth - iLabelWidth) / 2)
+                    .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                    .RightButtons(
+                        btnBrowseBudgetPlanTemplate,
+                        btnEraseBudgetPlanTemplate.Handler("eraseBudgetPlanTemplate()")
+                    )
+               )
+            )
+        .BottomBar(X.Toolbar().Items(btnGetData).PaddingSpec(sToolbarPaddingSpec)
+        ),
+        X.FormPanel()
+        .ID("FBudgetPlanTemplate")
+        .Padding(iBodyPadding)
+        .Collapsible(true)
+        .Title("Budget Plan Template")
+        .Items(
+            X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlBudgetPlanLeft")
+                  .PaddingSpec(sPanelPaddingSpec)
+                  .Items(
+            X.TextFieldFor(model => model.BudgetPlanTemplateID)
+                .FieldLabel(BudgetPlanTemplateVM.Prop.BudgetPlanTemplateID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .MaxLength(3)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.BudgetPlanTemplateDesc)
+                .FieldLabel(BudgetPlanTemplateVM.Prop.BudgetPlanTemplateDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.BudgetPlanTypeID)
+                        .FieldLabel(BudgetPlanTemplateVM.Prop.BudgetPlanTypeDesc.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "budgetPlanTypeIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "budgetPlanTypeIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.BudgetPlanTypeDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "budgetPlanTypeDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "budgetPlanTypeDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseBudgetPlanType
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseBudgetPlanType.Handler("eraseBudgetPlanType")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                    )
+                )
+            )
+        )
+        ,
+            X.FormPanel()
+                .ID("panelItemGroupParameter")
+                .Title("Budget Plan Structure")
+                .Collapsible(true)
+                .ItemsFromPartial("Structure/_FormInitial", Model.ListBudgetPlanTemplateStructureVM, ViewData)
+                .Padding(iBodyPadding)
+        ,
+        X.FormPanel()
+            .ID("PUserAccessForm")
+            .Frame(true)
+        .Items(
+            X.FormPanel()
+            .ID("FUserAccess")
+            .Padding(iBodyPadding)
+            .Collapsible(true)
+            .Title("User Access")
+            .ItemsFromPartial("UserAccess/_List", Model.lstUserBudgetPlanAccessVM, ViewData)
+            .Padding(iBodyPadding)
+       )
+    ).TopBar(
+            X.Toolbar()
+            .Padding(iBodyPadding)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+)

@@ -1,0 +1,169 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTStatusVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    //Button Status
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + FPTStatusVM.Prop.StatusID.Name, FPTStatusVM.Prop.StatusID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FPTStatusVM.Prop.StatusDesc.Name, FPTStatusVM.Prop.StatusDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseStatus = global_asax.Button(Buttons.ButtonBrowse, "Status", "", "BrowseStatus", true, false, false, null, oParamList);
+    Button.Builder btnEraseStatus = global_asax.Button(Buttons.ButtonErase, "Status", "", "", true);
+
+    //Status
+    <script>
+        var bPreventGetStatus = false;
+
+        getStatus = function (StatusID, StatusDesc, exact) {
+            debugger;
+            if (App.StatusID.isDirty() || App.StatusDesc.isDirty()) {
+                App.StatusID.originalValue = App.StatusID.getValue();
+                App.StatusDesc.originalValue = App.StatusDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetStatus", "FPT"))',
+                    params: {
+                        ControlStatusID: App.StatusID.id,
+                        ControlStatusDesc: App.StatusDesc.id,
+                        FilterStatusID: StatusID,
+                        FilterStatusDesc: StatusDesc,
+                        Exact: exact
+                    },
+                    success: getStatusSuccess,
+                    failure: getStatusFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getStatusSuccess = function () {
+            if (!App.StatusID.isDirty() && !App.StatusDesc.isDirty()) {
+                App.StatusID.originalValue = "";
+                App.StatusDesc.originalValue = "";
+            }
+            bPreventGetStatus = false;
+        };
+
+        getStatusFailed = function () {
+            eraseStatus();
+        };
+
+        StatusIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetStatus = true;
+                getStatus(field.getValue(), "", false);
+            }
+        };
+
+        StatusDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetStatus = true;
+                getStatus("", field.getValue(), false);
+            }
+        };
+
+        StatusIDBlur = function (StatusID) {
+            console.log(bPreventGetStatus);
+            if (!bPreventGetStatus) {
+                bPreventGetStatus = true;
+                if (StatusID.trim() == "")
+                    getStatusFailed();
+                else
+                    getStatus(StatusID, "", true);
+            }
+            bPreventGetStatus = false;
+        };
+
+        StatusDescBlur = function (StatusDesc) {
+            if (!bPreventGetStatus) {
+                bPreventGetStatus = true;
+                if (StatusDesc.trim() == "")
+                    getStatusFailed();
+                else
+                    getStatus("", StatusDesc, true);
+            }
+            bPreventGetStatus = false;
+        };
+
+        eraseStatus = function () {
+            App.StatusID.clear();
+            App.StatusDesc.clear();
+            App.StatusID.originalValue = "";
+            App.StatusDesc.originalValue = "";
+        };
+    </script>
+
+}
+@(
+    X.Panel()
+    .ID("PFPTStatusForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FApprovalPath")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.FPTID)
+                .FieldLabel(FPTStatusVM.Prop.FPTID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+           X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.StatusID)
+                        .FieldLabel(FPTStatusVM.Prop.StatusID.Desc)
+                        .ReadOnly(false)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "StatusIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "StatusIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.StatusDesc)
+                        .FieldLabel("")
+                        .ReadOnly(false)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "StatusDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "StatusDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseStatus
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseStatus.Handler("eraseStatus")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                ),
+            X.TextAreaFor(model => model.Remarks)
+                .Height(200)
+                .FieldLabel(FPTStatusVM.Prop.Remarks.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+
+           )
+           .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("Status/Entry/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

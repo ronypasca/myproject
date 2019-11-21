@@ -1,0 +1,80 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ParameterVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+}
+@(
+    X.Panel()
+    .ID("PParameterForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FParameter")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ParameterID)
+                .FieldLabel(ParameterVM.Prop.ParameterID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ParameterDesc)
+                .FieldLabel(ParameterVM.Prop.ParameterDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.TextFieldFor(model => model.DataType)
+                .FieldLabel(ParameterVM.Prop.DataType.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.NumberFieldFor(model => model.Length)
+                .FieldLabel(ParameterVM.Prop.Length.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.NumberFieldFor(model => model.Precision)
+                .FieldLabel(ParameterVM.Prop.Precision.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.NumberFieldFor(model => model.Scale)
+                .FieldLabel(ParameterVM.Prop.Scale.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.TextFieldFor(model => model.RefTable)
+                .FieldLabel(ParameterVM.Prop.RefTable.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.TextFieldFor(model => model.RefIDColumn)
+                .FieldLabel(ParameterVM.Prop.RefIDColumn.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                ,
+            X.TextFieldFor(model => model.RefDescColumn)
+                .FieldLabel(ParameterVM.Prop.RefDescColumn.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

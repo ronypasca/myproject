@@ -1,0 +1,21 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Add";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonAdd), ParameterMode.Value);
+    oParamList.Add(oParam);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, "SaveStatus", true, false, false, Buttons.ButtonSave, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdFPT.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null, "PageOne", true, false, false, null, null, null, "App.grdFPT.getStore().reload()");
+    
+}
+@(btnSave)
+@(btnCancel)

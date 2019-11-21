@@ -1,0 +1,635 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Controllers
+@model List<ItemComparisonDetailsVM>
+@{
+    ViewBag.Title = "Parameter";
+    var X = Html.X();
+    int iTreeMinHeight = 200;
+    string sPageName = "_SubItemGroup";
+    string sToolbarPaddingSpec = "10 10 10 0";
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    string HandlerSelection = isDisableButton ? "" : "getSelectionRow(selected.length)";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "getfordelete()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "ItemComparison", null, "", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("SelectedRow_", "getforAdd()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlFromItem", "true", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlTreePanel", Model[0].ItemComparisonDetailID, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "ItemComparison", "Add Item", "../ItemComparison/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);//, null, "addItem");
+
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GridStructure", "GetStructure()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemComparisonDetailsVM.Prop.ItemComparisonDetailID.Name, "grdItemCompare", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    //Button.Builder btnAddVendor = global_asax.Button(Buttons.ButtonAdd, "VendorComparison", null, null, true, false, false, null, oParamList, null, "addVendorPeriod");
+    Button.Builder btnAddVendor = global_asax.Button(Buttons.ButtonAdd, "VendorComparison", "Add Vendor", "../ItemComparison/BrowseVendor", true, false, false, null, oParamList);
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+
+    //Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "ItemComparison", "Delete", "", true);
+
+    bool isReadOnly = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate);
+
+    <script>
+        addVendorPeriod = function (success, msg) {
+            if (success)
+                console.log("Tes");
+            else
+                console.log("Tes");
+        };
+
+
+        var viewReady = function (grid, eOpts) {
+            setTimeout("afterFirstLoadTree()", 1);
+        };
+
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelItemComparison.getHeight();
+            resizeTreeItemComparison();
+            resizeContainer();
+        };
+
+        var resizeTreeItemComparison = function () {
+            if (App.treePanelItemComparison != null) {
+                var iHeight = $(window).height() - (App.treePanelItemComparison.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelItemComparison.setHeight(iHeight);
+            }
+        };
+
+        getSelectionRow = function (length) {
+            App.ButtonAddItemComparison.setDisabled(length <1);
+
+            if(typeof App.treePanelItemComparison.getSelectedNodes(0)[0] !== 'undefined' )
+            {
+
+                var setEnableDelete = false;
+                var obj = App.treePanelItemComparison.getSelectedNodes(0);
+                if(obj.length > 1)
+                {
+
+                    for(x=0;x<obj.length;x++)
+                    {
+
+                        if(obj[x].attributes.allowdelete){
+                            setEnableDelete=true;
+                        }
+                        else{
+                            setEnableDelete=false;
+                        }
+
+                        if(!setEnableDelete){break;}
+                    }
+                    App.ButtonDeleteItemComparison.setDisabled(!setEnableDelete);
+                    App.ButtonAddItemComparison.setDisabled(true);
+                }
+                else
+                {
+
+                    if(App.treePanelItemComparison.getSelectedNodes(0)[0]["attributes"]["allowdelete"])
+                    {
+                        App.ButtonDeleteItemComparison.setDisabled(false);
+                    }
+                    else{
+                        App.ButtonDeleteItemComparison.setDisabled(true);
+                    }
+                    if(App.treePanelItemComparison.getSelectedNodes(0)[0]["attributes"]["haschild"]){
+                        App.ButtonAddItemComparison.setDisabled(false);
+                    }
+                    else{
+                        App.ButtonAddItemComparison.setDisabled(true);
+                    }
+                    if(App.treePanelItemComparison.getSelection()[0].id == "0")
+                    {
+                        App.ButtonAddItemComparison.setDisabled(false);
+                    }
+
+                }
+            }
+            else{App.ButtonAddItemComparison.setDisabled(false);
+                App.ButtonDeleteItemComparison.setDisabled(true);}
+        };
+
+        getfordelete = function(){
+            var ret;
+            if(typeof App.treePanelItemComparison.getSelectedNodes(0)[0] !== 'undefined'){
+                return App.treePanelItemComparison.getSelectedNodes(0)[0].attributes.itemid;
+            }else{
+                ret = "";
+                return ret;
+            }
+        };
+
+        setsuccesDelete = function() {
+            App.treePanelItemComparison.getSelection()[0].remove(true);
+        };
+
+        var GetStructure = function () {
+            debugger;
+            var childata = App.treePanelItemComparison.getRootNode().childNodes;
+            var node_ = childata[x];
+            var x;
+            for (x in childata)
+            {
+                console.log("Item ID "+ App.treePanelItemComparison.getRootNode().childNodes[x].data.ItemID);
+            }
+           
+        };
+
+        var GetStructure_ = function () {
+            var childata = App.treePanelItemComparison.getRootNode().childNodes;
+            var dataLength = childata.length;
+            var data = [];
+            var x;
+            for (x in childata) {
+                data.push(childata[x].data);
+                var node_ = childata[x];
+                var setpushA_ = true;
+                if (node_.childNodes.length > 0) {
+                    data = loopStruct(node_, data, setpushA_);
+                };
+            }
+            console.log("get data " + data);
+            return data;
+        };
+
+        var loopStruct = function (node, data, setpush) {
+
+            if (setpush) {
+                var setpush_ = false;
+                var c;
+                for (c in node.childNodes) {
+                    data.push(node.childNodes[c].data);
+                    var node_ = node.childNodes[c];
+                    /*if(node_.data.haschild){*/
+                    setpush_ = true;
+                    /*}*/
+                    if (node_.childNodes.length > 0) {
+                        data = loopStruct(node_, data, setpush_);
+                    }
+                }
+            }
+            console.log("get data " + data);
+            return data;
+        };
+        handleCollapseExpandAll = function(btn){
+            btn.setHidden(true);
+            var obj = App.treePanelItemComparison.getRootNode().childNodes;
+            if(btn.id=='@General.EnumName(Buttons.ButtonCollapse)@sPageName'){
+                for(var x=0;x<obj.length;x++)
+                {obj[x].collapse();};
+                /*App.treePanelItemComparison.collapseAll();*/
+                App.ButtonExpand_SubItemGroup.setHidden(false);
+            }else{
+                for(var x=0;x<obj.length;x++)
+                {obj[x].expand();};
+                /*App.treePanelItemComparison.expandAll();*/
+                App.ButtonCollapse_SubItemGroup.setHidden(false);
+            }
+            btn.setHidden(true);
+        };
+        getforAdd = function(){
+            var ret = [];
+            /*console.log(App.treePanelItemComparison.getSelectedNodes()[0]);*/
+            if(typeof App.treePanelItemComparison.getSelectedNodes()[0] !== 'undefined' && App.treePanelItemComparison.getSelection()[0].id != "0"){
+                ret.push(App.treePanelItemComparison.getSelectedNodes()[0].attributes.itemtypeid.toString());
+                ret.push(App.treePanelItemComparison.getSelectedNodes()[0].attributes.itemid.toString());
+                /*ret.push(App.treePanelItemComparison.getSelectedNodes()[0].attributes.version.toString());*/
+                if(App.treePanelItemComparison.getSelection()[0].childNodes.length>0){
+                    ret.push(App.treePanelItemComparison.getSelection()[0].childNodes[0].data.itemtypeid.toString());
+                }else{
+                    ret.push("");
+                }
+
+                return ret;
+            }else{
+                ret = null;
+                return ret;
+            }
+        };
+
+        var bindBefore = function (checkcolumn, rowIndex, checked, eOpts)
+        {
+            var row = this.getView().getRow(rowIndex),
+                record = this.getView().getRecord(row);
+
+            return (record.get('enabledefault'));
+        };
+
+        var bindingCell = function(a,b,c,d){
+            if(c.data.enabledefault){
+                if(d){
+                    for (var x = 0; x < c.parentNode.childNodes.length; x++)
+                    {
+                        if (c.parentNode.childNodes[x].id !== c.data.id)
+                        {
+                            c.parentNode.childNodes[x].data.isdefault = !d;
+                            c.parentNode.childNodes[x].commit();
+                        } else
+                        {
+                            c.data.isdefault = d;
+                            c.commit();
+                        }
+                    }
+                }else{
+                    c.data.isdefault=!d;
+                    c.commit();
+                }
+            }
+        };
+
+        var checkAllowDrop = function(targetNode,eventNode,selectedNode){
+
+            var CurrentNodeIsFirstRowHasNotChild = selectedNode.records[0].data.enabledefault;
+            var CurrentNodeHasChild = selectedNode.records[0].data.haschild;
+            var TargetNodeItemType = targetNode.data.itemtypeid;
+            var TargetNodeHasChild = targetNode.data.haschild;
+            var ItemTypeChildTargetNodeHasChild;
+            if(targetNode.childNodes.length> 0){ItemTypeChildTargetNodeHasChild = targetNode.childNodes[0].data.haschild;}
+
+            var ParentTargetNodeHasChild = targetNode.parentNode.data.haschild;
+            var ParentTargetNodeisHasChild = targetNode.parentNode.childNodes;
+
+            var ChildParentwhereHasChildNode;
+            if(targetNode.parentNode.childNodes.length> 0){ChildParentwhereHasChildNode = targetNode.parentNode.childNodes[0].data.haschild;}
+
+            var ItemTypeParentCurrentNode = selectedNode.records[0].parentNode.data.itemtypeid;
+
+            if(eventNode == "before" || eventNode == "after" ){
+
+                if(CurrentNodeHasChild){
+                    if(ParentTargetNodeHasChild && TargetNodeHasChild){
+                        return true;}
+                    else{
+                        return false}
+                }
+                else{
+                    if(CurrentNodeIsFirstRowHasNotChild){
+                        if(selectedNode.records[0].data.isdefault)
+                        {
+                            if(targetNode.parentNode.data.id==selectedNode.records[0].parentNode.data.id){return true;}
+                            else{return false;}
+                        }
+                        else if(ParentTargetNodeHasChild && ParentTargetNodeisHasChild.length<=0)
+                        {return true;}
+                        else if(ParentTargetNodeHasChild && ParentTargetNodeisHasChild.length>0)
+                        {
+                            if(selectedNode.records[0].parentNode == targetNode.parentNode){return true;}
+                            else{
+                                if(!ChildParentwhereHasChildNode || !TargetNodeHasChild){
+                                    var returns = true;
+                                    for(var t=0;t<targetNode.parentNode.childNodes.length;t++){
+                                        if(targetNode.parentNode.childNodes[t].data.itemid == selectedNode.records[0].data.itemid
+                                            /*&& targetNode.parentNode.childNodes[t].data.version == selectedNode.records[0].data.version*/
+                                            ){
+                                            returns = false;
+                                            break;
+                                        }
+                                    }
+                                    return returns;}
+                                else{
+                                    return false;}
+                            }
+                        }
+                        else{return false;}
+                    }
+                    else{
+                        return false;}
+                }
+            }
+            else{
+
+                if(CurrentNodeHasChild){
+                    if(targetNode.childNodes.length> 0){
+                        if(ItemTypeChildTargetNodeHasChild)
+                        {return true;}
+                        else
+                        {return false;}
+                    }
+                    else if(targetNode.childNodes.length<=0 && TargetNodeHasChild)
+                    {return true;}
+                    else
+                    {return false;}
+                }
+                else
+                {
+                    if(CurrentNodeIsFirstRowHasNotChild){
+                        if(selectedNode.records[0].data.isdefault){
+                            if(targetNode.data.id==selectedNode.records[0].parentNode.data.id){return true;}
+                            else{return false; }
+                        }
+                        else if(TargetNodeHasChild && targetNode.childNodes <= 0){
+                            return true;
+                        }
+                        else if(TargetNodeHasChild && targetNode.childNodes.length> 0)
+                        {
+                            if(!ItemTypeChildTargetNodeHasChild){
+                                var returns = true;
+                                for(var t=0;t<targetNode.childNodes.length;t++){
+                                    if(targetNode.childNodes[t].data.itemid == selectedNode.records[0].data.itemid
+                                        /*&& targetNode.childNodes[t].data.version ==selectedNode.records[0].data.version*/
+                                        ){
+                                        returns = false;
+                                        break;
+                                    }
+                                }
+                                return returns;
+                            }
+                            else{
+                                return false;
+                            }
+                        }
+                        else{
+                            return false;
+                        }
+                    }
+                    else{
+                        return false;}
+                }
+            }
+        };
+                
+        var reloadNumbering = function()
+        {
+            var obj = App.treePanelItemComparison.store.root.childNodes;
+            for(var x=0;x<obj.length;x++)
+            {
+                var currentNumber = (x+1).toString();
+                obj[x].data.number = currentNumber;
+                if(obj[x].childNodes != undefined)
+                {
+                    loopNumbering(currentNumber, obj[x].childNodes);
+                }
+                obj[x].commit();
+            };
+            App.treePanelItemComparison.store.root.commit();
+        };
+        
+        var loopNumbering = function(parentNumber, parentChildNode)
+        {
+            debugger;
+            for(var n=0;n<parentChildNode.length;n++)
+            {
+                var currentNumber = parentNumber+"."+ (n+1).toString();
+                parentChildNode[n].data.number=currentNumber;
+                if(parentChildNode[n].childNodes != undefined)
+                {
+                    loopNumbering(currentNumber, parentChildNode[n].childNodes);
+                }
+                parentChildNode[n].commit();
+
+            };
+
+        };
+
+        GetSequenceNumber = function(this_,newparent){
+            var childata = App.treePanelItemComparison.getRootNode().childNodes;
+            var dataLength = childata.length;
+            var data = 0;
+            var x;
+            for(x in childata)
+            {
+                if(childata[x].childNodes.length>0){childata[x].data.expandable = true;}
+                else{
+                    childata[x].data.expandable = false;
+                    childata[x].data.expand = false;
+                }
+                data++;
+                childata[x].data.sequence = data;
+                var thisItemID = childata[x].data.itemid;
+                var thisSequence = childata[x].data.sequence;
+
+                var node_ = childata[x];
+                if(node_.childNodes.length > 0){
+                    data = loopSequence(node_,data,thisItemID,thisSequence,thisVersion);
+                };
+            }
+        };
+        
+        var reloadsequence = function(this_, oldParent, newParent){
+            GetSequenceNumber(this_,newParent);
+            reloadNumbering();
+        };
+    </script>
+}
+@(
+    X.TreePanel()
+        .ID("treePanelItemComparison")
+        .Expand(true)
+        .MultiSelect(false)
+        .MinHeight(iTreeMinHeight)
+        .WidthSpec("100%")
+        .RootVisible(false)
+        .Border(false)
+        .UseArrows(true).RowLines(true)
+        .Animate(true)
+        .Fields(X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemDesc.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemComparisonID.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemID.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemGroupDesc.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemTypeID.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.IsDefault.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.AllowDelete.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.ItemPriceID.Name.ToLower()),
+                X.ModelField().Name(ItemComparisonDetailsVM.Prop.HasChild.Name.ToLower()),
+                X.ModelField().Name("number")
+                 )
+        .ColumnModel(
+            X.Column()
+                .Text("No.")
+                .Flex(0).Sortable(false)
+                .DataIndex("number")
+                .Draggable(false),
+            X.Column()
+                .Text("Item")
+                .Flex(2).Sortable(false)
+                .DataIndex(ItemComparisonDetailsVM.Prop.ItemID.Name)
+                .Draggable(true),
+            X.Column()
+                .Text("Item Description")
+                .Flex(2).Sortable(false)
+                .DataIndex(ItemComparisonDetailsVM.Prop.ItemDesc.Name)
+                .Draggable(true),
+            X.Column()
+                .Text("Item Price ID")
+                .Flex(2).Sortable(false)
+                .DataIndex(ItemComparisonDetailsVM.Prop.ItemPriceID.Name)
+                .Draggable(true)
+                .Hidden(false)
+        //X.Column()
+        //    .Text("Item ID")
+        //    .Flex(2).Sortable(false)
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.ItemComparisonID.Name.ToLower())
+        //    .Draggable(true)
+        //    .Hidden(true),
+        //X.TreeColumn()
+        //    .Draggable(true)
+        //    .Text("Item")
+        //    .Flex(4)
+        //    .Sortable(false)
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.ItemDesc.Name.ToLower()),
+        //X.Column()
+        //    .Text("Item Group")
+        //    .Flex(2).Sortable(false)
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.ItemGroupDesc.Name.ToLower())
+        //    .Draggable(true)
+        //    .Hidden(false),
+        //X.Column()
+        //    .Text("Item ID")
+        //    .Flex(2).Sortable(false)
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.ItemID.Name.ToLower())
+        //    .Draggable(true)
+        //    .Hidden(true),
+        //X.Column()
+        //    .Text("ItemTypeID")
+        //    .Flex(0).Sortable(false)
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.ItemTypeID.Name.ToLower())
+        //    .Draggable(true)
+        //    .Hidden(true),
+        //X.CheckColumn()
+        //    .Text("AllowDelete")
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.AllowDelete.Name.ToLower())
+        //    .Editable(true)
+        //    .StopSelection(false)
+        //    .Sortable(false)
+        //    .Hidden(true),
+        //X.CheckColumn()
+        //    .Text("HasChild")
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.HasChild.Name.ToLower())
+        //    .Editable(false)
+        //    .Hidden(true)
+        //    .StopSelection(false)
+        //    .Sortable(false)
+        //    ,
+        //X.CheckColumn()
+        //    .Text("Default")
+        //    .Flex(1).Editable(true)
+        //    .Listeners(l =>
+        //    {
+        //        l.BeforeCheckChange.Fn = "bindBefore";
+        //        l.CheckChange.Fn = "bindingCell";
+        //    })
+        //    .Renderer("renderingCheckBox")
+        //    .DataIndex(ItemComparisonDetailsVM.Prop.IsDefault.Name.ToLower())
+        //    .Draggable(true)
+        //    .Hidden(false)
+        //    .Disabled(false)
+        )
+        .MultiSelect(true)
+        .View(
+                X.TreeView()
+                .Plugins(
+                    X.TreeViewDragDrop().AllowParentInserts(false)
+                    .EnableDrop(!isDisableButton).EnableDrag(!isDisableButton)
+                    .AllowLeafDrop(!isDisableButton)
+                )
+        )
+        .Plugins(
+               X.CellEditing()
+        )
+        //.Root(new BudgetPlanTemplateController().GetNodeBudgetPlanTemplate(Model))
+        .Listeners(l =>
+        {
+            l.RemoteActionRefusal.Handler = "Ext.Msg.alert('Action refusal', e.message);";
+            l.SelectionChange.Handler = HandlerSelection;
+            l.NodeDragOver.Fn = "checkAllowDrop";
+            l.ItemInsert.Handler = "reloadsequence()";
+            l.ItemAppend.Handler = "reloadsequence()";
+            l.AfterRender.Fn = "reloadNumbering";
+            l.ViewReady.Fn = "viewReady";
+
+        })
+        .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+                btnAdd.Disabled(isDisableButton),
+                btnAddVendor.Disabled(true),
+                btnDelete.Disabled(true).Handler("setsuccesDelete()"),
+                btnCollapse.Handler("handleCollapseExpandAll").Hidden(true),
+                btnExpand.Handler("handleCollapseExpandAll").Hidden(true)
+            )
+        )
+//X.TreePanel()
+//    .ID("treePanelItemComparison")
+//    .Expand(true)
+//    .MultiSelect(false)
+//    .MinHeight(iTreeMinHeight)
+//    .WidthSpec("100%")
+//    .EnableLocking(true).BufferedRenderer(true)
+//    .RootVisible(false)
+//    .Border(false)
+//    .UseArrows(true)
+//    .Animate(true).ColumnLines(true).RowLines(true)
+//    .Fields(
+//    )
+//    .ColumnModel(
+//        X.TreeColumn().Text(ItemPriceVendorPeriodVM.Prop.ItemID.Desc)
+//            .Sortable(false)
+//            .Locked(true)
+//            .DataIndex(ItemPriceVendorPeriodVM.Prop.ItemID.Name.ToLower())
+//        ,
+//        X.TreeColumn().Text(ItemPriceVendorPeriodVM.Prop.ItemDesc.Desc)
+//            .Sortable(false)
+//            .Locked(true)
+//            .DataIndex(ItemPriceVendorPeriodVM.Prop.ItemDesc.Name.ToLower())
+//    )
+//    .TopBar(
+//    X.Toolbar()
+//    .PaddingSpec(sToolbarPaddingSpec)
+//    .Items(
+//            btnAdd.Disabled(isDisableButton),//.Handler("createModel(App.treePanelItemComparison)"),
+//            btnAddVendor.Disabled(true).Handler("addVendor()"),
+//            btnDelete.Disabled(true).Handler("setsuccesDelete()"),
+//            btnCollapse.Handler("handleCollapseExpandAll").Hidden(true),
+//            btnExpand.Handler("handleCollapseExpandAll")
+//        //X.Button()
+//        //    .ID(General.EnumName(Buttons.ButtonDelete) + "ItemComparison")
+//        //    .Icon(Icon.Delete)
+//        //    .Text(General.EnumDesc(Buttons.ButtonDelete))
+//        //    .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+//        //    .Handler("deleteItemCompare();")
+//        )
+//    .Listeners(listener =>
+//    {
+//        listener.AfterRender.Fn = "grdItemCompareTopBarAfterRender";
+//    })
+//    )
+//    .BottomBar(
+//    X.StatusBar().AutoClear(1500)
+//    )
+
+)

@@ -1,0 +1,166 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<RoleFunctionVM>
+@{
+    ViewBag.Title = "Role Function";
+    string sPageName = "HomeRoleFunction";
+    var X = Html.X();
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    string sToolbarPaddingSpec = "0 10 10 0";
+
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlGrdRoleFunction", "grdRoleFunction", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseFunction", "Add", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, "Delete", string.Empty, true);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdRoleFunction()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdRoleFunction();
+        });
+
+        resizeGrdRoleFunction = function () {
+            if (App.grdRoleFunction != null)
+                App.grdRoleFunction.setHeight($(window).height() - App.grdRoleFunction.getY() - (App.grdRoleFunction.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeRoleFunction = function (length) {
+            App.ButtonAddBrowseFunction.setDisabled(length != 1);
+            App.ButtonDeleteHomeRoleFunction.setDisabled(length < 1);
+
+        };
+
+        var editRoleFunction = function (editor, e) {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        var beforeEditRoleFunction = function (editor, e) {
+            if("@isDisableButton" == "True")
+                return false;
+
+            App.grdRoleFunction.setSelection(e.rowIndex);
+        };
+
+        deleteSuccess = function () {
+            App.grdTCMember.getStore().reload();
+        };
+
+        deleteRowRoleFunction = function()
+        {
+            showMsgDeleteConfirmRoleFunction();
+        };
+
+        showMsgDeleteConfirmRoleFunction = function(){
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "deleteConfirmRoleFunction"
+            });
+            return;
+        };
+
+        deleteConfirmRoleFunction= function(btn){
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("DeleteRoleFunction"))',
+                    params: {
+                        Selected: App.grdRoleFunction.getRowsValues({ selectedOnly: true })
+                    },
+                    success: function (result) {
+                    },
+                    callback:function(){
+
+                        App.grdRoleFunction.getStore().remove(App.grdRoleFunction.getSelectionModel().getSelection());
+
+                    }
+                });
+            }
+        };
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdRoleFunction")
+    .Title("Function")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeRoleFunction(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelRoleFunction")
+                .Fields(
+            X.ModelField().Name(Model, model => model.FunctionID),
+            X.ModelField().Name(Model, model => model.FunctionDesc),
+            X.ModelField().Name(Model, model => model.RoleID)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(RoleFunctionVM.Prop.RoleID.Desc)
+        .DataIndex(Model, model => model.FunctionID)
+        .Flex(1),
+        X.Column()
+        .Text(RoleFunctionVM.Prop.FunctionDesc.Desc)
+        .DataIndex(Model, model => model.FunctionDesc)
+        .Flex(3)
+
+    )
+    .Plugins(
+         X.CellEditing()
+             .ClicksToEdit(1)
+                .Listeners(ls => ls.Edit.Fn = "editRoleFunction")
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditRoleFunction")
+                .ID("rowEditorRoleFunction")
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnAdd.Disabled(isDetailButton),
+            btnDelete.Disabled(true)
+            .Handler("deleteRowRoleFunction()")
+
+
+        )
+            )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

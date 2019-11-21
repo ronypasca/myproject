@@ -1,0 +1,68 @@
+﻿@using com.SML.BIGTRONS.ViewModels
+@model MailNotificationsVM
+@{
+    Layout = null;
+    var X = Html.X();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Preview</title>
+    
+   
+    <style media="screen" type="text/css">
+        body main {
+            -ms-flex: 1;
+            flex: 1;
+            min-width: 0;
+            padding: 1rem;
+        }
+
+    </style>
+</head>
+<body>
+    <main class="message">
+       
+            <div class="form-horizontal">
+
+                <table border="0" cellpadding="1" cellspacing="1" style="width:100%">
+                    <tbody>
+                        <tr>
+                            <td>To</td>
+                            <td> : @Model.RecipientsTO</td>
+                        </tr>
+                        <tr>
+                            <td>CC</td>
+                            <td> : @Model.RecipientsCC</td>
+                        </tr>
+                        <tr>
+                            <td>BCC</td>
+                            <td> : @Model.RecipientsBCC</td>
+                        </tr>
+                        <tr>
+                            <td>Subject</td>
+                            <td> : @Model.Subject</td>
+                        </tr>
+                        <tr>
+                            <td>Attachments</td>
+                            <td> : @Model.NotificationAttachmentName</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr>
+
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        @Html.Raw(Model.Contents)
+                    </div>
+                </div>
+            </div>
+       
+    </main>
+
+</body>
+</html>

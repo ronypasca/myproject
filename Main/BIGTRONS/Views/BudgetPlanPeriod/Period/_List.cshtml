@@ -1,0 +1,170 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<BudgetPlanVersionPeriodVM>
+@{
+    var X = Html.X();
+    string sPageName = "BudgetPlanVersionPeriod";
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 350;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(BudgetPlanVersionPeriodVM.Prop.BudgetPlanID.Name, "App.BudgetPlanID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(BudgetPlanVersionPeriodVM.Prop.BudgetPlanVersion.Name, "App.BudgetPlanVersion.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null,null, true, false, false, null, oParamList,null,"addBudgetPlanVersionPeriod");
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Selected", "App.grdBudgetPlanVersionPeriod.getSelection()[0].data", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListBudgetPlanVersionPeriod", "App.grdBudgetPlanVersionPeriod.getRowsValues()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteBudgetPlanVersionPeriodFinish");
+
+    <script>
+
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlanVersionPeriod()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdBudgetPlanVersionPeriod();
+        });
+
+        var resizeGrdBudgetPlanVersionPeriod = function () {
+            if (App.grdBudgetPlanVersionPeriod != null)
+                App.grdBudgetPlanVersionPeriod.updateLayout();
+              App.grdBudgetPlanVersionPeriod.setHeight($(window).height() - App.grdBudgetPlanVersionPeriod.getY() - (App.grdBudgetPlanVersionPeriod.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        var selectionChangeBudgetPlanVersionPeriod = function (length) {
+            App.ButtonDeleteBudgetPlanVersionPeriod.setDisabled(length < 1);
+            App.ButtonAddBudgetPlanVersionVendor.setDisabled(length < 1);
+           
+        };
+
+        var deleteBudgetPlanVersionPeriodFinish = function (result) {
+            var _result = JSON.parse(result.responseText).result;
+            if (_result == "" || _result == undefined){
+                App.grdBudgetPlanVersionPeriod.getStore().remove(App.grdBudgetPlanVersionPeriod.getSelectionModel().getSelection());
+            }
+            
+        };
+
+
+        var addBudgetPlanVersionPeriod = function(responseText,resultObj){
+            var BudgetPlanVersionPeriod = resultObj.result;
+            App.grdBudgetPlanVersionPeriod.store.add(new ModelBudgetPlanVersionPeriod({
+                BudgetPlanID: BudgetPlanVersionPeriod.BudgetPlanID,
+                BudgetPlanVersion: BudgetPlanVersionPeriod.BudgetPlanVersion,
+                BudgetPlanVersionPeriodID: BudgetPlanVersionPeriod.BudgetPlanVersionPeriodID,
+                BudgetPlanPeriodID: BudgetPlanVersionPeriod.BudgetPlanPeriodID,
+                BudgetPlanPeriodDesc: BudgetPlanVersionPeriod.BudgetPlanPeriodDesc,
+                StatusID:BudgetPlanVersionPeriod.StatusID,
+                StatusDesc:BudgetPlanVersionPeriod.StatusDesc,
+                PeriodVersion :BudgetPlanVersionPeriod.PeriodVersion
+            }));
+        };
+
+        var loadGridBudgetPlanVersionVendor = function (budgetPlanVersionPeriodID) {
+            var store = App.grdBudgetPlanVersionVendor.store;
+            store.clearFilter();
+            if(budgetPlanVersionPeriodID!=null){
+                store.filterBy(function(row, id){
+                    return row.get('BudgetPlanVersionPeriodID') === budgetPlanVersionPeriodID;
+                });
+            }else
+            {
+                store.filterBy(function(row, id){
+                    return row.get('BudgetPlanVersionPeriodID') === "";
+                });
+            }
+
+        };
+    </script>
+    
+}
+@(
+
+    X.GridPanel()
+        .ID("grdBudgetPlanVersionPeriod")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Single)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = (!isDisableButton ? "selectionChangeBudgetPlanVersionPeriod(selected.length)" : "");
+            oListener.Select.Handler = "loadGridBudgetPlanVersionVendor(App.grdBudgetPlanVersionPeriod.getSelection()[0].data.BudgetPlanVersionPeriodID)";
+        })
+        .Store(
+                X.Store()
+                .AutoLoad(true)
+                .RemoteSort(false)
+                .RemotePaging(true)
+                .RemoteFilter(true)
+                .PageSize(iPageSize)
+                .DataSource(Model)
+                .Model(
+                    X.Model()
+                    .Name("ModelBudgetPlanVersionPeriod")
+                    .Fields(
+                        X.ModelField().Name(Model, model => model.BudgetPlanPeriodID),
+                        X.ModelField().Name(Model, model => model.BudgetPlanID),
+                        X.ModelField().Name(Model, model => model.BudgetPlanVersion),
+                        X.ModelField().Name(Model, model => model.BudgetPlanVersionPeriodID),
+                        X.ModelField().Name(Model, model => model.StatusID),
+                        X.ModelField().Name(Model, model => model.StatusDesc),
+                        X.ModelField().Name(Model, model => model.BudgetPlanPeriodDesc),
+                        X.ModelField().Name(Model, model => model.PeriodVersion)
+                    )
+                )
+            )
+            .ColumnModel(
+                X.Column()
+                .Text(BudgetPlanVersionPeriodVM.Prop.PeriodVersion.Desc)
+                .DataIndex(Model, model => model.PeriodVersion)
+                .Flex(1),
+                X.Column()
+                .Text(BudgetPlanVersionPeriodVM.Prop.BudgetPlanPeriodDesc.Desc)
+                .DataIndex(Model, model => model.BudgetPlanPeriodDesc)
+                .Flex(3),
+                X.Column()
+                .Text(BudgetPlanVersionPeriodVM.Prop.StatusDesc.Desc)
+                .DataIndex(Model, model => model.StatusDesc)
+                .Flex(1),
+                X.Column()
+                .Text(BudgetPlanVersionPeriodVM.Prop.StatusID.Desc)
+                .DataIndex(Model, model => model.StatusID)
+                .Hidden(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd.Disabled(isDisableButton),
+                btnDelete.Disabled(true)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+
+)

@@ -1,0 +1,179 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ParameterVM
+@{
+   
+    var X = Html.X();
+    string sPageName = "Parameter";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectParameterBrowse('" + ViewData["Control" + ParameterVM.Prop.ParameterID.Name]
+        + "', '" + ViewData["Control" + ParameterVM.Prop.ParameterDesc.Name]
+        + "', '" + ViewData["ControlgrdParameter"]
+        + "', App.grdParameterBrowse.getRowsValues({selectedOnly:true})[0]['" + ParameterVM.Prop.ParameterID.Name + "']"
+        + ", App.grdParameterBrowse.getRowsValues({selectedOnly:true})[0]['" + ParameterVM.Prop.ParameterDesc.Name + "']"
+        + ");";
+    
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdParameterBrowse()", 1);
+        });
+        
+        $(window).resize(function () {
+            resizeGrdParameterBrowse();
+        });
+
+               resizeGrdParameterBrowse = function () {
+            if (App.grdParameterBrowse != null)
+                App.grdParameterBrowse.setHeight($(window).height() - App.grdParameterBrowse.getY() - (App.grdParameterBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionParameterChange = function (length) {
+            App.ButtonSelectParameter.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ParameterID, ParameterDesc) {
+            filter.fields[0].items.items[0].setValue(ParameterID);
+            filter.fields[1].items.items[0].setValue(ParameterDesc);
+        };
+
+        selectParameterBrowse = function (ControlParameterID, ControlParameterDesc, ControlgrdParameter, ParameterID, ParameterDesc) {
+           if (Ext.getCmp(ControlParameterID) != undefined) {
+                Ext.getCmp(ControlParameterID).setValue(ParameterID);
+                Ext.getCmp(ControlParameterID).originalValue = ParameterID;
+            }
+            if (Ext.getCmp(ControlParameterDesc) != undefined) {
+                Ext.getCmp(ControlParameterDesc).setValue(ParameterDesc);
+                Ext.getCmp(ControlParameterDesc).originalValue = ParameterDesc;
+            }
+            if (Ext.getCmp(ControlgrdParameter) != undefined) {
+                var s = App.grdParameterBrowse.getRowsValues({ selectedOnly: true });
+                var allrow = Ext.getCmp(ControlgrdParameter).getRowsValues({ selectedOnly: false });
+                var totalRow = s.length;
+                var matchParamID = false;
+                for(x=0;x<s.length;x++)
+                {
+                    for(n=0;n<allrow.length;n++)
+                    {
+                        if(s[x].ParameterID == allrow[n].ParameterID)
+                        {
+                            matchParamID = true;
+                            break;
+                        }
+                    } 
+                    if (!matchParamID) {
+                        Ext.getCmp(ControlgrdParameter).store.add(new ModelItemGroupParameter({
+                            ParameterID: s[x].ParameterID,
+                            ParameterDesc: s[x].ParameterDesc
+                        }));
+
+                    }
+                    else {
+                        matchParamID = false;
+                    }
+                }
+            }
+             App.WinBrowseParameter.close();
+        };   
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseParameter")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdParameterBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionParameterChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[ParameterVM.Prop.ParameterID.Name].ToString() + "', '" + ViewData[ParameterVM.Prop.ParameterDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "Parameter"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[ParameterVM.Prop.ParameterID.Name].ToString() == "" && ViewData[ParameterVM.Prop.ParameterDesc.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ParameterID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ParameterVM.Prop.ParameterID.Desc)
+            .DataIndex(Model, model => model.ParameterID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ParameterVM.Prop.ParameterDesc.Desc)
+            .DataIndex(Model, model => model.ParameterDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

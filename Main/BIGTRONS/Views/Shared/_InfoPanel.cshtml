@@ -1,0 +1,23 @@
+﻿@using com.SML.BIGTRONS.Controllers
+@{
+    var X = Html.X();
+
+    <script>
+        $(window).resize(function () {
+            resetPMessage();
+        });
+
+        resetPMessage = function () {
+            App.PMessage.updateLayout(true);
+        }
+    </script>
+}
+@(X.Panel()
+    .ID("PMessage")
+    .Bin(
+        X.InfoPanelQueue()
+        .Name("IPMessage")
+        .AlignmentSpec("c-c")
+        .Container("#{PMessage}")
+    )
+)

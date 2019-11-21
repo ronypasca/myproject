@@ -1,0 +1,104 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemVM>
+@{
+    ViewBag.Title = "Item";
+    var X = Html.X();
+    string sPageName = "HomeItem";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    <script>
+        var sTitleItemPrice = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizegrdItemFromFileUpload()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizegrdItemPriceFromFileUpload();
+        });
+
+        resizegrdItemFromFileUpload = function () {
+            if (App.grdItemFromFileUpload != null)
+                App.grdItemFromFileUpload.updateLayout();
+                /*App.grdItemPriceFromFileUpload.setHeight($(window).height() - App.grdItemPriceFromFileUpload.getY() - (App.grdItemPriceFromFileUpload.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeItem = function (length) {
+
+        };
+
+        deleteSuccess = function () {
+            App.grdItemFromFileUpload.getStore().reload();
+        };
+
+        deleteRow = function()
+        {
+            App.grdItemFromFileUpload.getStore().remove(App.grdItemFromFileUpload.getSelectionModel().getSelection());
+        };
+
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdItemFromFileUpload")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+    )
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelItem")
+                .Fields(
+                    X.ModelField().Name(Model, model => model.ItemID),
+                    X.ModelField().Name(Model, model => model.ItemDesc),
+                    X.ModelField().Name(Model, model => model.ItemGroupID),
+                    X.ModelField().Name(Model, model => model.UoMID),
+                    X.ModelField().Name(Model, model => model.IsActive)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column().Text("Item").Flex(3)
+        .Columns(
+            X.Column().Text(ItemVM.Prop.ItemID.Desc).DataIndex(Model, model => model.ItemID).Flex(1),
+            X.Column().Text(ItemVM.Prop.ItemDesc.Desc).DataIndex(Model, model => model.ItemDesc).Flex(1),
+            X.Column().Text(ItemVM.Prop.ItemGroupID.Desc).DataIndex(Model, model => model.ItemGroupID).Flex(1),
+            X.Column().Text(ItemVM.Prop.UoMID.Desc).DataIndex(Model, model => model.UoMID).Flex(1),
+            X.Column().Text(ItemVM.Prop.IsActive.Desc).DataIndex(Model, model => model.IsActive).Flex(1)
+        )
+    ,
+    X.Column().Text("Item Parameter").Flex(1)
+    .Columns(
+        X.Column().Text(ItemParameterVM.Prop.ParameterID.Desc).DataIndex(Model, model => model.ParameterID).Flex(1),
+        X.Column().Text(ItemParameterVM.Prop.Value.Desc).DataIndex(Model, model => model.Value).Flex(1)
+    )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

@@ -1,0 +1,425 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Controllers
+@model FPTVM
+@{
+    ViewBag.Title = "Parameter";
+    var X = Html.X();
+    //int iTreeMinHeight = 200;
+    string sPageName = "_SubItemGroup";
+    string sToolbarPaddingSpec = "10 10 10 0";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    //bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    //string HandlerSelection = isDisableButton ? "" : "getSelectionRow(selected.length)";
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+    Button.Builder btnBrowseVendor = global_asax.Button(Buttons.ButtonBrowse, "Vendor", "", "",true);
+    Button.Builder btnEraseVendor = global_asax.Button(Buttons.ButtonErase, "Vendor", "", "", true);
+    //Button.Builder btnEraseTCType = global_asax.Button(Buttons.ButtonErase, "TCType", "", "", true);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+
+        var iTreeInitHeight = -1;
+
+        $(document).ready(function () {
+            setTimeout("resizeTreeGrid()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeTreeGrid();
+            resizeContainer();
+        });
+
+        var viewReady = function (grid, eOpts) {
+            setTimeout("afterFirstLoadTree()", 1);
+        };
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelNegoConfig.getHeight();
+            resizeTreeBudgetPlanTemplate();
+            resizeContainer();
+        };
+
+        var resizeTreeBudgetPlanTemplate = function () {
+            if (App.treePanelNegoConfig != null) {
+                var iHeight = $(window).height() - (App.treePanelNegoConfig.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelNegoConfig.setHeight(iHeight);
+            }
+        };
+
+        resizeTreeGrid = function () {
+            if (App.treePanelNegoConfig != null)
+                App.treePanelNegoConfig.setHeight($(window).height() - App.treePanelNegoConfig.getY() - (App.treePanelNegoConfig.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+        var renderEndTime = function(record){
+          
+            /*return record.data.EndDateHours;*/
+        };
+        var beforeEditBudgetPlanVersionStructure = function (editor, e) {
+           
+            /*if(hasChild){
+                if(isBOI && e.record.data.children[0].isboi)return false;
+            }*/
+        };
+        var editBudgetPlanVersionStructure = function (editor, e) {
+
+            
+           
+
+        };
+        var GetListBidEntry = function(){
+            return App.treePanelNegoConfigUpload.getRootNode().data.listvendorstructure/*
+            var node = App.treePanelNegoConfigUpload.getRootNode().childNodes;
+            return node[0].data.listvendorstructure;*/
+        };
+
+        var GetListBidFromUpload = function(){
+            return App.treePanelNegoConfigUpload.getRootNode().data.liststructure/*
+            var node = App.treePanelNegoConfigUpload.getRootNode().childNodes;
+            return node[0].data.liststructure;*/
+          
+        };
+        var GetListProject = function(){
+            var node = App.treePanelNegoConfig.getRootNode().childNodes;  
+            
+
+            if(App.isFromUpload.getValue()){
+                node =[];
+                node.push(App.treePanelNegoConfigUpload.getRootNode());            
+            }
+            var data = [];
+            for(var x in node)
+            {
+                /*if(node[x].data.include){*/                   
+                    data = GetChildListProject(data,node[x].childNodes);
+                    data.push(node[x].data);
+                /*}*/
+            };
+            return data;
+        };
+        var GetChildListProject = function(data,node){        
+            if(node!=undefined){
+                for(var x in node)
+                {
+                    if(node[x].data.include){
+                        data = GetChildListProject(data,node[x].childNodes);
+                        data.push(node[x].data);
+                    }
+                };
+            }
+            return data;
+        };
+        var bindBefore = function(a,b,c,d,e){
+            
+        };
+        var bindingCell = function(a,b,c,d){
+            
+        };
+        var beforeedittc = function(a,b,c,d) {
+            var ReNego = "@bool.Parse(ViewData["isRenegotiation"].ToString().ToLower())";   
+           
+            if(ReNego.toLowerCase()=="true"){
+                debugger;
+                return false;
+            };
+
+        if((b.record.data.itemtype == "BudgetPlanID" && b.column.dataIndex=="tctype")
+            ||  (b.record.data.itemtype == "VendorID" && b.column.dataIndex=="include"))
+            return true;
+
+            
+                
+           return false;
+        };
+
+        var binDisTC =function(value, metaData, record, rowIndex, colIndex, store, view) {
+           
+            var cssPrefix = Ext.baseCSSPrefix,
+                cls = cssPrefix + '';
+            var ret = "";
+            if (value) {
+                cls += ' ' + cssPrefix + '';
+            }
+                      
+            ret = '<span class="' + cls + '" role="button" >'+ value+'</span>';
+            if(Ext.isEmpty(value))
+            {
+                ret = '<span class="' + cls + '" role="button" ></span>';
+            }
+           
+                  
+            return ret
+        };
+        var renderingCheckBox = function(value, metaData, record, rowIndex, colIndex, store, view) {
+            var cssPrefix = Ext.baseCSSPrefix,
+                cls = cssPrefix + 'grid-checkcolumn';
+            var ret = "";
+            if (value) {
+                cls += ' ' + cssPrefix + 'grid-checkcolumn-checked';
+            }
+            if (record.data.itemtype=="VendorID") {
+                ret = '<span class="' + cls + '" role="button" ></span>';
+            }
+            return ret;
+        };
+        var bindBefore= function(checkcolumn, rowIndex, checked, eOpts) {
+            var row = this.getView().getRow(rowIndex),
+                record = this.getView().getRecord(row);           
+            
+            if(!eOpts)
+            {                
+                for(var o =0;o<checked.parentNode.childNodes.length;o++)
+                {
+                    if(checked.parentNode.childNodes[o].data.include && checked.parentNode.childNodes[o].data.id != record.data.id ){ 
+                        eOpts=true;
+                        break;
+                    }
+                }
+            }
+            checked.parentNode.data.include = eOpts;
+            checked.parentNode.commit();
+            checked.parentNode.parentNode.data.include = eOpts;
+            checked.parentNode.parentNode.commit();
+            return (record.get('itemtype')=="VendorID");
+        };
+        var bindBeforeUpload= function(checkcolumn, rowIndex, checked, eOpts) {
+            var row = this.getView().getRow(rowIndex),
+                record = this.getView().getRecord(row);           
+            
+            if(!eOpts)
+            {                
+                for(var o =0;o<checked.parentNode.childNodes.length;o++)
+                {
+                    if(checked.parentNode.childNodes[o].data.include && checked.parentNode.childNodes[o].data.id != record.data.id ){ 
+                        eOpts=true;
+                        break;
+                    }
+                }
+            }
+            
+            checked.parentNode.data.include = eOpts;
+            checked.parentNode.commit();
+            return (record.get('itemtype')=="VendorID");
+        };
+        var bindingCell = function(a,b,c,d,e)
+        {
+           
+        };
+        var changetype = function(a,b,c,d){};
+    </script>
+}
+
+@(   
+        X.TreePanel()
+               .ID("treePanelNegoConfig")
+                           .Expand(true)
+                           .MultiSelect(false)
+                           .WidthSpec("100%")
+                           .RootVisible(false)
+                           .Border(false)
+                            .Padding(iBodyPadding)
+                            .MinHeight(iGridMinHeight)
+                           .UseArrows(true).RowLines(true)
+                           .Animate(false)
+                           .AutoLoad(false)
+                           .Fields( X.ModelField().Name("number"),
+                                    X.ModelField().Name("itemdesc"),
+                                    X.ModelField().Name("itemtype"),
+                                    X.ModelField().Name("value"),
+                                    X.ModelField().Name("tctype"),
+                                    X.ModelField().Name("tctypedesc"),
+                                    X.ModelField().Name("include")
+                                    )
+                           .ColumnModel(
+                                   X.Column()
+                                      .Text("No.")
+                                      .Flex(0).Sortable(false)
+                                      .DataIndex("number")
+                                      .Draggable(false).Hidden(false),
+                                  X.TreeColumn()
+                                      .Draggable(true)
+                                      .Text("Item")
+                                      .Flex(4).Sortable(false)
+                                      .DataIndex("itemdesc"),
+                                   //X.Column()
+                                   //     .Text("TC Type")
+                                   //     .DataIndex("tctypedesc")
+                                   //     .Flex(2)
+                                   //     .Editor(
+                                   //              X.ComboBox()
+                                   //             .DisplayField(TCTypesVM.Prop.TCTypeDesc.Name)
+                                   //             .ValueField(TCTypesVM.Prop.TCTypeID.Name)
+                                   //             .Store(
+                                   //                 X.StoreForModel()
+                                   //                 .Proxy(X.AjaxProxy()
+                                   //                     .Url(Url.Action("/GetTCProjectTypeList"))
+                                   //                     .Reader(X.JsonReader().RootProperty("data"))
+                                   //                 )
+                                   //                 .AutoLoad(true)
+                                   //             ).AllowBlank(true)
+                                   //      )//.Renderer("binDisTC")
+                                   //      ,
+                                   X.Column()
+                                        .Text("Business Unit")                                        
+                                        .DataIndex("tctype")
+                                        .Flex(2)
+                                       .Hidden(true)
+                                        .Editor(X.ComboBox()
+                                                .DisplayField(BusinessUnitVM.Prop.BusinessUnitDesc.Name)
+                                                .ValueField(BusinessUnitVM.Prop.BusinessUnitID.Name)
+                                                .Editable(false)
+                                                .Store(
+                                                    X.StoreForModel()
+                                                    .Proxy(X.AjaxProxy()
+                                                        .Url(Url.Action("/GetBusinessUnit"))
+                                                        .Reader(X.JsonReader().RootProperty("data"))
+                                                    )
+                                                    .AutoLoad(true)
+                                                )
+                                                .AllowBlank(true)
+                                         ).Renderer("binDisTC")
+                                         ,
+                                    X.CheckColumn()
+                                       .Text("Include")
+                                       .Flex(1)
+                                       .Editable(!bool.Parse(ViewData["isRenegotiation"].ToString()))
+                                       .Listeners(l =>
+                                       {
+                                           l.BeforeCheckChange.Fn = "bindBefore";
+                                           //l.CheckChange.Fn = "bindBefore";
+                                       })
+                                       .Renderer("renderingCheckBox")
+                                       .DataIndex("include")
+                                       .Draggable(true)
+                                       .Hidden(false)
+                                       .Disabled(false),
+                                  X.CheckColumn().Hidden(true)
+                                      .Text("Include")
+                                      .Flex(1).Editable(true)
+                                      .DataIndex("include")
+                                      .Disabled(false)
+                           )
+                           .MultiSelect(false)
+                           .Root(new NegotiationConfigurationsController().TreeNegoConfig(ViewData[General.EnumDesc(Params.Action)].ToString(),null,Model.ListProject))
+                           .Plugins(
+                                 X.CellEditing()
+                                     .ClicksToEdit(1)
+                                     .Listeners(l =>
+                                       {
+                                           l.BeforeEdit.Fn = "beforeedittc";
+                                           //l.CheckChange.Fn = "bindBefore";
+                                       })
+                                     .ID("rowEditorBudgetPlanVersionStructure")
+                           )
+                           .TopBar(
+                           X.Toolbar()
+                           .PaddingSpec(sToolbarPaddingSpec)
+                           .Items(
+                           //btnAddVersion.Disabled(isDisableButton),
+                           //btnDeleteversion.Disabled(true).Handler("setsuccesDelete()"),
+                           //btnCollapse.Handler("handleCollapseExpandAll").Hidden(true),
+                           //btnExpand.Handler("handleCollapseExpandAll")
+                           )
+                         )
+                           .BottomBar(
+                           X.StatusBar().AutoClear(1500)
+                           )
+
+),
+@(
+            X.TreePanel()
+                   .ID("treePanelNegoConfigUpload")
+                            .Padding(iBodyPadding)
+                            .MinHeight(iGridMinHeight)
+                               .Expand(true)
+                               .Hidden(true)
+                               .MultiSelect(false)
+                               .WidthSpec("100%")
+                               .RootVisible(true)
+                               .Border(false)
+                               .UseArrows(true).RowLines(true)
+                               .Animate(true)
+                               .Fields(X.ModelField().Name("number"),
+                                        X.ModelField().Name("itemdesc"),
+                                        X.ModelField().Name("itemtype"),
+                                        X.ModelField().Name("value"),
+                                        X.ModelField().Name("tctype"),
+                                        X.ModelField().Name("include")
+                                        )
+                               .ColumnModel(
+                                       X.Column()
+                                          .Text("No.")
+                                          .Flex(0).Sortable(false)
+                                          .DataIndex("number")
+                                          .Draggable(false).Hidden(false),
+                                      X.TreeColumn()
+                                          .Draggable(true)
+                                          .Text("Item")
+                                          .Flex(4).Sortable(false)
+                                          .DataIndex("itemdesc")
+                                          .Listeners(l =>
+                                          {
+                                              l.AfterRender.Fn = "changetype";
+                                          }),
+                                       X.Column()
+                                            .Text("TC Type")
+                                            .DataIndex("tctype")
+                                            .Flex(2).Hidden(true)
+                                            .Editor(
+                                                     X.ComboBox()
+                                                    .DisplayField(TCTypesVM.Prop.TCTypeDesc.Name)
+                                                    .ValueField(TCTypesVM.Prop.TCTypeID.Name)
+                                                    .Store(
+                                                        X.StoreForModel()
+                                                        .Proxy(X.AjaxProxy()
+                                                            .Url(Url.Action("/GetTCProjectTypeList"))
+                                                            .Reader(X.JsonReader().RootProperty("data"))
+                                                        )
+                                                        .AutoLoad(true)
+                                                    )
+                                                    .AllowBlank(true)
+                                             ).Renderer("binDisTC")
+                                            ,
+                                    X.CheckColumn()
+                                       .Text("Include")
+                                       .Flex(1).Editable(true)
+                                       .Listeners(l =>
+                                       {
+                                           l.BeforeCheckChange.Fn = "bindBeforeUpload";
+                                       })
+                                       .Renderer("renderingCheckBox")
+                                       .DataIndex("include")
+                                       .Draggable(true)
+                                       .Hidden(true)
+                                       .Disabled(true),
+                                    X.CheckColumn()
+                                          .Text("Include")
+                                          .Hidden(true)
+                                          .Flex(1).Editable(true)
+                                          .DataIndex("include")
+                                          .Disabled(false)
+                               )
+                               .MultiSelect(false)
+                               .Root(new NegotiationConfigurationsController().GetNodeUpload(Model.ByUpload,new List<NegotiationBidStructuresVM>(), new List<List<NegotiationBidEntryVM>>(), Model.ListBFPTVendorParticipantsVM,Model.TCTypeUpload,""))
+                           .Plugins(
+                                 X.CellEditing()
+                                     .ClicksToEdit(1)
+                                     .ID("rowEditorBudgetPlanVersionStructure2")
+                            )
+                           .TopBar(
+                           X.Toolbar()
+                           .PaddingSpec(sToolbarPaddingSpec)
+                           .Items(
+                           )
+                         )
+                           .BottomBar(
+                           X.StatusBar().AutoClear(1500)
+                           )
+
+)

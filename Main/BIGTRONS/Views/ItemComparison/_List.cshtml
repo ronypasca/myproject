@@ -1,0 +1,190 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemComparisonVM
+@{
+    ViewBag.Title = "Item Comparison";
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonAdd);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdItemComparison.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdItemComparison.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdItemComparison.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, null, true, false, false, null, oParamList, null, "deleteSuccess()");
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ItemComparisonID", "App.grdItemComparison.getRowsValues({selectedOnly:true})[1].ItemID", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemComparison()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemComparison();
+        });
+
+        resizeGrdItemComparison = function () {
+            if (App.grdItemComparison != null)
+                App.grdItemComparison.setHeight($(window).height() - App.grdItemComparison.getY() - (App.grdItemComparison.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        var GetSelectedData=function()
+        {
+            var data=App.grdItemComparison.getRowsValues({selectedOnly:true})[0];
+            var ItemComparisonDesc=String(data.ItemComparisonDesc).split('<br/>').join(',');
+            data.ItemComparisonDesc=ItemComparisonDesc;
+            return data;
+        };
+
+        var GetSelectedDataAll=function()
+        {
+            var data=App.grdItemComparison.getRowsValues({selectedOnly:true});
+
+            for (var i = 0; i < data.length; i++) {
+                data[i].ItemComparisonDesc=String(data.ItemComparisonDesc).split('<br/>').join(',');
+            }
+
+            return data;
+        };
+
+        selectionChange = function (length) {
+            App.ButtonDetailHome.setDisabled(length != 1);
+            App.ButtonUpdateHome.setDisabled(length != 1);
+            App.ButtonDeleteHome.setDisabled(length < 1);
+            App.ButtonExportHome.setDisabled(length != 1);
+        };
+
+        deleteSuccess = function () {
+            App.grdItemComparison.getStore().reload();
+        };
+
+    </script>
+}
+@(
+        X.GridPanel()
+        .ID("grdItemComparison")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(olist =>
+        {
+            olist.SelectionChange.Handler = "selectionChange(selected.length)";
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("Read"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(true)
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.ItemComparisonID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ItemComparisonVM.Prop.ItemComparisonID.Desc)
+            .DataIndex(Model, model => model.ItemComparisonID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemComparisonVM.Prop.ItemComparisonDesc.Desc)
+            .DataIndex(Model, model => model.ItemComparisonDesc)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ItemComparisonVM.Prop.UserID.Desc)
+            .DataIndex(Model, model => model.UserID)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnAdd,
+                btnDetail.Disabled(true),
+                btnUpdate.Disabled(true),
+                btnDelete.Disabled(true)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+)
+

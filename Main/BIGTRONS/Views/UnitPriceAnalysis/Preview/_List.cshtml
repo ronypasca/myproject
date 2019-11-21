@@ -1,0 +1,640 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemVersionChildVM>
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 250;
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPageName = "Simulation";
+
+    Button.Builder btnBack = global_asax.Button(Buttons.ButtonPrevious, null, "Back", string.Empty);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(ItemVersionVM.Prop.Version.Name, "App.grdItemVersionAHSReport.getRowsValues({selectedOnly:true})[0].Version", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemVersionVM.Prop.ItemID.Name, "App.grdItemVersionAHSReport.getRowsValues({selectedOnly:true})[0].ChildItemID", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Selected", "App.grdItemVersionAHSReport.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, General.EnumDesc(Buttons.ButtonBrowse) + "ReportAHSAlternative", true, false, false, null, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("Value" + ItemPriceVM.Prop.ItemID.Name, "App.grdItemVersionAHSReport.getSelection()[0].data.ChildItemID", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.RegionID.Name, "App.RegionID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ProjectID.Name, "App.ProjectID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.ClusterID.Name, "App.ClusterID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemPriceVM.Prop.UnitTypeID.Name, "App.UnitTypeID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnChangeSupplier = global_asax.Button(Buttons.ButtonUpdate, "ItemPriceVendor", "Change Supplier", "../Item/" + General.EnumDesc(Buttons.ButtonBrowse) + "ItemPriceVendorPeriod", true, false, false, null, oParamList);
+
+    Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, sPageName, null, string.Empty, true);
+
+    /* treeStructure */
+    <script>
+
+        var allowRefreshTree = false;
+
+        var treeStructureTopBarAfterRender = function (item) {
+            if (Ext.getCmp("ButtonDetailStructure") != undefined) {
+                App.ButtonDetailStructure.setDisabled(true);
+            }
+
+            if (Ext.getCmp("ButtonUpdateStructure") != undefined) {
+                App.ButtonUpdateStructure.setDisabled(true);
+            }
+
+            if (Ext.getCmp("ButtonDeleteStructure") != undefined) {
+                App.ButtonDeleteStructure.setDisabled(true);
+            }
+        };
+
+
+        var selectionChangePreview = function (length) {
+            try {
+                if (length > 0) {
+                    if (Ext.getCmp("ButtonUpdateItemPriceVendor") != undefined) {
+                        App.ButtonUpdateItemPriceVendor.setDisabled(false);
+                    }
+
+                    if (Ext.getCmp("ButtonUpdateSimulation") != undefined) {
+                        App.ButtonUpdateSimulation.setDisabled(false);
+                    }
+
+                } else {
+                    App.ButtonUpdateItemPriceVendor.setDisabled(true);
+                    App.ButtonUpdateSimulation.setDisabled(true);
+                }
+
+            } catch (e) {
+                console.log(e, "Error");
+                console.log(record, "Record");
+                console.log(view, "View");
+            }
+        };
+
+        var StructureRowDblClick = function (view, record, element, rowIndex, e, eOpts) {
+
+            return false;
+        };
+
+        var StructureItemInsert = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+            if (allowRefreshTree) {
+                generateFormulDesc(App.treeStructure.store.getNodeById("root"));
+            }
+            App.treeStructure.store.getNodeById("root").collapse();
+            App.treeStructure.store.getNodeById("root").expand();
+            /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+        };
+
+        var StructureItemAppend = function (view, node, refNode, eOpts) {
+            ReSequence(view);
+            if (allowRefreshTree) {
+                generateFormulDesc(App.treeStructure.store.getNodeById("root"));
+                App.treeStructure.store.getNodeById("root").collapse();
+                App.treeStructure.store.getNodeById("root").expand();
+                allowRefreshTree=false;
+            }
+            /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+        };
+
+        var StructureItemRemove = function (view, node) {
+            ReSequence(view);
+            generateFormulDesc(App.treeStructure.store.getNodeById("root"));
+        };
+
+        var ReSequence = function (NodeTree) {
+            if (NodeTree.childNodes.length == 0) {
+
+            } else {
+                for (var i = 0; i < NodeTree.childNodes.length; i++) {
+                    var oldSequenceDesc = String(NodeTree.childNodes[i].data.sequencedesc);
+                    NodeTree.childNodes[i].data.sequence = i + 1;
+                    NodeTree.childNodes[i].data.sequencedesc = NodeTree.data.sequencedesc + '.' + (i + 1).toString();
+                    NodeTree.childNodes[i].data.sequencedesc = NodeTree.childNodes[i].data.sequencedesc.replace('undefined.', '');
+
+                    if (NodeTree.childNodes[i].childNodes.length > 0) {
+                        ReSequence(NodeTree.childNodes[i]);
+                    }
+                    NodeTree.commit();
+                }
+            }
+        };
+
+        var StructureBeforeItemExpand = function (view, node) {
+            if (view.childNodes.length > 0) {
+                return true;
+            }
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/LoadMyChild',
+                method: 'POST',
+                params: {
+                    ChildItemID: view.data.childitemid,
+                    ChildVersion: view.data.childversion,
+                    Sequence: view.data.sequence,
+                    SequenceDesc: view.data.sequencedesc
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    if (jsonData.children.length > 0) {
+                        for (var i = 0; i < jsonData.children.length; i++) {
+                            view.appendChild(jsonData.children[i]);
+                        }
+                    }
+                    else {
+                        view.data.expandable = false;
+                        view.data.expanded = false;
+                        view.data.leaf = true;
+                    }
+
+                    view.commit();
+                    /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+                },
+                failure: function (response) {
+                    showErrorAlert("Unit Price Analysis - Load Child", response);
+                }
+            });
+
+        };
+
+        var ReplaceHaveCode = function (view, data) {
+            var parentNode = view.parentNode;
+            while (parentNode != null) {
+                for (var i = 0; i < parentNode.childNodes.length; i++) {
+                    var child = parentNode.childNodes[i];
+                    if (data.formula.length > 0) {
+                        if (data.formuladesc == "") {
+                            data.formuladesc = data.formula.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                        } else {
+                            data.formuladesc = data.formuladesc.replace(parentNode.childNodes[i].data.itemversionchildid, parentNode.childNodes[i].data.childitemid + '-' + parentNode.childNodes[i].data.childversion + '-' + parentNode.childNodes[i].data.sequencedesc);
+                        }
+                    }
+                }
+                parentNode = parentNode.parentNode;
+            }
+            return data;
+        };
+
+        var StructureNodeDragOver = function (targetNode, position, dragData) {
+            if (position == 'append') {
+                return false;
+            }
+            allowRefreshTree = targetNode.parentNode.id == 'root' && dragData.records[0].parentNode.id == 'root';
+            return allowRefreshTree && @(ViewData[General.EnumDesc(Params.Action)].ToString()!=General.EnumDesc(Buttons.ButtonDetail)?"true":"false");
+        };
+
+        var GetStructure = function () {
+            var data = [];
+            for (var i = 0; i < App.treeStructure.getRootNode().childNodes.length; i++) {
+                data.push(App.treeStructure.getRootNode().childNodes[i].data);
+            }
+            return data;
+        };
+    </script>
+
+    /* public method */
+    <script>
+
+        var CircularChecking = function (childVersion) {
+            Ext.Ajax.request({
+                url: '../UnitPriceAnalysis/CircularChecking',
+                method: 'POST',
+                params: {
+                    ChildItemID: childVersion.childitemid,
+                    ChildVersion: childVersion.childversion
+                },
+                success: function (response) {
+                    console.log("respone-circularChecking", response);
+                },
+                failure: function (response) {
+                    showErrorAlert("ERROR Load Child", response);
+                }
+            });
+        };
+
+        var deleteStructureConfirm = function () {
+            Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected record?", "deleteStructure");
+        };
+
+        var deleteStructure = function (title, message, fn, scope) {
+
+            if (title == "yes") {
+                App.treeStructure.getSelection()[0].remove(true);
+                ReSequence(App.treeStructure.store.getNodeById("root"));
+                App.treeStructure.store.getNodeById("root").collapse();
+                App.treeStructure.store.getNodeById("root").expand();
+                /*duplicateTree(App.treeStructure, App.treeSimulation);*/
+            }
+
+        };
+
+        var getDeepAllChildNodes = function (node) {
+            var allNodes = new Array();
+            if (!node.hasChildNodes()) {
+                return node;
+            } else {
+                allNodes.push(node);
+                node.eachChild(function (Mynode) { allNodes = allNodes.concat(getDeepAllChildNodes(Mynode)); });
+            }
+            return allNodes;
+        };
+
+        var generateFormulDesc = function (node) {
+            var allNodesFormulaDesc = getDeepAllChildNodes(node);
+            console.log(allNodesFormulaDesc);
+            for (var i = 0; i < allNodesFormulaDesc.length; i++) {
+                var formula=String(allNodesFormulaDesc[i].data.formula);
+                if (formula != "") {
+                    formula=generateFormulDescLoop(allNodesFormulaDesc[i].parentNode,formula);
+                    allNodesFormulaDesc[i].data.formuladesc=formula;
+                }
+            }
+        };
+
+        var generateFormulDescLoop=function (node,formula) {
+            if (formula.length==0||node==null) {
+                return formula;
+            }
+            console.log(node.childNodes.length);
+            for (var item = 0; item < node.childNodes.length; item++) {
+                formula=formula.replace(node.childNodes[item].data.itemversionchildid,node.childNodes[item].data.childitemid+"-"+node.childNodes[item].data.childversion+"-"+node.childNodes[item].data.sequencedesc);
+                if (node.childNodes[item].childNodes.length>0) {
+                    formula=generateFormulDescLoop(node.childNodes[item],formula);
+                }
+            }
+            return formula;
+        };
+
+        var replaceNodeFormulDesc = function (node,oldCode,newCode) {
+            var allNodesFormulaDesc = getDeepAllChildNodes(node);
+            for (var i = 0; i < allNodesFormulaDesc.length; i++) {
+                allNodesFormulaDesc[i].data.formuladesc = String(allNodesFormulaDesc[i].data.formuladesc).replace("-"+oldCode+".","-"+newCode+".");
+            }
+        };
+
+        var ItemIDCheck = function () {
+            if (App.ItemID.value == "") {
+                showErrorAlert("Unit Price Analysis", "@(ItemVersionVM.Prop.ItemID.Desc + " " + General.EnumDesc(MessageLib.mustFill))");
+                return false;
+            } else {
+                return true;
+            }
+        };
+
+        var rendererItemDesc = function(val, metaData, record, rowIndex, colIndex, store, view) {
+            var text = val;
+
+            return text;
+        };
+        var customGridRowClass = function (record) {
+
+            if (record.data.ChildItemID =='') {
+                return "markx";
+            };
+        };
+        var renderCoefficient = function(val, metaData, record, rowIndex, colIndex, store, view) {
+            record.set("Coefficient",record.data.ChildItemID==''?null:record.data.Coefficient);
+            record.commit();
+            return (record.data.ChildItemID==''?null:record.data.Coefficient);
+        };
+
+        var renderUnitPrice = function(val, metaData, record, rowIndex, colIndex, store, view){
+            @*var unitPrice = (record.data.MaterialAmount==null?0:record.data.MaterialAmount) +
+                            (record.data.WageAmount==null?0:record.data.WageAmount) +
+                            (record.data.MiscAmount==null?0:record.data.MiscAmount);
+            record.set('UnitPrice',unitPrice);
+            record.commit();
+            return unitPrice==0?(val==0?null:val):Ext.util.Format.number(unitPrice,'@global_asax.DefaultNumberFormat');*@
+            var unitPrice = Ext.util.Format.number(record.get('UnitPrice'),'@global_asax.IntegerNumberFormat');
+            
+            return unitPrice == 0 ? null : unitPrice;
+        };
+
+        var renderTotalUnitPrice = function(val, metaData, record, rowIndex, colIndex, store, view){
+            var  totalunitPrice = Ext.util.Format.number(record.get('TotalUnitPrice'),'@global_asax.IntegerNumberFormat');
+            return totalunitPrice == 0 ? null : totalunitPrice;
+        };
+
+        var itemDblClick = function(grid, record, item, index, e, eOpts){
+            /*debugger;*/
+            var store = grid.store;
+            store.clearFilter();
+
+            console.log(record.data.ChildItemID);
+            store.filterBy(function(row, id){
+                return row.get('ItemID') === record.data.ChildItemID;
+            });
+            itemID = record.data.ItemID;
+
+            var data = grid.getRowsValues().length;
+            if (data == 0) {
+                grid.store.clearFilter();
+                grid.store.filterBy(function(row, id){
+                    return row.get('ItemID') === record.data.ItemID;
+                });
+            }
+
+            toggleBack(grid);
+        };
+
+        var beforeItemDblClick = function( grid, record, item, index, e, eOpts){
+            if(record.data.IsAHS==false) return false;         
+        };
+
+        var viewReady = function(grid){
+            var store = grid.store;
+            store.clearFilter();
+
+            store.filterBy(function(row, id){
+                return row.get('FirstLevel') === true;
+            });
+
+            toggleBack(grid);
+
+
+        };
+
+        var itemID;
+        var loadPreviousGrid = function(){
+            var store = App.grdItemVersionAHSReport.store;
+            store.clearFilter();
+
+            store.filterBy(function(row, id){
+                return row.get('ItemID') === itemID;
+            });
+
+
+            toggleBack(App.grdItemVersionAHSReport);
+        };
+        
+        var exportToExcel = function (Grid) {
+            
+            for(var x = 0; x < Grid.store.data.items.length; x++){
+                var data = Grid.store.data.items[x].data;
+                if (data.Coefficient == null || data.Coefficient == "") 
+                    data.Coefficient = " ";
+                if (data.UoMID == null || data.UoMID == "") 
+                    data.UoMID = " ";
+                if (data.UnitPrice == null || data.UnitPrice == "") 
+                    data.UnitPrice = " ";
+                if (data.TotalUnitPrice == null || data.TotalUnitPrice == null || data.TotalUnitPrice == 0) 
+                    data.TotalUnitPrice = " ";
+            }
+           
+            exportGrid(Grid, false, true, 'UnitPriceAnalysis', 'xls', 'unitpriceanalysis');
+
+        };
+
+        var toggleBack = function(grid){
+            records = grid.getRowsValues();
+            for (var i = 0; i < records.length; i++) {
+                if(records[i].FirstLevel==true)
+                    App.ButtonPrevious.setDisabled(true);
+                else
+                    App.ButtonPrevious.setDisabled(false);
+            }
+        };
+        recalculate = function(record, isgroup){
+            var Grid = App.grdItemVersionAHSReport.store.getData().getSource().getRange();
+            for(var x = 0; x < Grid.length; x++){
+                if(isgroup){
+                    if (Grid[x].data.ChildItemID != "" && Grid[x].data.ChildItemID != null){
+                        if(Grid[x].data.ChildItemID == record.ItemID){
+                            var totalitem = 0;
+                            for(var y = 0; y < Grid.length; y++){
+                                if (Grid[y].data.ItemID == Grid[x].data.ChildItemID ){
+                                    if (Grid[y].data.ChildItemID == "" || Grid[y].data.ChildItemID == null ){
+                                        totalitem += Grid[y].data.TotalUnitPrice;
+                                                                               
+                                    }
+                                    
+                                }
+                            };
+                            Grid[x].data.TotalUnitPrice = totalitem;
+                            App.grdItemVersionAHSReport.getView().refresh();
+                            recalculate(Grid[x].data, false);
+                        }
+                    }
+                }
+                else {
+                    if (Grid[x].data.ChildItemID == "" || Grid[x].data.ChildItemID == null){
+                        if(Grid[x].data.ItemID == record.ItemID){
+                            var totalgroup = 0;
+                            var ParentRowID;
+                            for(var y = 0; y < Grid.length; y++){
+                                if (Grid[y].data.ItemID == Grid[x].data.ItemID && Grid[y].data.ChildItemTypeID == Grid[x].data.ChildItemTypeID){
+                                    if (Grid[y].data.ChildItemID == "" || Grid[y].data.ChildItemID == null ){
+                                        debugger;
+                                        ParentRowID = y;
+                                    }
+                                    else{
+                                        totalgroup += Grid[y].data.TotalUnitPrice;
+                                    }
+                    
+                                }
+                            };
+                            
+                            Grid[x].data.TotalUnitPrice = totalgroup;
+                            App.grdItemVersionAHSReport.getView().refresh();
+                            recalculate(Grid[x].data,true);
+                        }
+                    }
+                    
+                }
+                
+            };
+
+        };
+        recalculateTotalUnitPrice = function(record){
+            
+            var Grid = App.grdItemVersionAHSReport.store.getData().getSource().getRange();
+            
+            var CurentID = record.ChildItemID;
+            var ParentID = record.ItemID;
+            var ItemType = record.ChildItemTypeID;
+            var totalgroup = 0;
+            var ParentRowID;
+            
+            for(var x = 0; x < Grid.length; x++){
+                if (Grid[x].data.ItemID == ParentID && Grid[x].data.ChildItemTypeID == ItemType){
+                    if (Grid[x].data.ChildItemID == "" || Grid[x].data.ChildItemID == null ){
+                        ParentRowID = x;
+                    }
+                    else{
+                        totalgroup += Grid[x].data.Coefficient * Grid[x].data.UnitPrice;
+                    }
+                    
+                }
+            };
+                        
+            Grid[ParentRowID].data.TotalUnitPrice = totalgroup;
+            App.grdItemVersionAHSReport.getView().refresh();
+            recalculate(Grid[ParentRowID].data, true);
+            calculateGrandTotal();
+            
+        };
+
+        calculateGrandTotal = function(){
+            var Grid = App.grdItemVersionAHSReport.store.getData().getSource().getRange();
+            var grandTotal = 0;
+            var grandTotalrow;
+            for (var x = 0; x < Grid.length; x++){
+                if (Grid[x].data.FirstLevel){
+                    if (Grid[x].data.ChildItemID == "" || Grid[x].data.ChildItemID == null){
+                        if (Grid[x].data.ChildItemTypeID != "" && Grid[x].data.ChildItemTypeID != null){
+                            if(Grid[x].data.TotalUnitPrice == " " || Grid[x].data.TotalUnitPrice == "")
+                                Grid[x].data.TotalUnitPrice = 0;
+                            
+                            grandTotal += parseFloat(Grid[x].data.TotalUnitPrice);
+                        }
+                        else
+                        {
+                            grandTotalrow = x;
+                        }
+                    }
+                }
+            }
+            Grid[grandTotalrow].data.TotalUnitPrice = grandTotal;
+            App.grdItemVersionAHSReport.getView().refresh();
+        }
+
+    </script>
+
+
+    <style>
+        .markx{
+            font-weight:bold;
+        }
+    </style>
+}
+@(
+    X.GridPanel()
+        .ID("grdItemVersionAHSReport")
+        .View(
+        Html.X().GridView()
+               .GetRowClass(function => function.Fn = "customGridRowClass")
+        )
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionChangePreview(selected.length)";
+            oListener.ItemDblClick.Fn = "itemDblClick";
+            oListener.BeforeItemDblClick.Fn = "beforeItemDblClick";
+            oListener.ViewReady.Fn = "viewReady";
+        })
+        .Store(
+            X.StoreForModel()
+            //.Proxy(
+            //    X.AjaxProxy()
+            //    .Url(Url.Action("Read"))
+            //    .Reader(X.JsonReader().RootProperty("data"))
+            //)
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(false)
+            //.PageSize(iPageSize)
+            .SorterFor(Model, model => model.RowNo, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+        X.Column()
+        .Text("First Lvl")
+        .Hidden(true)
+        .DataIndex(Model, model => model.FirstLevel)
+        .Flex(4),
+         X.Column()
+        .Text("Row No")
+        .Hidden(true)
+        .DataIndex(Model, model => model.RowNo)
+        .Flex(4),
+         X.Column()
+        .Text(ItemVersionChildVM.Prop.ItemID.Desc)
+        .DataIndex(Model, model => model.ItemID)
+        .Hidden(true)
+        .Flex(4),
+        X.Column()
+        .Text(ItemVersionChildVM.Prop.ChildItemID.Desc)
+        .DataIndex(Model, model => model.ChildItemID)
+        .Hidden(true)
+        .Flex(4),
+         X.Column()
+        .Text(ItemVersionChildVM.Prop.ChildItemTypeID.Desc)
+        .DataIndex(Model, model => model.ChildItemTypeID)
+        .Hidden(true)
+        .Flex(4),
+        X.Column()
+        .Text(ItemVersionChildVM.Prop.ChildItemID.Desc)
+        .DataIndex(Model, model => model.ChildItemDesc)
+        .Flex(4)
+        .Renderer("rendererItemDesc"),
+        X.Column()
+        .Text(ItemVersionChildVM.Prop.Coefficient.Desc)
+        .DataIndex(Model, model => model.Coefficient)
+        .Flex(1)
+        .Renderer("renderCoefficient")
+        ,
+        X.Column()
+        .Text(ItemVersionChildVM.Prop.UoMID.Desc)
+        .DataIndex(Model, model => model.UoMID)
+        .Flex(2),
+        X.NumberColumn()
+        .Text(ItemVersionChildVM.Prop.UnitPrice.Desc)
+        .DataIndex(Model, model => model.UnitPrice)
+        .Flex(2)
+        .Format(global_asax.IntegerNumberFormat)
+        .Align(ColumnAlign.End)
+        .Renderer("renderUnitPrice"),
+        X.NumberColumn()
+        .Text(ItemVersionChildVM.Prop.TotalUnitPrice.Desc)
+        .DataIndex(Model, model => model.TotalUnitPrice)
+        .Flex(2)
+        .Format(global_asax.IntegerNumberFormat)
+        .Align(ColumnAlign.End)
+        .Renderer("renderTotalUnitPrice")
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnUpdate.Disabled(true),
+                btnChangeSupplier.Disabled(true),
+                btnBack.Handler("loadPreviousGrid"),
+                btnExport.Handler("exportToExcel(App.grdItemVersionAHSReport)")
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+        
+        
+
+)
+

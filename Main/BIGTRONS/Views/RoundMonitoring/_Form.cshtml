@@ -1,0 +1,234 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTNegotiationRoundVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var sPanelPaddingSpec = "10 0 0 0";
+
+    var bReadOnly = Model.NextRound > 1;
+    var isDetail = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    <script>
+
+        var sTitle = "Round Monitoring";
+
+        var beforeStartConfirm = function () {
+            Ext.Msg.show({
+                title: sTitle,
+                message: "You're going to start the next round.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+        var beforeCloseRounds = function () {
+            Ext.Msg.prompt("Round Monitoring", "Please enter the reason", function (btn, value) {
+                if (value.trim().length == 0) {
+                    showErrorAlert(sTitle, '@FPTNegotiationRoundVM.Prop.Remarks.Name' + ' ' + '@General.EnumDesc(MessageLib.mustFill)');
+
+                } else {
+                    if (btn == "ok") {
+
+                        App.FNegotiationRound.submit({
+                            url: '@Url.Action("CloseRemainingRound")',
+
+                            params: {
+                                '@FPTNegotiationRoundVM.Prop.Remarks.Name': value,
+                                '@General.EnumDesc(Params.Action)': '@General.EnumDesc(Buttons.ButtonUpdate)',
+                                '@General.EnumDesc(Params.Caller)': '@General.EnumDesc(Buttons.ButtonSave)',
+                                '@FPTNegotiationRoundVM.Prop.ListVendorParticipant.Name': JSON.stringify(App.grdVendorParticipant.getRowsValues({ selectedOnly: true })),
+                                '@FPTNegotiationRoundVM.Prop.ListTCParticipant.Name': JSON.stringify(App.grdTCParticipant.getRowsValues({ selectedOnly: true }))
+                            },
+                            success: successClose,
+                            failure: failureClose
+                        });
+                    }
+                }
+            }, this, true);
+        };
+
+        var beforeStopConfirm = function () { /* title, message, fn, scope, [multiLine], [value], [prompt]*/
+            Ext.Msg.prompt("Round Monitoring", "Please enter the reason", function (btn, value) {
+                if (value.trim().length == 0) {
+                    showErrorAlert(sTitle, '@FPTNegotiationRoundVM.Prop.Remarks.Name' + ' ' + '@General.EnumDesc(MessageLib.mustFill)');
+
+                } else {
+                    if (btn == "ok") {
+
+                        App.FNegotiationRound.submit({
+                            url: '@Url.Action(ViewData["Button"].ToString())',
+
+                            params: {
+                                '@FPTNegotiationRoundVM.Prop.Remarks.Name': value,
+                                '@General.EnumDesc(Params.Action)': '@General.EnumDesc(Buttons.ButtonUpdate)',
+                                '@General.EnumDesc(Params.Caller)': '@ViewData["Button"].ToString()',
+                                '@FPTNegotiationRoundVM.Prop.ListVendorParticipant.Name': JSON.stringify(App.grdVendorParticipant.getRowsValues({ selectedOnly: true })),
+                                '@FPTNegotiationRoundVM.Prop.ListTCParticipant.Name': JSON.stringify(App.grdTCParticipant.getRowsValues({ selectedOnly: true }))
+                            },
+                            success: successSave,
+                            failure: failureSave
+                        });
+                    }
+                }
+                }, this, true);
+        };
+
+        var verifyConfirm = function (btn) {
+
+            if (btn == "yes") {
+                /* */
+                App.FNegotiationRound.submit({
+                    url: '@Url.Action(ViewData["Button"].ToString())',
+
+                    params: {
+                        '@General.EnumDesc(Params.Action)': '@General.EnumDesc(Buttons.ButtonUpdate)',
+                        '@General.EnumDesc(Params.Caller)' : '@ViewData["Button"].ToString()',
+                        '@FPTNegotiationRoundVM.Prop.ListVendorParticipant.Name': JSON.stringify(App.grdVendorParticipant.getRowsValues({ selectedOnly: true })),
+                        '@FPTNegotiationRoundVM.Prop.ListTCParticipant.Name': JSON.stringify(App.grdTCParticipant.getRowsValues({ selectedOnly: true })),
+                    },
+                    success: successSave,
+                    failure: failureSave
+                });
+            }
+        };
+
+        var successSave = function (form, action) {
+            debugger;
+            if (action.result.hasOwnProperty("script")) {
+                eval(action.result);
+            } else {
+                eval(action.response.responseText);
+            }
+
+        };
+
+        var failureSave = function (form, action) {
+            debugger;
+            if (action.result.hasOwnProperty("script")) {
+
+                eval(action.result);
+            } else {
+                eval(action.response.responseText);
+            }
+
+        };
+
+        var successClose = function (form, action) {
+            debugger;
+            if (action.result.hasOwnProperty("script")) {
+                eval(action.result);
+            } else {
+                eval(action.response.responseText);
+            }
+
+        };
+
+        var failureClose = function (form, action) {
+            debugger;
+            if (action.result.hasOwnProperty("script")) {
+
+                eval(action.result);
+            } else {
+                eval(action.response.responseText);
+            }
+
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PNegotiationRoundForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FNegotiationRound")
+        .Padding(iBodyPadding)
+        .Items(
+            X.HiddenFor(model=>model.Duration),
+            X.TextFieldFor(model => model.FPTID)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.FPTID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.FPTDesc)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.Descriptions.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+             X.TextFieldFor(model => model.Schedule)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.Schedule.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.RoundRemaining)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.RoundRemaining.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.TotalRound)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.Round.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+              X.TextFieldFor(model => model.NextRound)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.NextRound.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+              X.NumberFieldFor(model => model.TopValue)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.TopValue.Desc)
+                .ReadOnly(bReadOnly || isDetail)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .MinValue(0)
+                .MaxValue(double.Parse(ViewData[FPTNegotiationRoundVM.Prop.TopValue.Name].ToString())),
+              X.NumberFieldFor(model => model.BottomValue)
+                .FieldLabel(FPTNegotiationRoundVM.Prop.BottomValue.Desc)
+                .ReadOnly(bReadOnly || isDetail)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .MinValue(0)
+                .MaxValue(double.Parse(ViewData[FPTNegotiationRoundVM.Prop.BottomValue.Name].ToString())),
+          X.Panel()
+             .ID("pnlListRounds")
+             .Title("List of Round(s)")
+             .Collapsible(true)
+                .ItemsFromPartial("Rounds/_List", Model.ListNegotiationRoundsVM, ViewData)
+                .PaddingSpec(sPanelPaddingSpec),
+           X.Container()
+                    .Layout(LayoutType.Column)
+                    .Items(
+                            X.Panel()
+                            .Cls("fullOnSmall")
+                            .ColumnWidth(0.5)
+                            .ID("pnlVendorParticipant")
+                            .ItemsFromPartial("Vendors/_List", new List<FPTVendorParticipantsVM>(), ViewData)
+                            .PaddingSpec("0 10 0 10")
+                            .Title("Vendors Participant")
+                            .Collapsible(true),
+                               X.Panel()
+                                .Cls("fullOnSmall")
+                                .ColumnWidth(0.5)
+                                .ID("pnlTCParticipant")
+                                .Title("TC Participant")
+                                .Collapsible(true)
+                                .ItemsFromPartial("TCMembers/_List", new List<FPTTCParticipantsVM>(), ViewData)
+                                .PaddingSpec("0 0 0 0")
+                    )
+
+         )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+
+
+        )
+    )
+)
+

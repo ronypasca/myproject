@@ -1,0 +1,160 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<EntryValuesVM>
+@{
+	var X = Html.X();
+	string sPageName = "EntryValues";
+	int iGridMinHeight = 250;
+	int iBodyPadding = 10;
+	string sToolbarPaddingSpec = "0 10 10 0";
+	int iPageSize = 30;
+	bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+	List<Parameter> oParamList;
+	Parameter oParam;
+
+ 
+	<script>
+		var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+		$(document).ready(function () {
+			setTimeout("resizeGrdEntryValues()", 1);
+		});
+
+		$(window).resize(function () {
+			resizeContainer();
+			resizeGrdEntryValues();
+		});
+
+		resizeGrdEntryValues = function () {
+			if (App.grdEntryValues != null)
+				App.grdEntryValues.setHeight($(window).height() - App.grdEntryValues.getY() - (App.grdEntryValues.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+		};
+
+		selectionChanged = function (length) {
+			
+			var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+			
+			if(FromDetail !== 'Detail'){
+				App.ButtonDeleteRecipient.setDisabled(length<1)
+			}
+		};
+
+
+		onEditMinutesEntryValues = function (editor, e) {
+
+			if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+				e.record.commit();
+			}
+		};
+
+		onBeforeEditMinutesEntryValues = function (editor, e) {
+			if ("@isDetailButton" == "True")
+				return false;
+
+			App.grdEntryValues.getSelectionModel().select(e.record);
+		};
+
+		beforeSelect = function(){
+			App.grdNotificationValues.getSelectionModel().deselectAll();
+		};
+		
+		selectMinutes = function( grd, record, index, eOpts){
+			CKEDITOR.instances.Contents.setReadOnly(false);
+			dt = record.data;
+			debugger;
+			val="";
+			if(!Ext.isEmpty(dt.Value))
+				val = dt.Value;
+			CKEDITOR.instances.Contents.setData(val);
+
+		};
+	</script>
+}
+@(
+	X.GridPanel()
+	.ID("grdEntryValues")
+	.Padding(iBodyPadding)
+	.MinHeight(iGridMinHeight)
+	.SelectionModel(
+		X.RowSelectionModel()
+		.Mode(SelectionMode.Single)
+		.AllowDeselect(true)
+	)
+	.Listeners(oListener =>
+	{
+		oListener.SelectionChange.Handler = "selectionChanged(selected.length)";
+		oListener.BeforeSelect.Fn = "beforeSelect";
+		oListener.Select.Fn = "selectMinutes";
+
+	})
+	.Store(
+			X.Store()
+			.AutoLoad(true)
+			.RemoteSort(false)
+			.RemotePaging(false)
+			.RemoteFilter(false)
+			.PageSize(iPageSize)
+			.DataSource(Model)
+			.Model(
+				X.Model()
+				.Name("ModelEntryValues")
+				.Fields(
+					X.ModelField().Name(Model, model => model.MinuteEntryID),
+					X.ModelField().Name(Model, model => model.EntryValueID),
+					X.ModelField().Name(Model, model => model.FieldTagID),
+					X.ModelField().Name(Model, model => model.TagDesc),
+					X.ModelField().Name(Model, model => model.Value)
+				)
+			)
+		)
+	.ColumnModel(
+		X.Column()
+		.Text(EntryValuesVM.Prop.EntryValueID.Desc)
+		.DataIndex(Model, model => model.EntryValueID)
+		.Flex(1)
+		.Hidden(true),
+		X.Column()
+		.Text(EntryValuesVM.Prop.MinuteEntryID.Desc)
+		.DataIndex(Model, model => model.MinuteEntryID)
+		.Flex(1)
+		.Hidden(true),
+		X.Column()
+		.Text(FieldTagReferenceVM.Prop.FieldTagID.Desc)
+		.DataIndex(Model, model => model.FieldTagID)
+		.Flex(1)
+		.Hidden(false),
+		X.Column()
+		.Text(FieldTagReferenceVM.Prop.TagDesc.Desc)
+		.DataIndex(Model, model => model.TagDesc)
+		.Flex(2)
+		,
+		X.Column()
+		.DataIndex(Model, model => model.Value)
+		.Flex(1)
+		.Text(EntryValuesVM.Prop.Value.Desc)
+		.Hidden(true)
+		.Editor(
+			X.TextArea()
+			)
+
+	)
+	.Plugins(
+		X.FilterHeader()
+		.Remote(false),
+		Html.X().CellEditing().ClicksToEdit(1)
+					.Listeners(ls => ls.Edit.Fn = "onEditMinutesEntryValues")
+					.Listeners(ls => ls.BeforeEdit.Fn = "onBeforeEditMinutesEntryValues")
+	)
+	.TopBar(
+		X.Toolbar()
+		.PaddingSpec(sToolbarPaddingSpec)
+	)
+	.BottomBar(
+		X.PagingToolbar()
+		.DisplayInfo(true)
+		.BaseCls("paging")
+		.DisplayMsg("Displaying {0} - {1} of {2}")
+		.EmptyMsg("No records to display")
+		.HideRefresh(true)
+	)
+)

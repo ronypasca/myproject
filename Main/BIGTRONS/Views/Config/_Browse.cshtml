@@ -1,0 +1,150 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ConfigVM
+@{
+    var X = Html.X();
+    string sPageName = "Config";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectConfigBrowse('" + ViewData["Control" + ConfigVM.Prop.Key1.Name]
+        + "', '" + ViewData["Control" + ConfigVM.Prop.Desc1.Name]
+        + "', App.grdConfigBrowse.getRowsValues({selectedOnly:true})[0]['" + ConfigVM.Prop.Key1.Name + "']"
+        + ", App.grdConfigBrowse.getRowsValues({selectedOnly:true})[0]['" + ConfigVM.Prop.Desc1.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdConfigBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdConfigBrowse();
+        });
+
+        resizeGrdConfigBrowse = function () {
+            if (App.grdConfigBrowse != null)
+                App.grdConfigBrowse.setHeight($(window).height() - App.grdConfigBrowse.getY() - (App.grdConfigBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionConfigChange = function (length) {
+            App.ButtonSelectConfig.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ConfigID, ConfigDesc) {
+            filter.fields[0].items.items[0].setValue(ConfigID);
+            filter.fields[1].items.items[0].setValue(ConfigDesc);
+        };
+
+        selectConfigBrowse = function (ControlConfigID, ControlConfigDesc, ConfigID, ConfigDesc) {
+            if (Ext.getCmp(ControlConfigID) != undefined) {
+                Ext.getCmp(ControlConfigID).setValue(ConfigID);
+                Ext.getCmp(ControlConfigID).originalValue = ConfigID;
+            }
+            if (Ext.getCmp(ControlConfigDesc) != undefined) {
+                Ext.getCmp(ControlConfigDesc).setValue(ConfigDesc);
+                Ext.getCmp(ControlConfigDesc).originalValue = ConfigDesc;
+            }
+            App.WinBrowseConfig.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseConfig")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdConfigBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionConfigChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[ConfigVM.Prop.Key1.Name].ToString() + "', '" + ViewData[ConfigVM.Prop.ConfigDesc.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "Config"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[ConfigVM.Prop.Desc1.Name].ToString() == "" && ViewData[ConfigVM.Prop.Desc1.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.Key1, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(ConfigVM.Prop.Key1.Desc)
+            .DataIndex(Model, model => model.Key1)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(ConfigVM.Prop.Desc1.Desc)
+            .DataIndex(Model, model => model.Desc1)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

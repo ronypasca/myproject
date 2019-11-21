@@ -1,0 +1,72 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+
+@{
+    ViewBag.Title = "Item Comparison";
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemComparison()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemComparison();
+        });
+
+        resizeGrdItemComparison = function () {
+            if (App.grdItemComparison != null)
+                App.grdItemComparison.setHeight($(window).height() - App.grdItemComparison.getY() - (App.grdItemComparison.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        var GetSelectedData=function()
+        {
+            var data=App.grdItemComparison.getRowsValues({selectedOnly:true})[0];
+            var ItemComparisonDesc=String(data.ItemComparisonDesc).split('<br/>').join(',');
+            data.ItemComparisonDesc=ItemComparisonDesc;
+            return data;
+        };
+
+        var GetSelectedDataAll=function()
+        {
+            debugger;
+            var data=App.grdItemComparison.getRowsValues({selectedOnly:true});
+
+            for (var i = 0; i < data.length; i++) {
+                data[i].ItemComparisonDesc=String(data.ItemComparisonDesc).split('<br/>').join(',');
+            }
+
+            return data;
+        };
+
+        var submitHandler = function () {
+            App.BtnSubmit.setDisabled(1);
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PParentForm")
+    .Frame(true)
+    .Items(
+
+               X.FormPanel()
+                .ID("FItemComparisonId")
+                .Loader(
+                    X.ComponentLoader()
+                    .AutoLoad(true)
+                    .Url(Url.Action("GetPanel"))
+                    .Mode(LoadMode.Component)
+                )
+    )
+)

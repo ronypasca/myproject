@@ -1,0 +1,103 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTNegotiationRoundVM
+@{
+    var X = Html.X();
+
+    var FPTID = ViewData["FPTIDData"].ToString();
+    var TCMemberID = ViewData["TCMemberIDData"].ToString();
+    var RoundID = ViewData["RoundIDData"].ToString();
+    var FPTName = ViewData["FPTNameData"].ToString();
+    //var TCTypes = ViewData["TCTypes"];
+    var BusinessUnitIDs = ViewData["BusinessUnitIDs"];
+
+    //decimal pricemargintop = (decimal)ViewData["PriceMarginTopData"];
+    //decimal pricemarginbottom = (decimal)ViewData["PriceMarginBottomData"];
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, "", null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdFPTNegotiationRound.store.reload()");
+    Button.Builder btnSubmit = global_asax.Button(Buttons.ButtonSelect, "", "Submit All", General.EnumDesc(Params.Home), true, false, false, null, null, null, "");
+}
+<script>
+    var getGridList = function (GridlID) {
+
+        var BPGrid = Ext.getCmp(GridlID);
+        return BPGrid.getRowsValues();
+    };
+
+    var renderGridColumn = function(a,b,c,d,e,f,g){
+       
+        var prop = g.grid.tag;
+        var valuetop = b.record.data.BudgetPlanDefaultValue + (b.record.data.BudgetPlanDefaultValue * (prop.tVal / 100));
+        var valuebottom = b.record.data.BudgetPlanDefaultValue - (b.record.data.BudgetPlanDefaultValue * (prop.bVal / 100));
+        if(a > valuetop ){
+            b.style = "color:red;";
+        }
+        else if(a < valuebottom ){
+            b.style = "color:blue;";
+        }
+        else
+        {
+            b.style = "color:green;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+
+    var renderGridColumnAfterFee = function(a,b,c,d,e,f,g){
+        
+        var prop = g.grid.tag;
+        var valuetop = b.record.data.BudgetPlanDefaultValueAfterFee + (b.record.data.BudgetPlanDefaultValueAfterFee * (prop.tVal / 100));
+        var valuebottom = b.record.data.BudgetPlanDefaultValueAfterFee - (b.record.data.BudgetPlanDefaultValueAfterFee * (prop.bVal / 100));
+        if(a > valuetop ){
+            b.style = "color:red;";
+        }
+        else if(a < valuebottom ){
+            b.style = "color:blue;";
+        }
+        else
+        {
+            b.style = "color:green;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+
+</script>
+
+
+@(
+    X.Panel()
+    .ID("PBidForm")
+    .Frame(true)
+    .Items(
+
+               X.FormPanel()
+                .ID("FPBid")
+                .Loader(
+                    X.ComponentLoader()
+                    .AutoLoad(true)
+                    .Url(Url.Action("GetPanel"))
+                    .Params(new { FPTID = FPTID, TCMemberID = TCMemberID, BusinessUnitIDs = BusinessUnitIDs })
+                    .Mode(LoadMode.Component)
+                )
+
+    )
+    .TopBar(
+        X.Toolbar()
+        .Items(
+            btnSubmit.Hidden(true),
+            btnList,
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:green;'>&nbsp;</span><i> Acceptable</i>")
+                .Cls("lblhigherinfo"),
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:blue;';>&nbsp;</span><i> Below Standard Cost</i>")
+                .Cls("lblhigherinfo"),
+            X.Label()
+                .Html("<span class='legendbox' style='background-color:red;'>&nbsp;</span><i> Higher than Standard Cost</i>")
+                .Cls("lblhigherinfo")
+            )
+        )
+
+)
+
+

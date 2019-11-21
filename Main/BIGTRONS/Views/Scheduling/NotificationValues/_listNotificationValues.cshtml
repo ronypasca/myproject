@@ -1,0 +1,314 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<NotificationValuesVM>   
+@{
+    var X = Html.X();
+    string sPageName = "NotificationValues";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlGrdTCMember", "grdNotificationValues", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("GrdScheduleRecipient", "grdNotificationValues", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    //Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "BrowseRecipient", "Add", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    //Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    oParamList = new List<Parameter>();
+    //Button.Builder btnBrowseEmployee = global_asax.Button(Buttons.ButtonBrowse, "BrowseRecipient", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, null);
+
+    Button.Builder btnSubmitValue = global_asax.Button(Buttons.ButtonRollUp, "Cluster", "Update", "", true);
+
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdNegotiationConfigurations()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdNegotiationConfigurations();
+        });
+
+        resizeGrdNegotiationConfigurations = function () {
+            if (App.grdNotificationValues != null)
+                App.grdNotificationValues.setHeight($(window).height() - App.grdNotificationValues.getY() - (App.grdNotificationValues.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeb = function (length) {
+            var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+            if(FromDetail !== 'Detail'){
+                App.ButtonDeleteRecipient.setDisabled(length<1)
+            }
+        };
+        clickPopup = function (a)
+        {            
+            App.ValueEditor.setValue(a.column.record.data.Value);
+            App.returnValueEditor.setValue(a.column.rowIndex);
+            App.ContainerEditor.setHidden(false); 
+            App.panelLeftPopup_.setCollapsed(false);
+        };
+        submitVal = function(){
+            row = App.grdNotificationValues.store.getAt(App.returnValueEditor.value);
+            row.set('Value',App.ValueEditor.getValue());
+            row.commit();
+        };
+
+        deleteSuccess = function () {
+            App.grdNotificationValues.getStore().reload();
+        };
+
+        deleteSelectedRecipient = function(){
+            App.grdNotificationValues.getStore().remove(App.grdNotificationValues.getSelectionModel().getSelection());
+        };
+        GetSelectedBusinessUn = function(){
+            var data = [];
+            data.push(App.BusinessUnitID.value);
+            return data;
+        };
+        GetSelectedBusinessUnit = function (){
+            var node = App.treePanelNegoConfig.getRootNode().childNodes;
+
+            if(App.isFromUpload.getValue()){
+                node =[];
+                node.push(App.treePanelNegoConfigUpload.getRootNode());
+            }
+            var data = [];
+            for(var x in node)
+            {
+                debugger;
+                prjNode = node[x];/*GetProjectList*/
+                /*if(prjNode.data.include){ */
+                    for(var bpNode in prjNode.childNodes)
+                    {debugger;
+                        if(prjNode.childNodes[bpNode].data.include && prjNode.childNodes[bpNode].data.itemtype=="BudgetPlanID"){
+                            data.push(prjNode.childNodes[bpNode].data.tctype);
+                        }
+                    }
+                    /*data = GetChildListBU(data,node[x].childNodes); */
+                /*}*/
+            };
+            return data;
+        };
+        var GetChildListBU = function(data,node){
+            if(node!=undefined){
+                for(var x in node)
+                {
+                    if(node[x].data.include && node[x].data.itemtype=="BudgetPlan"){
+                        data.push(node[x].data);
+                    }
+                };
+            }
+            return data;
+        };
+
+
+        GetListNotVal = function(){
+            var data = [];
+            for(var x in App.grdNotificationValues.store.data.items)
+            {
+                data.push(App.grdNotificationValues.store.data.items[x].data);
+            }
+            return data;
+        };
+
+        GetTCType = function(){
+            debugger;
+            var ret = App.TCType.getValue();
+            if(ret == null)
+            {
+                ret="";
+            }
+            return ret;
+        };
+
+
+    </script>
+}
+
+@(
+   X.FieldContainer()
+    .FieldLabel("")
+    .LabelWidth(0)
+    .Width(1200)
+    .Layout(LayoutType.Column)
+    .Items(
+    X.GridPanel()
+    .ID("grdNotificationValues")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .Width(600)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeb(selected.length)";
+    })
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeb(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelNotificationValues")
+                .Fields(
+            X.ModelField().Name(Model, model => model.MailNotificationID),
+            X.ModelField().Name(Model, model => model.NotificationValueID),
+            X.ModelField().Name(Model, model => model.FieldTagID),
+            X.ModelField().Name(Model, model => model.TagDesc),
+            X.ModelField().Name(Model, model => model.Value)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column()
+        .Text(NotificationValuesVM.Prop.NotificationValueID.Desc)
+        .DataIndex(Model, model => model.NotificationValueID)
+        .Flex(1)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+        .Hidden(true),
+        X.Column()
+        .Text(NotificationValuesVM.Prop.MailNotificationID.Desc)
+        .DataIndex(Model, model => model.MailNotificationID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+        .Hidden(true),
+        X.Column()
+        .Text(NotificationValuesVM.Prop.FieldTagID.Desc)
+        .DataIndex(Model, model => model.FieldTagID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+        .Hidden(false),
+        X.Column()
+        .Text(NotificationValuesVM.Prop.TagDesc.Desc)
+        .DataIndex(Model, model => model.TagDesc)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+            )
+        )
+        .Hidden(false),
+        X.ComponentColumn()
+                .Editor(true)
+                .DataIndex(Model, model => model.Value)
+                .Flex(3)
+                .Text(NotificationValuesVM.Prop.Value.Desc)
+                .Component(X.TextField().ReadOnly(true)),
+        X.ComponentColumn()
+                .Editor(true)
+                .DataIndex("")
+                .Width(50)
+                .Text("")
+                .Component(
+                    X.Button()
+                    .Disabled(isDetailButton)
+                    .Icon(Icon.Pencil)
+                    .EnableToggle(true)
+                    .ToggleGroup("Group1")
+                    .Listeners(q => q.Click.Fn = "clickPopup")
+                )
+
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+
+        )
+
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+            //btnAdd.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+            //btnDelete.Disabled(true).Handler("deleteSelectedRecipient()")
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .HideRefresh(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+        ,
+          X.FieldContainer()
+          .ID("ContainerEditor")
+            .FieldLabel("").Hidden(true)
+            .LabelWidth(0)
+            .Width(600)
+            .Layout(LayoutType.Column)
+            .Items(
+                    
+                    X.Panel()
+                            .ID("panelLeftPopup_")
+                            .Title("Editor")
+                            .Collapsible(true).Width(600)
+                            .Region(Region.West)
+                            .Items(
+                        X.HtmlEditor().Disabled(false)
+                    .PaddingSpec("20 0 0 0")
+                    .ID("ValueEditor")
+                    .Width(600)
+                    .Height(130)
+                    ,
+                    btnSubmitValue
+                    .Width(100)
+                    .Handler("submitVal()"),
+                    X.Hidden().ID("returnValueEditor")
+            )
+            )
+           )
+    )
+)

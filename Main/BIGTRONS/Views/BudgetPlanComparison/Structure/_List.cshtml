@@ -1,0 +1,1037 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.Controllers
+@using com.SML.BIGTRONS.ViewModels
+@using System.Collections.Generic
+@model List<BudgetPlanVersionStructureVM>
+@{
+    var X = Html.X();
+    var sPageName = "Comparison";
+    ViewBag.Title = "RAB"; ;
+    int iTreeMinHeight = 200;
+    string sToolbarPaddingSpec = "10 10 10 0";
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    string HandlerSelection = isDisableButton ? "" : "getSelectionRow(selected.length)";
+
+    List<string> CellColor = (List<string>)ViewData["CellColor"];
+    string ColorCase1 = CellColor[0];
+    string ColorCase2 = CellColor[1];
+    string ColorCase3 = CellColor[2];
+
+    List<decimal> ToleranceValue = (List<decimal>)ViewData["TolerancePrice"];
+    decimal TopTolerance = ToleranceValue[0];
+    decimal BottomTolerance = ToleranceValue[1];
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+    Button.Builder btnExportInOne = global_asax.Button(Buttons.ButtonExport, sPageName, "Export_One", string.Empty, true);
+    
+    //Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, sPageName, null, string.Empty, true);
+    Button.Builder btnPrintFull = global_asax.Button(Buttons.ButtonPrint, "PrintFull", "PrintFull", string.Empty, true);
+    Button.Builder btnPrint = global_asax.Button(Buttons.ButtonPrint, "Print", null, string.Empty, true);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("GridStructure", "GetStructure()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("BPDesc", "App.Description.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("VendorCount", "vendorToExport", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+
+    Button.Builder btnExport = global_asax.Button(Buttons.ButtonExport, "btnExp", "Export", "../BudgetPlanComparison/ExportExcelReturnDirect", true, false, false, null, oParamList, null, "SuccessExport");
+
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        var AlignEnd = "end";
+        var VendorCode = "V";
+        var prefixLatest = 'new_';
+        var numberXtype = 'numbercolumn';
+        var treeXtype = 'treecolumn';
+        var RecentColName = 'Recent';
+        var NumberingIdx = "numbering";
+        var NumberingText = 'No.';
+        var iTreeInitHeight = -1;
+        var vendorToExport = "";
+
+        $(window).resize(function () {
+            resizeTreeComparison();
+            resizeContainer();
+        });
+
+        var doPrint = function () {
+            App.treePanelBudgetVersionStructure.setHeight("100%");
+            document.body.scrollTop = document.documentElement.scrollTop = 0;
+            window.print();
+        };
+
+        var handleCollapseExpandAll = function(btn){
+            btn.setHidden(true);
+            var obj = App.treePanelBudgetVersionStructure.getRootNode().childNodes;
+            if(btn.id=='@General.EnumName(Buttons.ButtonCollapse)@sPageName'){
+                for(var x=0;x<obj.length;x++)
+                {obj[x].collapse();};
+                App.ButtonExpandComparison.setHidden(false);
+            }else{
+                for(var x=0;x<obj.length;x++)
+                {obj[x].expand();};
+                App.ButtonCollapseComparison.setHidden(false);
+            }
+            btn.setHidden(true);
+
+        };
+        var viewReady = function (grid, eOpts) {
+        };
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelBudgetVersionStructure.getHeight();
+            resizeTreeComparison();
+            resizeContainer();
+        };
+
+        var resizeTreeComparison = function () {
+            if (App.treePanelBudgetVersionStructure != null) {
+                var iHeight = $(window).height() - (App.treePanelBudgetVersionStructure.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelBudgetVersionStructure.setHeight(iHeight);
+            }
+        };
+        var reloadstore = function(store, colModel){
+            var vendorList;
+            Ext.Ajax.request({
+                url: '../BudgetPlanComparison/GetVendorLists',
+                method: 'POST',
+                params:{
+                    BudgetPlanID: App.BudgetPlanID.value,
+                    Version: "@ViewData["Version"].ToString()"
+                },
+                success: function (response) {
+                    var jsonData = Ext.util.JSON.decode(response.responseText);
+                    vendorList = jsonData.data;
+                    if(vendorList.length > 0){
+                        var dataStore = store.store.root.data;
+                        combineVendortoTemplate(dataStore, vendorList, store.store);
+                    }
+                    else{
+
+                    }
+                },
+                failure: function (response) {
+                    Ext.Msg.alert("Budget Comparison - Load Vendor Price", response);
+                }
+            });
+        };
+        var SuccessExport = function (filename) {
+            window.location = "Content/"+JSON.parse(filename.responseText).result;
+            Ext.Ajax.request({
+                url: '../BudgetPlanComparison/ClearExcelFile',
+                method: 'POST',
+                params:{
+                    filename: JSON.parse(filename.responseText).result
+                },
+                failure: function (response) {
+                    Ext.Msg.alert("Error Delete from Server", response);
+                }
+            });
+        };
+
+        /*Create JSON For Saving*/
+        GetStructure = function(){
+            var childata = App.treePanelBudgetVersionStructure.getRootNode().childNodes;
+            var dataLength = childata.length;
+            var data = [];
+            var x;
+            for(x in childata)
+            {
+
+                data.push(childata[x].data);
+                var node_ = childata[x];
+                var setpushA_ = false;
+                if(node_.data.haschild){
+                    setpushA_ = true;}
+                if(node_.childNodes.length > 0){
+                    data = loopStruct(node_,data,setpushA_);
+                };
+            }
+
+            return data;
+        };
+        var loopStruct = function(node, data,setpush){
+
+            if(setpush){
+                var setpush_ = false;
+                var c;
+                for(c in node.childNodes)
+                {
+                    data.push(node.childNodes[c].data);
+                    var node_ = node.childNodes[c];
+                    if(node_.data.haschild){setpush_ = true;}
+                    if(node_.childNodes.length > 0){
+                        data = loopStruct(node_,data,setpush_);
+                    }
+                }
+            }
+            return data;
+        };
+
+
+
+        createColsubTotal = function(nameCol,total){
+            var newCols =  {text : nameCol ,dataIndex:total,xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingFontBold, width:150};
+            return newCols;
+        };
+        createColsubVol = function(nameCol,volume){
+            var newCols = {text: nameCol, dataIndex:volume, xtype:numberXtype, align:AlignEnd,sortable:false,renderer:renderingColor};
+            return newCols;
+        };
+        createColsubUnitPrice = function(nameCol,mat,wag,misc,totu){
+            var newCols = {
+                text: nameCol, columns:[
+                    { text : "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc",dataIndex :mat,xtype:numberXtype,align:AlignEnd, sortable: false,renderer:renderingColor},
+                    { text : "@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc",dataIndex :wag,xtype:numberXtype,align:AlignEnd, sortable: false,renderer:renderingColor},
+                    { text : "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc",dataIndex :misc,xtype:numberXtype,align:AlignEnd, sortable: false,renderer:renderingColor},
+                    { text : "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc", dataIndex: totu,xtype:numberXtype, align:AlignEnd,sortable: false,renderer:renderOptionTotalPrice }
+                ]};
+            return newCols;
+        };
+        combineVendortoTemplate = function(budgetTemplate,vendorList,store_){
+            var tamp = [] ;
+            var newCols = [
+                   { text : NumberingText,dataIndex :NumberingIdx, locked:true},
+                   { text : "@BudgetPlanVersionStructureVM.Prop.ItemDesc.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()", xtype : treeXtype, width:200, renderer: renderingFontBold,locked:true },
+                   { text : "@BudgetPlanVersionStructureVM.Prop.Specification.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()"},
+                   { text : "@BudgetPlanVersionStructureVM.Prop.UoMID.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()"}
+            ];
+            var matB = "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()";
+            var wagB = "@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()";
+            var miscB = "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()";
+            var totuB = "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()";
+            var totB = "@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()";
+
+            var lengthcol = newCols.length;
+
+            Ext.Ajax.request({
+                url: '../BudgetPlanComparison/LoadVendorPrice',
+                method: 'POST',
+                params: {
+                    BudgetPlanID: App.BudgetPlanID.value,
+                    Version: "@ViewData["Version"].ToString()",
+                    sizeValue : "@Convert.ToDecimal(ViewData["AreaSize"])",
+                    totalUnit : "@Convert.ToDecimal(ViewData["TotalUnit"])"
+                },
+                success: function (response) {
+                    jsonData = Ext.util.JSON.decode(response.responseText);
+                    tamp = jsonData.children;
+                    if(vendorList.length > 0){
+                        for(c = 0 ; c<vendorList.length; c++) {
+                            var indexvendor = c+1;
+                            budgetTemplate = insertToTemplate(budgetTemplate,tamp[c],indexvendor);
+                            vendorToExport += tamp[c].vendordesc +'|';
+                        }
+                    };
+                    var subColVolume=[];
+                    var subColSubUP=[];
+                    var subColTotal=[];
+                    subColVolume[0]= { text : sTitle,dataIndex :"@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false};
+                    subColSubUP[0] = {text: sTitle, columns:[
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false, format:integerNumberFormat},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false, format:integerNumberFormat},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc",dataIndex :"@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false, format:integerNumberFormat},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc", dataIndex: "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()",xtype:numberXtype, align:AlignEnd,sortable: false,renderer:renderingFontBold }
+                    ]};
+                    subColSubUP[1] = {text: RecentColName, columns:[
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc",dataIndex :prefixLatest+"@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingHideEqualValue},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc",dataIndex :prefixLatest+"@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingHideEqualValue},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc",dataIndex :prefixLatest+"@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingHideEqualValue},
+                                        {text : "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc", dataIndex: prefixLatest+"@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()",xtype:numberXtype, align:AlignEnd,sortable: false ,renderer:renderingHideEqualValue}
+                    ]};
+                    subColTotal[0]= { text : sTitle,dataIndex :"@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingFontBold, width:150};
+                    subColTotal[1]= { text : RecentColName,dataIndex :prefixLatest+"@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()",xtype:numberXtype,align:AlignEnd,sortable: false,renderer:renderingFontBold ,width:150};
+
+
+                    for (i = 0; i < tamp.length; i++) {
+                        var index_ = lengthcol+i;
+                        var incrVendor = (i+1).toString();
+                        var nameField = tamp[i].vendordesc;
+                        var mat = "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()"+VendorCode+incrVendor;
+                        var wag =  "@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()"+VendorCode+incrVendor;
+                        var miscVendor = "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()"+VendorCode+incrVendor;
+                        var totu =  "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()"+VendorCode+incrVendor;
+                        var tot =  "@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()"+VendorCode+incrVendor;
+                        var vol=  "@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()"+VendorCode+incrVendor;
+                        subColVolume[i+1] = createColsubVol(nameField,vol);
+                        subColSubUP[i+2] = createColsubUnitPrice(nameField,mat,wag,miscVendor,totu);
+                        subColTotal[i+2] = createColsubTotal(nameField,tot);
+                    }
+                    newCols[newCols.length] = { text: "@BudgetPlanVersionStructureVM.Prop.Volume.Desc",columns:subColVolume};
+                    newCols[newCols.length] = { text: 'Unit Price',columns:subColSubUP};
+                    newCols[newCols.length] = { text: 'Total Price',columns:subColTotal};
+
+                    App.treePanelBudgetVersionStructure.reconfigure(store_, newCols);
+                    store_.getRootNode(store_.getRootNode());
+                    App.treePanelBudgetVersionStructure.store.root['vendorlist'] = vendorList;
+                    App.treePanelBudgetVersionStructure.store.root['groupcolumn'] = newCols;
+                    setTimeout("afterFirstLoadTree()", 1);
+                },
+            failure: function (response) {
+                Ext.Msg.alert("Error Load Child", response);
+            }
+        });
+        };
+        var repUndefined = function(val){
+
+            var ret = val;
+            if(val==undefined)
+                ret=null;
+            return ret;
+        };
+        insertToTemplate = function(templateObj,objData,vendorIndex,colLength){
+
+            var objDataTemplate = templateObj;
+            var comparisonData = objData;
+            try{
+                if(objDataTemplate.children.length!==objData.children.length){}
+            }
+            catch(err){
+            }
+            if(objDataTemplate.children!= undefined){
+
+                var NilaiRABPembulatan = 0;
+                var NilaiVendorPembulatan = 0;
+                var NilaiPersentaseVendorTerhadapBudgetPlan = 0;
+
+                for(x in objDataTemplate.children){
+                    var tot=0;
+                    var totup = 0;
+                    var vol = 0;
+                    miscName = "@BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+                    matName = "@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+                    wagName = "@BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+                    totUP = "@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+                    tot = "@BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+                    vol = "@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()"+VendorCode+ vendorIndex.toString();
+
+                    if(comparisonData.children[x]!= undefined){
+                        var TotalVendor = repUndefined(comparisonData.children[x].total);
+                        if(objDataTemplate.children[x].itemdesc == "Pembulatan")
+                        {
+                            NilaiRABPembulatan = objDataTemplate.children[x].total;
+                            NilaiVendorPembulatan = repUndefined(comparisonData.children[x].total);
+                            NilaiPersentaseVendorTerhadapBudgetPlan = (NilaiVendorPembulatan - NilaiRABPembulatan)/NilaiRABPembulatan*100;
+                        }
+                        else if(objDataTemplate.children[x].itemdesc == "Persentase BudgetPlan")
+                        {
+                            TotalVendor = NilaiPersentaseVendorTerhadapBudgetPlan;
+                        }
+                        objDataTemplate.children[x][miscName] = repUndefined(comparisonData.children[x].miscamount);
+                        objDataTemplate.children[x][matName] =  repUndefined(comparisonData.children[x].materialamount);
+                        objDataTemplate.children[x][wagName] =  repUndefined(comparisonData.children[x].wageamount);
+                        objDataTemplate.children[x][totUP] =  repUndefined(comparisonData.children[x].totalunitprice);
+                        objDataTemplate.children[x][tot] =  TotalVendor;
+                        objDataTemplate.children[x][vol] =  repUndefined(comparisonData.children[x].volume);
+
+                        if(objDataTemplate.children[x].children != undefined){
+                            objDataTemplate.children[x] = insertToTemplate(objDataTemplate.children[x],comparisonData.children[x],vendorIndex);
+                        }
+                    }
+                }
+            }
+            return objDataTemplate;
+        };
+        var renderOptionTotalPrice = function(value, metaData, record, rowIndex, colIndex, store, view){
+
+            var ret;
+            if(record.childNodes.length>0)
+            {
+                record.set(metaData.column.dataIndex,null);
+                /* Hidden value total unit price, hidden byhq */
+                /*ret = renderingFontBold(value, metaData, record, rowIndex, colIndex, store, view);*/
+            }
+            else{
+                ret = renderingColor(value, metaData, record, rowIndex, colIndex, store, view);}
+
+            return ret;
+        };
+
+        var renderingColor = function(value, metaData, record, rowIndex, colIndex, store, view) {
+
+
+            /*var cssPrefix = Ext.baseCSSPrefix,
+                cls = cssPrefix + 'tree-node-text';*/
+            var retval = value ;
+            var RABwag = record.data.wageamount;
+            var RABmsc = record.data.miscamount;
+            var RABmat = record.data.materialamount;
+            var RABtup = record.data.totalunitprice;
+            var RABvol = record.data.volume;
+            var RABTot = record.data.total;
+            if(value!= null && value != undefined){
+
+                if(RABwag!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc"){
+                    metaData.tdStyle=returnBackColorCSS(RABwag,value,false,record);}
+                else if(RABmat!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc"){
+                    metaData.tdStyle=returnBackColorCSS(RABmat,value,false,record);}
+                else if(RABmsc!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc"){
+                    metaData.tdStyle=returnBackColorCSS(RABmsc,value,false,record);}
+                else if(RABtup!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc"){
+                    metaData.tdStyle=returnBackColorCSS(RABtup,value,false,record);}
+                else if(RABvol!=null&& metaData.column.config.dataIndex.indexOf("@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()"+VendorCode)>=0){
+                    metaData.tdStyle=returnBackColorCSS(RABvol,value,true,record);
+                }
+
+                if (metaData.column.config.dataIndex.indexOf("@BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()"+VendorCode)>=0){
+                    retval = (value.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                }
+                else
+                {
+                    retval = (retval.toFixed(0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
+
+
+            }
+            return retval;
+        };
+        var returnBackColorCSS = function(RABValue,val,isVolume,rec){
+            var CSScolorReturn = "background-color:";
+            var Colcase1 = "@ColorCase1";
+            var Colcase2 = "@ColorCase2";
+            var Colcase3 = "@ColorCase3";
+            var TopTolerancePrice = Number("@TopTolerance");
+            var BottomTolerancePrice = Number("@BottomTolerance");
+
+            if(!isVolume){
+                if((RABValue*(1+TopTolerancePrice))< val){
+                    CSScolorReturn += Colcase1;/*
+                    rec.data['colorcase']=Colcase1;
+                    rec.commit();*/
+                }
+                else if((RABValue * (1-BottomTolerancePrice))>val){
+                    CSScolorReturn += Colcase2;/*
+                    rec.data['colorcase']=Colcase2;
+                    rec.commit();*/}
+            }else{
+                if(RABValue!=val && !(val == undefined || val == null)){
+                    CSScolorReturn += Colcase3;
+                    /*rec.data['colorcase']=Colcase3;
+                    rec.commit();*/
+                }
+            }
+            return CSScolorReturn;
+        };
+        var renderingFontBold = function(vl, metaData, record, rowIndex, colIndex, store, view) {
+
+            /*var cssPrefix = Ext.baseCSSPrefix,
+                    cls = cssPrefix + 'tree-node-text';*/
+            if(!isNaN(vl) && vl != null){
+                /*vl = (vl.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g,"$1,");*/
+                vl = (vl.toFixed(0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            };
+            var ret = vl;
+            if (record.data.parentId =='root' && vl!= undefined) {
+                ret = '<span style="font-weight:bold">'+ vl +'</span>';
+            };
+
+            return ret;
+        };
+
+        var renderingHideEqualValue = function(vl, metaData, record, rowIndex, colIndex, store, view) {
+
+            if(vl!= null && vl != undefined && !isNaN(vl)){
+
+                var RABwag = record.data.wageamount;
+                var RABmsc = record.data.miscamount;
+                var RABmat = record.data.materialamount;
+                var RABtup = record.data.totalunitprice;
+                if(RABwag!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.WageAmount.Desc"){
+                    if(RABwag == vl){vl = ''; }}
+                else if(RABmat!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc"){
+                    if(RABmat == vl){vl = ''; }}
+                else if(RABmsc!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc"){
+                    if(RABmsc == vl){vl = ''; }}
+                else if(RABtup!=null&&metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc"){
+                    if(RABtup == vl){vl = ''; }
+
+                }
+                if(vl!=''){
+                    /*vl = (vl.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");*/
+                    vl = (vl.toFixed(0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                };
+                if (record.data.parentId =='root' && vl != '' && RABtup!=null && metaData.column.config.text=="@BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc") {
+
+                    vl = '<span style="font-weight:bold">'+ vl.toString() +'</span>';
+
+                };
+            };
+            return vl;
+        };
+
+        /*-------------------------------------------------------------------------------------------------------*/
+        /*--------------------------------------------Print Separated Vendor-------------------------------------*/
+        /*-------------------------------------------------------------------------------------------------------*/
+        PrintPanelSeparate = function () {
+            var newWindow = window.open();
+            var html = ConvertTreePanelToHTMLSeparatedVendor(App.treePanelBudgetVersionStructure);
+            newWindow.document.write(html);
+            newWindow.print();
+        };
+        var ConvertTreePanelToHTMLSeparatedVendor = function (Data) {
+            var vendorList = Data.store.root.vendorlist;
+            var headerHTML = "<html><head><title>RAB Comparison</title><style type='text/css' media='print'>{ size: landscape; }</style><style>table {font-family: arial, sans-serif;  border-collapse: collapse;  width: 100%;}td, th {border: 1px solid #dddddd;padding: 8px;}tr:nth-child(even) {background-color: #eaeaea;} .HeaderColumnFirst{min-width: 120px;color: white; font-weight: bold;background-color: #ed1c24;text-align: center;} .titleVendor{font-weight: bold;} .HeaderColumn{color:white; background-color: #ed1c24;text-align: center;}</style></head><body>";
+            var html="";
+            for (var y = 0; y < vendorList.length; y++) {
+                /*create header table <style type='text/css' media='print'>{ size: landscape; }</style>*/
+                html += "<p class ='titleVendor'>"+ vendorList[y] +"</p><table>";
+                html += "<tr>";
+                for (var i = 0; i < 4; i++) {
+                    html += "<td rowspan ='3' class='HeaderColumnFirst' >" + Data.getColumns()[i].text + "</td>";
+                };
+                html += "<td colspan ='2'  class='HeaderColumnFirst'> Volume</td>";
+                html += "<td colspan ='12'  class='HeaderColumnFirst'> Unit Price</td>";
+                html += "<td colspan ='3'  class='HeaderColumnFirst'> Total Price</td>";
+                html += "</tr>";
+                html += "<tr>";
+                html += "<td rowspan ='2'   class='HeaderColumn'> RAB</td>";
+                html += "<td rowspan ='2'  class='HeaderColumn'> " + vendorList[y] + "</td>";
+                html += "<td colspan ='4'  class='HeaderColumn'> RAB</td>";
+                html += "<td colspan ='4' class='HeaderColumn'> Recent</td>";
+                html += "<td colspan ='4'  class='HeaderColumn'> " + vendorList[y] + "</td>";
+                html += "<td rowspan ='2' class='HeaderColumn'> RAB</td>";
+                html += "<td rowspan ='2' class='HeaderColumn'> Recent</td>";
+                html += "<td rowspan ='2' class='HeaderColumn'> " + vendorList[y] + "</td>";
+                html += "</tr>";
+                html += "<tr>";
+                for (var i = 0; i < 3; i++) {
+                    html += "<td  class='HeaderColumn'> Material</td>";
+                    html += "<td class='HeaderColumn'> Wage</td>";
+                    html += "<td  class='HeaderColumn'> Other</td>";
+                    html += "<td class='HeaderColumn'> Total Unit Price</td>";
+                }
+                html += "</tr>";
+
+                /*create rows data*/
+                for (var i = 0; i < Data.store.root.childNodes.length; i++) {
+                    html += "<tr>";
+                    for (var j = 0; j < 5; j++)
+                        html += replaceNullValue(j, Data.store.root.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                    html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[5 + y].dataIndex]) + "</td>";
+
+                    for (var j = 5 + vendorList.length; j < 5 + vendorList.length + 8; j++)
+                        html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                    for (var j = 5 + vendorList.length + 8 + (y * 4) ; j < 5 + vendorList.length + 8 + (y * 4) + 4; j++)
+                        html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                    html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4)].dataIndex]) + "</td>";
+                    html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4) + 1].dataIndex]) + "</td>";
+                    html += replaceNullValue(1, Data.store.root.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4) + 2 + y].dataIndex]) + "</td>";
+
+                    html += "</tr>";
+                    if (Data.store.root.childNodes[i].childNodes.length > 0) {
+                        var newHTML = GetChildNodesSparated(Data, Data.store.root.childNodes[i],y);
+                        html += newHTML;
+                    }
+                }
+                html += "</table></br></br></br>";
+                @*+"<div style='display:block; page-break-before:always;'></div>";*@
+            };
+            html += "</body></html>";
+            headerHTML += html;
+            return headerHTML;
+        };
+        var GetChildNodesSparated = function (Data, ParentNode, y) {
+            var html = "";
+            var vendorList = Data.store.root.vendorlist;
+            for (var i = 0; i < ParentNode.childNodes.length; i++) {
+                html += "<tr>";
+                for (var j = 0; j < 5; j++)
+                    html += replaceNullValue(j, ParentNode.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[5 + y].dataIndex]) + "</td>";
+
+                for (var j = 5 + vendorList.length; j < 5 + vendorList.length + 8; j++)
+                    html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                for (var j = 5 + vendorList.length + 8 + (y * 4) ; j < 5 + vendorList.length + 8 + (y * 4) + 4; j++)
+                    html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[j].dataIndex]) + "</td>";
+
+                html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4)].dataIndex]) + "</td>";
+                html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4) + 1].dataIndex]) + "</td>";
+                html += replaceNullValue(1, ParentNode.childNodes[i].data[Data.getColumns()[5 + vendorList.length + 8 + (vendorList.length * 4) + 2 + y].dataIndex]) + "</td>";
+
+                html += "</tr>";
+
+                if (ParentNode.childNodes[i].childNodes.length > 0) {
+                    var newHTML = GetChildNodesSparated(Data, ParentNode.childNodes[i],y);
+                    html += newHTML;
+                }
+            }
+            return html;
+        };
+        var replaceNullValue = function (colNumber, val) {
+            var styleAlignLeft = "<td style = 'text-align:left;' > ";
+            var styleAlignRight = "<td style = 'text-align:right;' > ";
+            var ret = styleAlignLeft + val;
+            if (val == null || val == undefined || val == "")
+                ret = "<td>";
+            else {
+                if (!isNaN(val) && colNumber > 0) {
+                    /*ret = (parseFloat(val).toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");*/
+                    ret = (parseFloat(val).toFixed(2) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    ret = styleAlignRight + ret;
+                }
+            };
+            return ret + "</td>";
+        };
+
+        /*-------------------------------------------------------------------------------------------------------*/
+        /*---------------------------------------Print Fit to Page All Vendor------------------------------------*/
+        /*-------------------------------------------------------------------------------------------------------*/
+        PrintPanel = function () {
+            var newWindow = window.open();
+            var html = ConvertTreePanelToHTML(App.treePanelBudgetVersionStructure);
+            newWindow.document.write(html);
+            newWindow.print();
+        };
+        var ConvertTreePanelToHTML = function (Data) {
+            var vendorListAll = Data.store.root.vendorlist;
+            var dateNow = '@DateTime.Now.ToString("dd MMM yyyy")';
+            var BPDesc = App.Description.value;
+            var headerHTML = "<html><head><title>RAB Comparison</title><style media='print'></style><style>table { font-family: arial, sans-serif;  border-collapse: collapse;  width: 100%;}td, th {border: 1px solid #dddddd;padding: 8px;}tr:nth-child(even) {background-color: #eaeaea;} .HeaderColumnFirst{color: white; font-weight: bold;background-color: #ed1c24; text-align: center;} .HeaderColumn{ min-width: 130px; color:white; background-color: #ed1c24; text-align: center;}</style></head><body>";
+
+            /*var headerHTML = "<html><head><title>RAB Comparison</title><link href='/Content/Styles/printComparison.css' rel='stylesheet'></head><body>";*/
+            var toFloor =  Math.floor((vendorListAll.length/3));
+            var mod = vendorListAll.length % 3;
+            if(mod > 0)
+                toFloor+=1;
+
+            var html = "<page>";
+            html+= "<img src='/Content/Images/companylogo.png' style='margin-left: 10px;position: relative;' alt='Company Logo'/></br></br></br>";
+            html+= "</br><p style='margin-left: 10px;font-weight: bold;font-size: 15pt;'>Budget Plan Comparison:</p><p style='margin-left: 10px;font-weight: bold;font-size: 15pt;'>"+BPDesc+"</p>";
+            html+= "</br><p style='margin-left:10px;font-weight: 700;'><b>"+dateNow+"</p>";
+
+            var ListPosition = 0;
+            for(var h = 0; h < toFloor ; h++){
+
+                var vendorList = [];
+                var loopMax = 3;
+                if(h+1 == toFloor && mod > 0)
+                    loopMax = mod;
+
+                var ColumnsGrid = GetColumnGrid(Data.getColumns(),h,loopMax,vendorListAll.length);
+                for(var p=0;p<loopMax;p++){
+                    vendorList.push(vendorListAll[ListPosition]);
+                    ListPosition++;
+                }
+                if(h>0){html+="<div style='page-break-before: always;'></div>";}
+                html += "<table class='tableComparison'>";
+
+                /*create header */
+                /*Row 1*/
+                html += "<tr>";
+                for (var i = 0; i < 4; i++) {
+                    if(i!=1 && i!=2){
+                        html += "<td rowspan ='2' class='HeaderColumnFirst'>" + Data.getColumns()[i].text + "</td>";
+                    }
+                    else{
+                        html += "<td rowspan ='2' style='color: white; font-weight: bold; background-color: #ed1c24; text-align: center; min-width: 200px;'>" + Data.getColumns()[i].text + "</td>";
+                    }
+                };
+                html += "<td colspan ='" + (1 + vendorList.length) + "' class='HeaderColumnFirst'> Volume</td>";
+                html += "<td colspan ='" + (2 + vendorList.length) + "' class='HeaderColumnFirst'> Unit Price</td>";
+                html += "<td colspan ='" + (2 + vendorList.length) + "' class='HeaderColumnFirst'> Total Price</td>";
+                html += "</tr>";
+
+                /*Row 2*/
+                html += "<tr>";
+                html += "<td rowspan ='1' class='HeaderColumn'> RAB</td>";
+                for (var i = 0; i < vendorList.length;i++)
+                    html += "<td rowspan ='1' class='HeaderColumn'> " + vendorList[i] + "</td>";
+
+                html += "<td colspan ='1' class='HeaderColumn'> RAB</td>";
+                html += "<td colspan ='1' class='HeaderColumn'> Recent</td>";
+                for (var i = 0; i < vendorList.length; i++)
+                    html += "<td colspan ='1' class='HeaderColumn'> " + vendorList[i] + "</td>";
+
+                html += "<td rowspan ='1' class='HeaderColumn'> RAB</td>";
+                html += "<td rowspan ='1' class='HeaderColumn'> Recent</td>";
+                for (var i = 0; i < vendorList.length; i++)
+                    html += "<td rowspan ='1' class='HeaderColumn'> " + vendorList[i] + "</td>";
+                html += "</tr>";
+
+                /*Row 3
+                html += "<tr>";
+                for (var i = 0; i < 2+vendorList.length; i++) {
+                    html += "<td class='HeaderColumn'> Material</td>";
+                    html += "<td class='HeaderColumn'> Wage</td>";
+                    html += "<td class='HeaderColumn'> Other</td>";
+                    html += "<td class='HeaderColumn'> Total Unit Price</td>";}
+                html += "</tr>";
+                */
+                /*Row Item*/
+                for (var i = 0; i < Data.store.root.childNodes.length; i++) {
+                    html += "<tr>";
+                    for (var j = 0; j < ColumnsGrid.length; j++){
+                        html += replaceNullValue(j,Data.store.root.childNodes[i].data[ColumnsGrid[j].dataIndex]) + "</td>";
+                    }
+                    html += "</tr>";
+
+                    if (Data.store.root.childNodes[i].childNodes.length > 0) {
+
+                        var newHTML = GetChildNodes(ColumnsGrid, Data.store.root.childNodes[i]);
+                        html += newHTML;
+                    }
+                }
+                html += "</table></br></br></br>";
+            };
+            html+="</page></body></html>";
+            headerHTML += html;
+            return headerHTML;
+        };
+
+        var GetChildNodes = function (Columns, ParentNode) {
+            var html = "";
+            for (var i = 0; i < ParentNode.childNodes.length; i++) {
+                html += "<tr>";
+                for (var j = 0; j < Columns.length; j++)
+                    html += replaceNullValue(j, ParentNode.childNodes[i].data[Columns[j].dataIndex]);
+                html += "</tr>";
+                if (ParentNode.childNodes[i].childNodes.length > 0) {
+                    var newHTML = GetChildNodes(Columns, ParentNode.childNodes[i]);
+                    html += newHTML;
+                }
+            }
+            return html;
+        };
+
+        var GetColumnGrid = function(Columns,Index,LimitMax,VendorLength){
+            var position = Index;
+            var ret = [];
+            var startPos = 0;
+            var endPos = 5;
+
+            for(var f=startPos;f<endPos;f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+
+            startPos = 5+(position*3);
+            endPos =  5+(position*3)+LimitMax;
+            for(var f= startPos; f < endPos; f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+            for(var f = 5+VendorLength; f < 5+VendorLength+8 ; f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+            for(var f = 5+VendorLength +8+(12*position); f < 5+VendorLength +8+(12*position)+(4*LimitMax) ; f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+            for(var f = 5 + VendorLength + 8 + (VendorLength * 4)  ; f < 5 + VendorLength + 8 + (VendorLength * 4) + 2 ; f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+            for(var f  =  5 + VendorLength + 8 + (VendorLength * 4) + 2 + (position*3); f <  5 + VendorLength + 8 + (VendorLength * 4) + 2 + (position*3) + (LimitMax); f++){
+                if(Columns[f].dataIndex.includes("wageamount") || Columns[f].dataIndex.includes("miscamount") || Columns[f].dataIndex.includes("materialamount"))
+                {}
+                else
+                {ret.push({dataIndex : Columns[f].dataIndex})}
+            };
+            return ret;
+
+        };
+        @*var testingexport = function(){
+            CreateGridToExport();
+        };
+
+        CreateGridToExport = function(){
+            Ext.create('Ext.data.Store', {
+                storeId: 'GridExportStore',
+                fields:[ 'name', 'email', 'phone'],
+                data: [
+                    { name: 'Lisa', email: 'lisa@simpsons.com', phone: '555-111-1224' },
+                    { name: 'Bart', email: 'bart@simpsons.com', phone: '555-222-1234' },
+                    { name: 'Homer', email: 'homer@simpsons.com', phone: '555-222-1244' },
+                    { name: 'Marge', email: 'marge@simpsons.com', phone: '555-222-1254' }
+                ]
+            });
+
+            Ext.create('Ext.grid.Panel', {
+                id:'gridToExport',
+                hidden: true,
+                title: 'GridToExport',
+                store: Ext.data.StoreManager.lookup('GridExportStore'),
+                columns: [
+                    { text: 'Name', dataIndex: 'name' },
+                    { text: 'Email', dataIndex: 'email', flex: 1 },
+                    { text: 'Phone', dataIndex: 'phone' }
+                ],
+                height: 200,
+                width: 400/*,
+            renderTo: Ext.getBody()*/
+            });
+        };*@
+
+        /*-------------------------------------------------------------------------------------------------------*/
+        /*--------------------------------------------ExportExcel------------------------------------------------*/
+        /*-------------------------------------------------------------------------------------------------------*/
+        var exportFromTreePanelToGrid = function (grid) {
+            createGridToExports(grid);
+
+            exportGrid(App.gridToExport, false, true, 'BudgetPlanComparison', 'xls', 'Budget Plan Comparison');
+            App.gridToExport.destroy();
+            App.exportStore.destroy();
+        };
+
+        var getListBudgetPlanVersionStructure = function (nodeTree) {
+            var data =new Array();
+
+            var nodes = getDeepAllChildNodes(nodeTree);
+            data.push({"RAB":''});
+            for (var i = 0; i < nodes.length; i++) {
+                @*if(!nodes[i].data.root)*@
+                data.push(nodes[i].data);
+            }
+
+            return data;
+        };
+        var getDeepAllChildNodes = function(node){
+            var allNodes = new Array();
+            if(node==null || node==undefined){
+                return [];
+            }
+
+            if(!node.hasChildNodes()){
+                return node;
+            }else{
+                allNodes.push(node);
+                node.eachChild(function(Mynode){allNodes = allNodes.concat(getDeepAllChildNodes(Mynode));});
+            }
+            return allNodes;
+        };
+
+        var getforModel = function(grid){
+            var ret =[];
+            for(var x = 0;x<grid.getColumns().length;x++){
+                ret.push({name: grid.getColumns()[x].dataIndex});
+            }
+            return ret;
+        };
+        var getforColumn = function(grid){
+            var ret =[];
+            for(var x = 0;x<grid.getColumns().length;x++){
+                ret.push({text: grid.getColumns()[x].text, dataIndex: grid.getColumns()[x].dataIndex});
+            }
+            return ret;
+        };
+        var createGridToExports = function (grid) {
+            var coltocraete = getforColumn(grid);
+            Ext.define('ModelBudgetPlanComparison', {
+                extend: 'Ext.data.Model',
+                fields: getforModel(grid)
+            });
+            var dataToExports = getListBudgetPlanVersionStructure(grid.getRootNode());
+            var objColumn =[];
+            for(var x = 0;x<grid.getColumns().length;x++){
+                var dindex = grid.getColumns()[x].dataIndex;
+                objColumn.push({ dindex : grid.getColumns()[x].text});
+            }
+            dataToExports[1] = objColumn;
+
+            var exportStore = Ext.create('Ext.data.Store', {
+                storeId: 'exportStore',
+                data: dataToExports,
+                model: 'ModelBudgetPlanComparison'
+            });
+            Ext.create('Ext.grid.Panel', {
+                renderTo: document.body,
+                id: 'gridToExport',
+                store: exportStore,
+                columns:coltocraete
+            });
+        };
+    </script>
+}
+
+@(X.TreePanel()
+            .ID("treePanelBudgetVersionStructure")
+            .Expand(true)
+            .MultiSelect(false)
+            .MinHeight(iTreeMinHeight)
+            .WidthSpec("100%")
+            .EnableLocking(true).BufferedRenderer(true)
+            .RootVisible(false)
+            .Border(false)
+            .UseArrows(true)
+            .Animate(true).ColumnLines(true).RowLines(true)
+            .Fields(
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemDesc.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.BudgetPlanID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.BudgetPlanVersionStructureID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Version.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Sequence.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentItemID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentVersion.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ParentSequence.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.ItemVersionChildID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.HasChild.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsDefault.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsBOI.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.IsAHS.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower()),
+                           //X.ModelField().Name(BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower()),
+                           //X.ModelField().Name("new_materialamount"),
+                           //X.ModelField().Name("new_wageamount"),
+                           //X.ModelField().Name("new_miscamount")
+                           ).ColumnModel(
+                  X.TreeColumn().Text(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Desc)
+                   //.Flex(4)
+                   .Sortable(false)
+                   .Locked(true)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower())
+                  , X.Column()
+                    .Text(BudgetPlanVersionStructureVM.Prop.Specification.Desc)
+                    .DataIndex(BudgetPlanVersionStructureVM.Prop.Specification.Name.ToLower())
+                    //.Flex(2)
+                    .Sortable(false),
+                  X.Column()
+                    .Text(BudgetPlanVersionStructureVM.Prop.UoMID.Desc)
+                    .DataIndex(BudgetPlanVersionStructureVM.Prop.UoMID.Name.ToLower())
+                    .Flex(1).Sortable(false),
+                  X.Column()
+                    .Text(BudgetPlanVersionStructureVM.Prop.Volume.Desc)
+                    .Flex(1).Sortable(false)
+                    .Columns(
+                        X.NumberColumn()
+                        .Text("Budget Plan")
+                        .DataIndex(BudgetPlanVersionStructureVM.Prop.Volume.Name.ToLower())
+                        .Format(global_asax.DefaultNumberFormat).Sortable(false)
+                        .Align(ColumnAlign.End)
+
+                            .Flex(1)
+            ),
+                   X.Column()
+        .Text("Unit Price")
+        .Flex(2).Sortable(false)
+        .Columns(
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Name.ToLower())
+            .Format(global_asax.IntegerNumberFormat)
+            .Align(ColumnAlign.End)
+            ,
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.WageAmount.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.WageAmount.Name.ToLower()).Sortable(false)
+            .Format(global_asax.IntegerNumberFormat)
+            .Align(ColumnAlign.End)
+            ,
+            X.NumberColumn()
+            .Text(BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc)
+            .DataIndex(BudgetPlanVersionStructureVM.Prop.MiscAmount.Name.ToLower())
+            .Format(global_asax.IntegerNumberFormat).Sortable(false)
+            .Align(ColumnAlign.End)
+        ),
+                   X.NumberColumn()
+        .Text(BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc)
+        .Layout(LayoutType.HBox)
+        .DataIndex(BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Name.ToLower())
+        .Align(ColumnAlign.End)
+        .Format(global_asax.IntegerNumberFormat).Sortable(false)
+        .Flex(2),
+                   X.NumberColumn()
+                        .Text(BudgetPlanVersionStructureVM.Prop.Total.Desc)
+                        .Align(ColumnAlign.End)
+                        .Layout(LayoutType.HBox)
+                        .DataIndex(BudgetPlanVersionStructureVM.Prop.Total.Name.ToLower())
+                        .Format(global_asax.IntegerNumberFormat)
+                        .Flex(1)
+            , X.NumberColumn()
+                  .Text(BudgetPlanVersionStructureVM.Prop.MaterialAmount.Desc)
+                  .Layout(LayoutType.HBox)
+                  .DataIndex("new_materialamount")
+                  .Align(ColumnAlign.End)
+                  .Format(global_asax.IntegerNumberFormat).Sortable(false)
+                  .Flex(2)
+            , X.NumberColumn()
+                  .Text(BudgetPlanVersionStructureVM.Prop.WageAmount.Desc)
+                  .Layout(LayoutType.HBox)
+                  .DataIndex("new_wageamount")
+                  .Align(ColumnAlign.End)
+                  .Format(global_asax.IntegerNumberFormat).Sortable(false)
+                  .Flex(2)
+            , X.NumberColumn()
+                  .Text(BudgetPlanVersionStructureVM.Prop.MiscAmount.Desc)
+                  .Layout(LayoutType.HBox)
+                  .DataIndex("new_miscamount")
+                  .Align(ColumnAlign.End)
+                  .Format(global_asax.IntegerNumberFormat).Sortable(false)
+                  .Flex(2)
+            , X.NumberColumn()
+                  .Text(BudgetPlanVersionStructureVM.Prop.TotalUnitPrice.Desc)
+                  .Layout(LayoutType.HBox)
+                  .DataIndex("new_totalunitprice")
+                  .Align(ColumnAlign.End)
+                  .Format(global_asax.IntegerNumberFormat).Sortable(false)
+                  .Flex(2)
+            , X.NumberColumn()
+                  .Text(BudgetPlanVersionStructureVM.Prop.Total.Desc)
+                  .DataIndex("new_total")
+                  .Align(ColumnAlign.End)
+                  .Format(global_asax.IntegerNumberFormat).Sortable(false)
+                  .Flex(2)
+            )
+        .Root(new BudgetPlanComparisonController().LoadTemplatePrice(
+            Model.First().BudgetPlanID,
+            ViewData["Version"].ToString(),
+            ViewData["ProjectID"].ToString(),
+            ViewData["ClusterID"].ToString(),
+            ViewData["UnitTypeID"].ToString(),
+            Convert.ToDecimal(ViewData["AreaSize"]),
+            Convert.ToDecimal(ViewData["FeePercentage"]),
+            Convert.ToDecimal(ViewData["TotalUnit"])
+            ))
+        .Listeners(l =>
+        {
+            l.AfterItemExpand.Handler = "";
+            l.AfterRender.Fn = "reloadstore";
+            l.ViewReady.Fn = "viewReady";
+        })
+        .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .Items(
+            btnCollapse.Handler("handleCollapseExpandAll").Hidden(true),
+            btnExpand.Handler("handleCollapseExpandAll"),
+            btnPrint.Handler("PrintPanelSeparate").Hidden(true),
+            btnPrintFull.Handler("PrintPanel"),
+            btnExport
+            //btnExport.Handler("exportFromTreePanelToGrid(App.treePanelBudgetVersionStructure)")
+            )
+        )
+        .BottomBar(
+        X.StatusBar().AutoClear(1500)
+        )
+)

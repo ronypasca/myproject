@@ -1,0 +1,223 @@
+﻿<style type="text/css">
+    .modal-body {
+        position: relative;
+        overflow-y: auto;
+        max-height: 400px;
+        padding: 15px;
+    }
+</style>
+
+@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 10";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    //var isHasUnitPriceAnalysis = Model.HasUnitPriceAnalysis;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlGrdTCMember", "grdTO", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("GrdScheduleRecipient", "grdTO", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonPreview,"PreviewComparasion", "Preview Comparison", string.Empty,true);
+
+    <script>
+
+        var panel = Ext.create(Ext.window.Window, {
+            title: 'Demo Window',
+            height: 200, width: 200,
+            layout: 'fit',
+            item: [
+                {
+                    xtype: 'textfield', fieldLabel: 'Enter Value 1'
+                },
+                {
+                    xtype: 'textfield', fieldLabel: 'Enter Value 2'
+                }
+            ],
+            dockedItems: [
+                {
+                    xtype: 'toolbar',
+                    dock: 'bottom',
+                    items: [
+                        {
+                            text: 'Submit'
+                        },
+                        {
+                            text: 'Cancel'
+
+                        }
+                    ]
+                }
+            ]
+
+        });
+
+        changeFile = function () {
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };
+
+        successGetFileUpload = function (data) {
+            debugger;
+            if (data != undefined) {
+                App.treePanelNegoConfigUpload.store.root.removeAll();
+                App.treePanelNegoConfigUpload.setRootNode(data);
+                var filename = data.fileuploadname;
+                App.FileUpload.setRawValue(filename);
+                /*
+                App.treePanelNegoConfigUpload.store.root.appendChild(data);
+                App.treePanelNegoConfigUpload.store.root.data.expandable = true;
+                App.treePanelNegoConfigUpload.store.root.expand();
+                */
+                Ext.Msg.show({
+                    message: "Upload Success!",
+                    title: "Upload Structure",
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        };
+
+        failedGetFileUpload = function (errorMessage) {
+            App.treePanelNegoConfigUpload.store.root.removeAll();
+            Ext.Msg.notify("Error", errorMessage);
+        }
+
+
+
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            $('#ComparationModal').on('shown.bs.modal', function () {
+                $(this).find('.modal-body').css({
+                    width: 'auto', /*probably not needed*/
+                    height: 'auto', /* probably not needed */
+                    'max-height': '100%'
+                });
+
+                $("#ComparationModalDialog").css("width", (0.98 * $(window).width()));
+            });
+        });
+        function ShowModal() {
+
+            if ($("#FPTID-inputEl").val() == "") {
+                Ext.Msg.alert('Error', 'You Have to Save FPT first');
+                return false;
+            } else {
+
+                $.ajax({
+                    type: "GET",
+                    url: "@Url.Action("ViewComparation", "NegotiationConfigurations")",
+                    data: { FPTID: $("#FPTID-inputEl").val()  },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        status = data.result;
+                        msg = data.message;
+                        if (status) {
+
+                            $("#ComparationTable").html(msg);
+
+                            $("#ComparationModal").modal('toggle');
+                        } else {
+                            Ext.Msg.alert('Error', msg);
+                        }
+
+                    },
+                    error: function (jqXHR, exception) {
+
+                        if (jqXHR.status === 0) {
+                            msg = 'Not connect.\n Verify Network.';
+                        } else if (jqXHR.status == 404) {
+                            msg = 'Requested page not found. [404]';
+                        } else if (jqXHR.status == 500) {
+                            msg = 'Internal Server Error [500].';
+                        } else if (exception === 'parsererror') {
+                            msg = 'Requested JSON parse failed.';
+                        } else if (exception === 'timeout') {
+                            msg = 'Time out error.';
+                        } else if (exception === 'abort') {
+                            msg = 'Ajax request aborted.';
+                        } else {
+                            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                        }
+                        status = false;
+                        Ext.Msg.alert('Error', msg);
+                    }
+                });
+
+            }
+        }
+    </script>
+}
+
+<form id="formFileUpload" enctype="multipart/form-data">
+    @(
+                    X.Panel()
+                    .ID("PItemPriceUploadForm")
+                    .Frame(true)
+                    .TopBar(
+                         X.Toolbar()
+                        .PaddingSpec(sToolbarPaddingSpec)
+                        .Items(
+                             btnAdd.Handler("ShowModal();")
+
+                    )
+                )
+                .Items(
+                    X.FormPanel()
+                    .ID("FItemPriceUploadForm")
+                    .Padding(iBodyPadding)
+                    .Items(
+                         X.FileUploadField()
+                            .ID(ItemPriceVM.Prop.FileUpload.Name)
+                            .FieldLabel(ItemPriceVM.Prop.FileUpload.Desc)
+                            .LabelWidth(iLabelWidth)
+                            .Text("")
+                            .Width(iFieldWidth)
+                            .Listeners(d => d.Change.Fn = "changeFile")
+                    //.Accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"),
+                    , X.Button()
+                        .ID("btnGetData")
+                        .Text("Get Data")
+                        .Width(iLabelWidth)
+                        .DirectEvents(events =>
+                        {
+                            events.Click.Action = "ReadFileUpload";
+                            events.Click.EventMask.ShowMask = true;
+                            events.Click.Success = "successGetFileUpload(result.data)";
+                            events.Click.Failure = "failedGetFileUpload(result.errorMessage);";
+                        }).Hidden(true)
+                    )
+                  )
+    )
+
+
+</form>
+<!-- Modal -->
+<div class="modal fade" id="ComparationModal" role="dialog" style="z-index:99999999;width:100%">
+    <div class="modal-dialog" id="ComparationModalDialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 style="color:red;">FPT Comparison</h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table" id="ComparationTable">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

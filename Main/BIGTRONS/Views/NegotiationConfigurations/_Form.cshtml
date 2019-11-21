@@ -1,0 +1,763 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@using com.SML.BIGTRONS.Controllers
+@model FPTVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    string messages = "";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlEmployeeID", FPTVM.Prop.TRMLead.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlEmployeeName" , FPTVM.Prop.TRMLeadDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseTRMLead = global_asax.Button(Buttons.ButtonBrowse, "TRMLead", "", "../Employee/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseTRMLead = global_asax.Button(Buttons.ButtonErase, "TRMLead", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("ControlCatalogCartID", CatalogCartVM.Prop.CatalogCartID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlCatalogCartDesc", CatalogCartVM.Prop.CatalogCartDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseCatalogCart = global_asax.Button(Buttons.ButtonBrowse, "Cart", "", "../Cart/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseCatalogCart = global_asax.Button(Buttons.ButtonErase, "Cart", "", "", true);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + NegotiationConfigurationsVM.Prop.FPTID.Name, FPTVM.Prop.FPTID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + NegotiationConfigurationsVM.Prop.FPTDesc.Name, NegotiationConfigurationsVM.Prop.Descriptions.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlBUnit" , FPTVM.Prop.BusinessUnitID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlBUnitDesc", FPTVM.Prop.NegoConfigBUnitDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlDivision" , FPTVM.Prop.DivisionID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlProject" , FPTVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + FPTVM.Prop.ClusterID.Name, FPTVM.Prop.ClusterID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("OldValueFPTID","App.FPTID.getValue()", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseFPTID = global_asax.Button(Buttons.ButtonBrowse, "FPTID", "", "../NegotiationConfigurations/" + General.EnumDesc(Buttons.ButtonBrowse)+"FPT", true, false, false, null, oParamList);
+    Button.Builder btnEraseFPTID = global_asax.Button(Buttons.ButtonErase, "FPTID", "", "", true);
+
+    <script>
+        /*Cart*/
+        var bPreventGetCatalogCart = false;
+        var firstload = true;
+        getCatalogCart = function (catalogCartID, catalogCartDesc, exact) {
+            if (App.CatalogCartID.isDirty() || App.CatalogCartID.isDirty()) {
+                App.CatalogCartID.originalValue = App.CatalogCartID.getValue();
+                App.CatalogCartDesc.originalValue = App.CatalogCartDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetCatalogCart", "Cart"))',
+                    params: {
+                        ControlCatalogCartID: App.CatalogCartID.id,
+                        ControlCatalogCartDesc: App.CatalogCartDesc.id,
+                        FilterCatalogCartID: catalogCartID,
+                        FilterCatalogCartDesc: catalogCartDesc,
+                        Exact: exact
+                    },
+                    success: getCatalogCartSuccess,
+                    failure: getCatalogCartFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getCatalogCartSuccess = function () {
+            if (!App.CatalogCartID.isDirty() && !App.CatalogCartDesc.isDirty()) {
+                App.CatalogCartID.originalValue = "";
+                App.CatalogCartDesc.originalValue = "";
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        getCatalogCartFailed = function () {
+            eraseCatalogCart();
+        };
+
+        CatalogCartID = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCart = true;
+                getCatalogCart(field.getValue(), "", false);
+            }
+        };
+
+        CatalogCartDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetCatalogCart = true;
+                getCatalogCart("", field.getValue(), false);
+            }
+        };
+
+        CatalogCartIDBlur = function (catalogCart) {
+            console.log(bPreventGetCatalogCart);
+            if (!bPreventGetCatalogCart) {
+                bPreventGetCatalogCart = true;
+                if (catalogCart.trim() == "")
+                    getCatalogCartFailed();
+                else
+                    getCatalogCart(CatalogCart, "", true);
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        CatalogCartDescBlur = function (catalogCartDesc) {
+            if (!bPreventGetCatalogCart) {
+                bPreventGetCatalogCart = true;
+                if (catalogCartDesc.trim() == "")
+                    getCatalogCartFailed();
+                else
+                    getCatalogCart("", catalogCartDesc, true);
+            }
+            bPreventGetCatalogCart = false;
+        };
+
+        eraseCatalogCart = function () {
+            App.CatalogCartID.clear();
+            App.CatalogCartDesc.clear();
+            App.CatalogCartID.originalValue = "";
+            App.CatalogCartDesc.originalValue = "";
+        };
+        /*End Cart*/
+
+
+        var bPreventGetTRMLead = false;
+        var firstload = true;
+        getTRMLead = function (trmLead, descriptions, exact) {
+            if (App.TRMLead.isDirty() || App.TRMLeadDesc.isDirty()) {
+                App.TRMLead.originalValue = App.TRMLead.getValue();
+                App.TRMLeadDesc.originalValue = App.TRMLeadDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetEmployee", "Employee"))',
+                    params: {
+                        ControlEmployeeID: App.TRMLead.id,
+                        ControlEmployeeDesc: App.TRMLeadDesc.id,
+                        FilterEmployeeID: trmLead,
+                        FilterEmployeeDesc: descriptions,
+                        Exact: exact
+                    },
+                    success: getTRMLeadSuccess,
+                    failure: getTRMLeadFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getTRMLeadSuccess = function () {
+            if (!App.TRMLead.isDirty() && !App.TRMLeadDesc.isDirty()) {
+                App.TRMLead.originalValue = "";
+                App.TRMLeadDesc.originalValue = "";
+            }
+            bPreventGetTRMLead = false;
+        };
+
+        getTRMLeadFailed = function () {
+            eraseTRMLead();
+        };
+
+        trmLeadID = function (field, event) {
+        if (event.getKey() == event.ENTER) {
+        bPreventGetTRMLead = true;
+        getTRMLead(field.getValue(), "", false);
+    }
+    };
+
+        descriptionsSpecialKey = function (field, event) {
+        if (event.getKey() == event.ENTER) {
+        bPreventGetTRMLead = true;
+        getTRMLead("", field.getValue(), false);
+    }
+    };
+
+        trmLeadIDBlur = function (trmLead) {
+        console.log(bPreventGetTRMLead);
+        if (!bPreventGetTRMLead) {
+            bPreventGetTRMLead = true;
+            if (trmLead.trim() == "")
+                getTRMLeadFailed();
+            else
+                getTRMLead(trmLead, "", true);
+        }
+        bPreventGetTRMLead = false;
+    };
+
+    descriptionsBlur = function (descriptions) {
+        if (!bPreventGetTRMLead) {
+            bPreventGetTRMLead = true;
+            if (descriptions.trim() == "")
+                getTRMLeadFailed();
+            else
+                getTRMLead("", descriptions, true);
+        }
+        bPreventGetTRMLead = false;
+    };
+
+    eraseTRMLead = function () {
+        App.TRMLead.clear();
+        App.TRMLeadDesc.clear();
+        App.TRMLead.originalValue = "";
+        App.TRMLeadDesc.originalValue = "";
+    };
+    var bPreventGetFPTID = false;
+    getFPTID = function (fptID, Desc, exact) {
+        if (App.FPTID.isDirty() || App.Descriptions.isDirty()) {
+            App.FPTID.originalValue = App.FPTID.getValue();
+            App.Descriptions.originalValue = App.Descriptions.getValue();
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetFPTID", "NegotiationConfigurations"))',
+                params: {
+                    ControlFPTID: App.FPTID.id,
+                    ControlFPTDesc: App.Descriptions.id,
+                    FilterFPTID: fptID,
+                    FilterFPTDesc: Desc,
+                    Exact: exact
+                },
+                success: getFPTIDSuccess,
+                failure: getFPTIDFailed
+            });
+        }
+        else
+            console.log("not dirty");
+    };
+    getFPTIDSuccess = function () {
+        if (!App.FPTID.isDirty() && !App.Descriptions.isDirty()) {
+            App.FPTID.originalValue = "";
+            App.Descriptions.originalValue = "";
+        }
+        bPreventGetFPTID = false;
+    };
+
+    getFPTIDFailed = function () {
+        eraseFPTID();
+    };
+    FPTIDSpecialKey = function (field, event) {
+        if (event.getKey() == event.ENTER) {
+            bPreventGetFPTID = true;
+            getFPTID("", field.getValue(), false);
+        }
+    };
+    FPTIDBlur = function (fptid) {
+        if (!bPreventGetFPTID) {
+            bPreventGetFPTID = true;
+            if (fptid.trim() == "")
+                getFPTIDFailed();
+            else
+                getFPTID("", fptid, true);
+        }
+        bPreventGetFPTID = false;
+    };
+    FPTDescSpecialKey = function (field, event) {
+        if (event.getKey() == event.ENTER) {
+            bPreventGetFPTID = true;
+            getFPTID(field.getValue(), "", false);
+        }
+    };
+    FPTDescBlur = function (fptid) {
+        if (!bPreventGetFPTID) {
+            bPreventGetFPTID = true;
+            if (fptid.trim() == "")
+                getFPTIDFailed();
+            else
+                getFPTID(fptid, "", true);
+        }
+        bPreventGetFPTID = false;
+    };
+    eraseFPTID = function () {
+        App.FPTID.clear();
+        App.FPTID.originalValue = "";
+        App.Descriptions.clear();
+        App.Descriptions.originalValue = "";
+        App.BusinessUnitID.clear();
+        App.BusinessUnitID.originalValue = "";
+        App.treePanelNegoConfig.store.root.removeAll();
+        App.grdTCMember.store.removeAll();
+    };
+    var showhideUpload = function ()
+    {
+
+        if (App.isFromUpload.getValue())
+            CBChange("", true);
+
+    };
+    var whenPanelUploadCollapsed = function () {
+
+    };
+
+    PopulateTCMember = function () {
+        Ext.net.DirectMethod.request({
+                url: '@(Url.Action("ReloadTCMember", "NegotiationConfigurations"))',
+                params: {
+                    TCTypeID: App.TCType.value,
+                    BusinessUnitID: App.BusinessUnitID.value,
+                    ScheduleDateNego: App.ScheduleDate.value
+                },
+                success: function (result) {
+                    var data = result.data;
+                    if (App.grdTCMember.store.data.items.length > 0)
+                        App.grdTCMember.getStore().remove(App.grdTCMember.store.data.items);
+                    var SelectedData = result.data;
+                    debugger;
+                    for (var n = 0; n < SelectedData.length; n++) {
+                            TCMemberID = SelectedData[n].TCMemberID;
+                            EmployeeID = SelectedData[n].EmployeeID;
+                            EmployeeName = SelectedData[n].EmployeeName;
+                            PeriodStart = SelectedData[n].PeriodStart;
+                            PeriodEnd = SelectedData[n].PeriodEnd;
+                            BUnitDesc = SelectedData[n].BusinessUnitDesc;
+                            Email = SelectedData[n].Email;
+                            App.grdTCMember.store.add(new ModelTCMembers({
+                                TCMemberID: TCMemberID,
+                                EmployeeID: EmployeeID,
+                                EmployeeName: EmployeeName,
+                                PeriodStart: PeriodStart,
+                                PeriodEnd: PeriodEnd,
+                                BusinessUnitDesc: BUnitDesc,
+                                Email: Email
+                            }));
+                    }
+                },
+                failure: function () { }
+            });
+    };
+
+    RefreshTCMember = function (YESNO,a,b,c,d,e) {
+        if (YESNO == "yes") {
+            PopulateTCMember();
+        }
+        else {
+            App.TCType.setValue(c);
+            return;
+        }
+    };
+
+    DateChange = function (a,b,c) {
+        TCChange('Date', '', c);
+    };
+    var TCChange = function (a, b, c) {
+        if (firstload) {
+            firstload = !firstload;
+        }
+        else {
+            if (App.grdTCMember.store.data.items.length > 0) {
+                Ext.Msg.show({
+                    title: 'Reload Confirmation',
+                    message: "List TCMember will be refreshed due to your changes.</br>Do you want to continue?",
+                    buttons: Ext.MessageBox.YESNO,
+                    fn: function (btn) {
+                        if (btn === "yes") {
+                            PopulateTCMember();
+                        }
+                        else if (btn === "no") {
+                            if (a === "Date") {
+                                App.ScheduleDate.setValue(c);
+                            }
+                            else if (a === "FPT") {
+                                App.FPTID.setValue(c);
+                            }
+                            else {
+                                App.TCType.setValue(c);
+                            }
+
+                            Ext.Msg.close()
+                        }
+                    }
+                });
+            }
+            else {
+                debugger;
+                RefreshTCMember("yes");
+            }
+        };
+    };
+    showMsgConfirmVerify = function () {
+        return;
+    };
+    BeforeSelectType = function (a,b,c,d,e) {
+    };
+    var CBChange = function (a, b, c, d) {
+        if (b) {
+            App.panelUpload.expand();
+            App.FileUpload.setDisabled(false);
+            App.treePanelNegoConfig.hide();
+            App.treePanelNegoConfigUpload.show();
+            App.panelCartList.hide();
+        } else {
+            App.panelUpload.collapse();
+            App.FileUpload.setDisabled(true);
+            App.treePanelNegoConfigUpload.hide();
+            App.treePanelNegoConfig.show();
+            App.panelCartList.hide();
+        }
+    };
+
+    var SetTimeConfig = function (a, b, c, d) {
+        var r = App.ScheduleDate.getValue();
+        r.setHours(b.getHours(), b.getMinutes());
+        App.ScheduleDate.setValue(r);
+
+
+    };
+
+    var dataSourceChanged = function (el) {
+        App.isFromUpload.setValue(false);
+        App.panelProjectsList.show();
+        App.panelUpload.setHidden(true);
+        if (el.getActiveItem().itemIndex == 0) {
+            App.isFromUpload.setValue(true);
+            App.panelUpload.setHidden(false);
+        } else if (el.getActiveItem().itemIndex == 2) {
+            App.isFromUpload.setValue(true);
+
+            App.panelUpload.expand();
+            App.FileUpload.setDisabled(true);
+            App.panelProjectsList.hide();
+
+            App.panelCartList.show();
+        }
+    };
+
+    var beforeRender = function (el) {
+        
+        menus = el.getMenu();
+        menuitem = menus.items.items[@ViewData["selectedSource"]];
+        console.log(menuitem);
+        el.setActiveItem(menuitem);
+    };
+
+    </script>
+}
+@(
+            X.Panel()
+            .ID("PFPTForm")
+            .Frame(true)
+            .Items(
+                X.FormPanel()
+                .ID("FFPT")
+                .Padding(iBodyPadding)
+                .Items(
+                    X.TextFieldFor(model => model.FPTID)
+                        .FieldLabel("FPTID")
+                        .ReadOnly(false)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "FPTIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "FPTIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        .Width(iFieldWidth)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseFPTID
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate)),
+                            btnEraseFPTID.Handler("eraseFPTID")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonUpdate))
+                        ),
+                    X.TextFieldFor(model => model.Descriptions)
+                        .FieldLabel(FPTVM.Prop.Descriptions.Desc)
+                        .ReadOnly(true)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "FPTDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "FPTDescBlur(this.getValue());";
+                        }),
+                    X.TextFieldFor(model => model.NegoConfigBUnitDesc)
+                        .FieldLabel(FPTVM.Prop.NegoConfigBUnitDesc.Desc)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .ReadOnly(true),
+                    X.TextFieldFor(model => model.BusinessUnitID)
+                        .FieldLabel(FPTVM.Prop.BusinessUnitID.Desc)
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth).Hidden(true),
+                    X.TextFieldFor(model => model.DivisionID)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.ProjectID)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.ClusterID)
+                        .Hidden(true),
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.DateFieldFor(model => model.ScheduleDate)
+                                //.ID("Schedule")
+                                .FieldLabel(FPTVM.Prop.Schedule.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .LabelWidth(iLabelWidth)
+                                .Width(iFieldWidth)
+                                .Format(global_asax.DefaultDateFormat).Listeners(oListeners =>{
+                                    oListeners.Change.Fn = "DateChange";
+                                })
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TimeField()
+                                .ID("TimeSetting")
+                                .Increment(30)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .SelectedTime(Model.ScheduleTimeHour)
+                                .Format("H:mm")
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.Change.Fn = "SetTimeConfig";
+                                }),
+                            X.TimeFieldFor(model=>model.ScheduleTimeHour)
+                                .Hidden(true)
+
+                                ),
+                    X.TextFieldFor(model => model.Schedule)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.TaskID)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.TaskStatus)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.FPTStatusID)
+                        .Hidden(true),
+                    X.TextFieldFor(model => model.CurrentApprovalLvl)
+                        .Hidden(true),
+                    X.NumberFieldFor(model => model.NegoLevel)
+                        .MinValue(1)
+                        .MaxValue(99)
+                        .FieldLabel(FPTVM.Prop.NegoLevel.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                    X.NumberFieldFor(model => model.NegoRound)
+                        .MinValue(1)
+                        .MaxValue(99)
+                        .FieldLabel(FPTVM.Prop.NegoRound.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                    X.NumberFieldFor(model => model.NegoRoundTime)
+                        .MinValue(1)
+                        .MaxValue(120)
+                        .FieldLabel(FPTVM.Prop.NegoRoundTime.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth),
+                    X.ComboBoxFor(model => model.TCType)
+                        .DisplayField(TCMembersVM.Prop.TCTypeID.Name)
+                        .FieldLabel("TC Type")
+                        .ValueField(TCMembersVM.Prop.TCTypeID.Name)
+                        .Editable(false)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .LabelWidth(iLabelWidth)
+                        .Width(iFieldWidth)
+                        .Store(
+                            X.StoreForModel()
+                            .Proxy(X.AjaxProxy()
+                                .Url(Url.Action("/GetTCType"))
+                                .Reader(X.JsonReader().RootProperty("data"))
+                            )
+                            .AutoLoad(true)
+                        )
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.Change.Fn = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonDetail)?  "TCChange":"";
+                            //oListeners.BeforeSelect.Fn = "BeforeSelectType";
+                            //oListeners.Change.Handler = "TCChange(App.TCType.value);";
+                            //oListeners.Select.Handler = "TCChange(App.TCType.value);";
+                        })
+                        .AllowBlank(true),
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.TRMLead)
+                                .FieldLabel(FPTVM.Prop.TRMLead.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "trmLeadID(item, e);";
+                                    oListeners.Blur.Handler = "trmLeadIDBlur(this.getValue());";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.TRMLeadDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "descriptionsSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "descriptionsBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseTRMLead
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                    btnEraseTRMLead.Handler("eraseTRMLead")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                ),
+                            X.CheckboxFor(model => model.ByUpload)
+                                        .ID("isFromUpload")
+                                        .FieldLabel("By Upload")
+                                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || bool.Parse(ViewData["isRenegotiation"].ToString()))
+                                        .LabelWidth(iLabelWidth)
+                                        .Hidden(true)
+                                        .Listeners(oListeners =>
+                                        {
+                                            oListeners.Change.Fn = "CBChange";
+                                        })
+                                        .Width(iFieldWidth),
+                              X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                                  X.Label().Text("Source:")
+                                  .Cls("x-label x-form-item-label-text x-column x-label-default")
+                                  .Width(iLabelWidth)
+                                  .MarginSpec("5 0 0 0")
+                                  ,
+                                  X.CycleButton()
+                                    .ShowText(true)
+                                    .Width((iFieldWidth - iLabelWidth) / 2)
+                                    .PrependText("")
+                                    .MarginSpec("5 0 0 5")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                    .Menu(X.Menu()
+                                        .Items(
+                                            X.CheckMenuItem()
+                                                .Text("Upload")
+                                                .Icon(Icon.PageExcel),
+                                            X.CheckMenuItem()
+                                                .Text("Budget Plan")
+                                                .Icon(Icon.ApplicationViewList)
+                                                .Checked(true),
+                                            X.CheckMenuItem()
+                                                .Text("Cart")
+                                                .Icon(Icon.Cart)
+                                        )
+                                    )
+                                    .Listeners(ls => { ls.Change.Fn = "dataSourceChanged"; ls.BeforeRender.Fn = "beforeRender"; })
+                                  )
+
+                        )
+                )
+                .Listeners(oListeners =>
+                {
+                    oListeners.AfterRender.Fn = "showhideUpload";
+                })
+                .TopBar(
+                    X.Toolbar()
+                    .PaddingSpec(sToolbarPaddingSpec)
+                    .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+                ),
+                X.FormPanel()
+                .ID("panelUpload")
+                .Title("Upload")
+                .Collapsed(true)
+                .Hidden(true)
+                //.Listeners(oListeners =>
+                //{
+                //    oListeners.Collapse.Fn = "whenPanelUploadCollapsed";
+                //})
+                .ItemsFromPartial("Upload/_Form", Model, ViewData)
+                .Padding(iBodyPadding),
+                X.FormPanel()
+                .ID("panelProjectsList")
+                .Title("Project Configurations")
+                .Collapsible(true)
+                //.Listeners(oListeners =>
+                //{
+                //    oListeners.Collapse.Fn = "whenPanelBPlanCollapsed";
+                //})
+                .ItemsFromPartial("Projects/_listProject", Model, ViewData)
+                .Padding(iBodyPadding),
+                X.FormPanel()
+                .ID("panelCartList")
+                .Hidden(true)
+                .Title("Cart Configurations")
+                .Collapsible(true)
+                //.Listeners(oListeners =>
+                //{
+                //    oListeners.Collapse.Fn = "whenPanelBPlanCollapsed";
+                //})
+                .Items(
+                    //X.TextField()
+                    //.ID(CartItemVM.Prop.CatalogCartID.Name)
+                    //.FieldLabel(CartItemVM.Prop.CatalogCartID.Desc)
+                    //.LabelWidth(iLabelWidth)
+                    //.Width(iFieldWidth)
+                    //.MarginSpec("10 0 0 0")
+
+                    X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .MarginSpec("10 0 0 0")
+                        .Items(
+                            X.TextField()
+                                .ID(CartItemVM.Prop.CatalogCartID.Name)
+                                .FieldLabel(CartItemVM.Prop.CatalogCartID.Desc)
+                                //.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "CatalogCartID(item, e);";
+                                    oListeners.Blur.Handler = "CatalogCartIDBlur(this.getValue());";
+                                    oListeners.Change.Fn = "loadCartDetail";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextField().ID(CartItemVM.Prop.CatalogCartDesc.Name)
+                                .FieldLabel("")
+                                //.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "CatalogCartDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "CatalogCartDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseCatalogCart
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                                    btnEraseCatalogCart.Handler("eraseCatalogCart")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                )
+                                )
+
+
+                    ,
+                    X.Panel().ItemsFromPartial("Carts/_List", new List<CartItemVM>())
+
+                    )
+
+                .Padding(iBodyPadding)
+                ,
+                X.FormPanel()
+                .ID("panelTCMembers")
+                .Title("TC Member Configurations")
+                .Collapsible(true)
+                .ItemsFromPartial("TCmembers/_listTCMember", Model.ListTCMembers, ViewData)
+                .Padding(iBodyPadding)
+                )
+            )
+       

@@ -1,0 +1,502 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model PackageVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlBudgetPlanID", "", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlDescription", "", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("isFromPackage", "1", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlBudgetPlanList", "grdBudgetPlanList", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterStatusID", "0", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterProjectID", "App.ProjectID.value", ParameterMode.Raw, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseBudgetPlan = global_asax.Button(Buttons.ButtonAdd, "BudgetPlanList", null, "../BudgetPlan/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList, "availableBrowseBudgetPlan()");
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectID.Name, ProjectVM.Prop.ProjectID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.ProjectDesc.Name, ProjectVM.Prop.ProjectDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ProjectVM.Prop.CompanyID.Name, ProjectVM.Prop.CompanyID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FilterDivisionID", ViewData["divisionid"].ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseProject = global_asax.Button(Buttons.ButtonBrowse, "Project", "", "../Project/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseProject = global_asax.Button(Buttons.ButtonErase, "Project", "", "", true);
+
+    <script>
+        var deleteBudgetPlanList = function () {
+            if (App.grdBudgetPlanList.getSelection().length > 1)
+                Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected records?", "deletingBudgetPlanList");
+            else
+                Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected record?", "deletingBudgetPlanList");
+        };
+
+        var deletingBudgetPlanList = function (title, message, fn, scope) {
+            if (title == "yes") {
+                var selectedRow = App.grdBudgetPlanList.getSelection();
+                for (var i = 0; i <= selectedRow.length; i++) {
+
+                    App.grdBudgetPlanList.store.remove(selectedRow[i]);
+                }
+            }
+        };
+
+        var grdBudgetPlanListTopBarAfterRender = function (item) {
+            if (Ext.getCmp("ButtonDeleteBudgetPlanList") != undefined) {
+                App.ButtonDeleteBudgetPlanList.setDisabled(true);
+            }
+        };
+
+        var selectionBudgetPlanListChange = function (length) {
+            if (Ext.getCmp("ButtonDeleteBudgetPlanList") != undefined) {
+                if (App.grdBudgetPlanList.getSelection().length > 0) {
+                    for (var i = 0; i < App.grdBudgetPlanList.getSelection().length; i++) {
+                        if (App.grdBudgetPlanList.getSelection()[i].data.StatusID > 0) {
+                            App.ButtonDeleteBudgetPlanList.setDisabled(true);
+                            break;
+                        } else {
+                            App.ButtonDeleteBudgetPlanList.setDisabled(false);
+                        }
+                    }
+
+                } else
+                    App.ButtonDeleteBudgetPlanList.setDisabled(true);
+            }
+        };
+
+        var availableBrowseBudgetPlan = function () {
+
+            if (App.ProjectID.value == "") {
+                return false;
+            } else {
+                return true;
+            }
+
+        };
+
+    </script>
+
+    /* Budget Plan List */
+    <script>
+
+        var applyFilter = function (field) {
+            var store = App.grdBudgetPlanList.getStore();
+            store.filterBy(getRecordFilter());
+        };
+
+        var filterString = function (value, dataIndex, record) {
+
+            var val = record.get(dataIndex);
+
+            if (typeof val != "string") {
+                return value.length == 0;
+            }
+
+            return val.toLowerCase().indexOf(value.toLowerCase()) > -1;
+        };
+
+        var filterDate = function (value, dataIndex, record) {
+            var val = Ext.Date.clearTime(record.get(dataIndex), true).getTime();
+
+            if (!Ext.isEmpty(value, false) && val != Ext.Date.clearTime(value, true).getTime()) {
+                return false;
+            }
+            return true;
+        };
+
+        var filterNumber = function (value, dataIndex, record) {
+            var val = record.get(dataIndex);
+
+            if (!Ext.isEmpty(value, false) && val != value) {
+                return false;
+            }
+
+            return true;
+        };
+
+        var getRecordFilter = function () {
+            var f = [];
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.StatusDescFilter.getValue() || "", "StatusDesc", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.BudgetPlanIDFilter.getValue(), "BudgetPlanID", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterNumber(App.BudgetPlanVersionFilter.getValue(), "BudgetPlanVersion", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.BudgetPlanTypeDescFilter.getValue(), "BudgetPlanTypeDesc", record);
+                }
+            });
+
+            f.push({
+                filter: function (record) {
+                    return filterString(App.DescriptionFilter.getValue(), "Description", record);
+                }
+            });
+
+            var len = f.length;
+
+            return function (record) {
+                for (var i = 0; i < len; i++) {
+                    if (!f[i].filter(record)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+        };
+
+    </script>
+
+    /* Browse Project */
+    <script>
+        var bPreventGetProject = false;
+
+        getProject = function (projectID, projectDesc, exact) {
+            if (App.ProjectID.isDirty() || App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = App.ProjectID.getValue();
+                App.ProjectDesc.originalValue = App.ProjectDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetProject", "Project"))',
+                    params: {
+                        ControlProjectID: App.ProjectID.id,
+                        ControlProjectDesc: App.ProjectDesc.id,
+                        ControlCompanyID: App.CompanyID.id,
+                        FilterProjectID: projectID,
+                        FilterProjectDesc: projectDesc,
+                        Exact: exact
+                    },
+                    success: getProjectSuccess,
+                    failure: getProjectFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getProjectSuccess = function () {
+            App.grdBudgetPlanList.store.load([]);
+            if (!App.ProjectID.isDirty() && !App.ProjectDesc.isDirty()) {
+                App.ProjectID.originalValue = "";
+                App.ProjectDesc.originalValue = "";
+                App.CompanyID.originalValue = "";
+            }
+            bPreventGetProject = false;
+        };
+
+        getProjectFailed = function () {
+            eraseProject();
+        };
+
+        projectIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject(field.getValue(), "", false);
+            }
+        };
+
+        projectDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetProject = true;
+                getProject("", field.getValue(), false);
+            }
+        };
+
+        projectIDBlur = function (projectID) {
+            console.log(bPreventGetProject);
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectID.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject(projectID, "", true);
+            }
+            bPreventGetProject = false;
+        };
+
+        projectDescBlur = function (projectDesc) {
+            if (!bPreventGetProject) {
+                bPreventGetProject = true;
+                if (projectDesc.trim() == "")
+                    getProjectFailed();
+                else
+                    getProject("", projectDesc, true);
+            }
+            bPreventGetProject = false;
+        };
+
+        setDisableBrowseBudgetPlan = function () {
+            App.grdBudgetPlanList.store.load([]);
+            if (App.ProjectID.value != null && App.ProjectID.value.length > 0) {
+                App.ButtonAddBudgetPlanList.setDisabled(false);
+            } else {
+                App.ButtonAddBudgetPlanList.setDisabled(true);
+            }
+        };
+
+        eraseProject = function () {
+            App.ProjectID.clear();
+            App.ProjectDesc.clear();
+            App.CompanyID.clear();
+            App.ProjectID.originalValue = "";
+            App.ProjectDesc.originalValue = "";
+            App.CompanyID.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PPackageForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FPackage")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.PackageID)
+                .FieldLabel(PackageVM.Prop.PackageID.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.PackageDesc)
+                .FieldLabel(PackageVM.Prop.PackageDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.CompanyID)
+                .FieldLabel(PackageVM.Prop.CompanyID.Desc)
+                .Hidden(true),
+            X.FieldContainer()
+                        .FieldLabel("")
+                        .LabelWidth(0)
+                        .Width(iFieldWidth)
+                        .Layout(LayoutType.Column)
+                        .Items(
+                            X.TextFieldFor(model => model.ProjectID)
+                                .FieldLabel(ItemPriceVM.Prop.ProjectDesc.Desc)
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "projectIDSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "projectIDBlur(this.getValue());";
+                                    oListeners.Change.Handler = "setDisableBrowseBudgetPlan();";
+                                })
+                                .LabelWidth(iLabelWidth)
+                                .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                            X.TextFieldFor(model => model.ProjectDesc)
+                                .FieldLabel("")
+                                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                .Listeners(oListeners =>
+                                {
+                                    oListeners.SpecialKey.Handler = "projectDescSpecialKey(item, e);";
+                                    oListeners.Blur.Handler = "projectDescBlur(this.getValue());";
+                                })
+                                .LabelWidth(0)
+                                .Width((iFieldWidth - iLabelWidth) / 2)
+                                .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                                .RightButtons(
+                                    btnBrowseProject
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd)),
+                                    btnEraseProject.Handler("eraseProject")
+                                    .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                                )),
+            X.TextFieldFor(model => model.StatusID)
+                .FieldLabel(PackageVM.Prop.StatusID.Desc)
+                .Hidden(true),
+            X.TextFieldFor(model => model.StatusDesc)
+                .FieldLabel(PackageVM.Prop.StatusDesc.Desc)
+                .ReadOnly(true)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.GridPanel()
+                        .ID("grdBudgetPlanList")
+                        .Title("Budget Plan")
+                        .Collapsible(true)
+                        .MinHeight(250)
+                        .SelectionModel(
+                            X.RowSelectionModel()
+                            .Mode(SelectionMode.Multi)
+                            .AllowDeselect(true)
+                        )
+                        .Listeners(oListener =>
+                        {
+                            oListener.SelectionChange.Handler = "selectionBudgetPlanListChange(selected.length)";
+                        })
+                        .ColumnModel(
+                            X.Column()
+                                .Text("Budget Plan ID")
+                                .DataIndex("BudgetPlanID")
+                                .Flex(1)
+                                .Filterable(true)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanIDFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Budget Plan Version")
+                                .DataIndex("BudgetPlanVersion")
+                                .Flex(2)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanVersionFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Budget Type")
+                                .DataIndex("BudgetPlanTypeDesc")
+                                .Flex(2)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("BudgetPlanTypeDescFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Description")
+                                .DataIndex("Description")
+                                .Flex(1)
+                                .Items(
+                                    Html.X().TextField()
+                                    .ID("DescriptionFilter")
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Status")
+                                .DataIndex("StatusDesc")
+                                .Flex(1)
+                                .Items(
+                                    Html.X().ComboBox()
+                                    .ID("StatusDescFilter")
+                                    .TriggerAction(TriggerAction.All)
+                                    .QueryMode(DataLoadMode.Local)
+                                    .Editable(false)
+                                    .DisplayField("StatusDesc")
+                                    .ValueField("StatusDesc")
+                                    .Store(
+                                       X.StoreForModel()
+                                        .Proxy(X.AjaxProxy()
+                                            .Url(Url.Action("/GetStatusList"))
+                                            .Reader(X.JsonReader().RootProperty("data"))
+                                        )
+                                        .AutoLoad(true)
+                                    )
+                                    .Listeners(l =>
+                                    {
+                                        l.Change.Handler = "applyFilter(this);";
+                                        l.Change.Buffer = 250;
+                                    })
+                                    .Plugins(Html.X().ClearButton())
+                                )
+                                .Sortable(false),
+                            X.Column()
+                                .Text("Status ID")
+                                .Hidden(true)
+                                .DataIndex("StatusID")
+                                .Flex(1)
+                                .Sortable(false)
+                        )
+                        .Store(
+                             X.Store()
+                                .ID("grdBudgetPlanListStore")
+                                .AutoLoad(true)
+                                .PageSize(30)
+                                .DataSource(Model.BudgetPlanList)
+                                .Model(
+                                    X.Model()
+                                    .Name("ModelBudgetPlanList")
+                                    .Fields(
+                                        X.ModelField().Name("BudgetPlanID"),
+                                        X.ModelField().Name("BudgetPlanVersion"),
+                                        X.ModelField().Name("BudgetPlanTypeDesc"),
+                                        X.ModelField().Name("Description"),
+                                        X.ModelField().Name("StatusDesc"),
+                                        X.ModelField().Name("StatusID")
+                                    )
+                                )
+                         )
+                        .TopBar(
+                            X.Toolbar()
+                            .MarginSpec("0px 0px 0px 0px")
+                            .Items(
+                                btnBrowseBudgetPlan.Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)).Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonUpdate) ? true : false),
+                                X.Button()
+                                    .ID(General.EnumName(Buttons.ButtonDelete) + "BudgetPlanList")
+                                    .Icon(Icon.Delete)
+                                    .Text(General.EnumDesc(Buttons.ButtonDelete))
+                                    .Hidden(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                                    .Handler("deleteBudgetPlanList();")
+                            )
+                            .Listeners(listener =>
+                            {
+                                listener.AfterRender.Fn = "grdBudgetPlanListTopBarAfterRender";
+                            })
+                        )
+                        .BottomBar(
+                            X.PagingToolbar()
+                                .DisplayInfo(true)
+                                .BaseCls("paging")
+                                .DisplayMsg("Displaying {0} - {1} of {2}")
+                                .EmptyMsg("No records to display")
+                                .HideRefresh(true)
+                        )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

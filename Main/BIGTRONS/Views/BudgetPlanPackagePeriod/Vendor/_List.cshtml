@@ -1,0 +1,106 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<BudgetPlanVersionVendorVM>
+
+
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    int iGridMinHeight = 250;
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + BudgetPlanVersionVendorVM.Prop.VendorID.Name, BudgetPlanVersionVendorVM.Prop.VendorID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + BudgetPlanVersionVendorVM.Prop.VendorDesc.Name, BudgetPlanVersionVendorVM.Prop.VendorDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlGrid", "grdBudgetPlanPackageVendor", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "Vendor", "Add", "../Vendor/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "Vendor", null, string.Empty, true);
+
+
+    <script>
+    selectionChangeto = function (length) {
+        App.ButtonDeleteVendor.setDisabled(length < 1);
+        
+    };
+
+        deleteSelectedVendor = function () {
+            App.grdBudgetPlanPackageVendor.getStore().remove(App.grdBudgetPlanPackageVendor.getSelectionModel().getSelection());
+    };
+
+   
+    </script>
+
+}
+@(
+    X.GridPanel()
+        .ID("grdBudgetPlanPackageVendor")
+        .View(
+        Html.X()
+        .GridView()
+        )
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionChangeto(selected.length)";
+        })
+        .Store(
+            X.Store()
+                                .ID("grdVendorListStore")
+                                .AutoLoad(true)
+                                .PageSize(30)
+                                .DataSource(Model)
+                                .Model(
+                                    X.Model()
+                                    .Name("ModelVendorList")
+                                    .Fields(
+                                        X.ModelField().Name(Model, model => model.VendorID),
+                                        X.ModelField().Name(Model, model => model.VendorDesc)
+                                    )
+                                )
+        )
+        .ColumnModel(
+        X.Column()
+        .Text("Vendor ID")
+        .Hidden(true)
+        .DataIndex(Model, model => model.VendorID)
+        .Flex(4),
+        X.Column()
+        .Text("Vendor Name")
+        .Hidden(false)
+        .DataIndex(Model, model => model.VendorDesc)
+        .Flex(4)
+
+        )
+        .TopBar(
+                            X.Toolbar()
+                            .MarginSpec("0px 0px 0px 0px")
+                            .Items(
+                                btnAdd.Disabled(false),
+                                btnDelete.Disabled(true).Handler("deleteSelectedVendor();")
+                            )
+                        )
+        .BottomBar(
+            X.PagingToolbar()
+            .DisplayInfo(true)
+            .BaseCls("paging")
+            .DisplayMsg("Displaying {0} - {1} of {2}")
+            .EmptyMsg("No records to display")
+        )
+
+
+
+)

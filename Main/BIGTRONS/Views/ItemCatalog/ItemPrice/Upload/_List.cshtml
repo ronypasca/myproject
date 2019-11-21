@@ -1,0 +1,131 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemPriceUploadVM>
+@{
+    ViewBag.Title = "Item Price";
+    var X = Html.X();
+    string sPageName = "HomeItemPrice";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+   
+    <script>
+        var sTitleItemPrice = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizegrdItemPriceFromFileUpload()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizegrdItemPriceFromFileUpload();
+        });
+
+        resizegrdItemPriceFromFileUpload = function () {
+            if (App.grdItemPriceFromFileUpload != null)
+                App.grdItemPriceFromFileUpload.updateLayout();
+                /*App.grdItemPriceFromFileUpload.setHeight($(window).height() - App.grdItemPriceFromFileUpload.getY() - (App.grdItemPriceFromFileUpload.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeItemPrice = function (length) {
+            
+        };
+
+        deleteSuccess = function () {
+            App.grdItemPriceFromFileUpload.getStore().reload();
+        };
+
+        deleteRow = function()
+        {
+            App.grdItemPriceFromFileUpload.getStore().remove(App.grdItemPriceFromFileUpload.getSelectionModel().getSelection());
+        };
+
+       
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdItemPriceFromFileUpload")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+    )
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelItemPrice")
+                .Fields(
+                    X.ModelField().Name(Model, model => model.ItemPriceID),
+                    X.ModelField().Name(Model, model => model.ItemID),
+                    X.ModelField().Name(Model, model => model.ItemDesc),
+                    X.ModelField().Name(Model, model => model.PriceTypeID),
+                    X.ModelField().Name(Model, model => model.PriceTypeDesc),
+                    X.ModelField().Name(Model, model => model.RegionID),
+                    X.ModelField().Name(Model, model => model.RegionDesc),
+                    X.ModelField().Name(Model, model => model.ProjectID),
+                    X.ModelField().Name(Model, model => model.ProjectDesc),
+                    X.ModelField().Name(Model, model => model.ClusterID),
+                    X.ModelField().Name(Model, model => model.ClusterDesc),
+                    X.ModelField().Name(Model, model => model.UnitTypeID),
+                    X.ModelField().Name(Model, model => model.UnitTypeDesc),
+                    X.ModelField().Name(Model, model => model.PriceTypeID),
+
+                    X.ModelField().Name(Model, model => model.VendorID),
+                    X.ModelField().Name(Model, model => model.IsDefault),
+
+                    X.ModelField().Name(Model, model => model.ValidFrom),
+                    X.ModelField().Name(Model, model => model.ValidTo),
+                    X.ModelField().Name(Model, model => model.CurrencyID),
+                    X.ModelField().Name(Model, model => model.Amount)
+                )
+            )
+        )
+    .ColumnModel(
+        X.Column().Text("Price").Flex(3)
+        .Columns(
+            X.Column().Text(ItemPriceUploadVM.Prop.ItemPriceID.Desc).DataIndex(Model, model => model.ItemPriceID).Hidden(true),
+            X.Column().Text(ItemPriceUploadVM.Prop.ItemID.Desc).DataIndex(Model, model => model.ItemID).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.ItemDesc.Desc).DataIndex(Model, model => model.ItemDesc).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.RegionID.Desc).DataIndex(Model, model => model.RegionID).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.ProjectID.Desc).DataIndex(Model, model => model.ProjectID).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.ClusterID.Desc).DataIndex(Model, model => model.ClusterID).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.UnitTypeID.Desc).DataIndex(Model, model => model.UnitTypeID).Flex(1),
+            X.Column().Text(ItemPriceUploadVM.Prop.PriceTypeID.Desc).DataIndex(Model, model => model.PriceTypeID).Flex(1).Hidden(true)
+        ),
+        //X.Column().Text("Item Price Vendor").Flex(1)
+        //.Columns(
+        //    X.Column().Text(ItemPriceVendorVM.Prop.VendorID.Desc).DataIndex(Model, model => model.VendorID).Flex(1),
+        //    X.Column().Text(ItemPriceVendorVM.Prop.IsDefault.Desc).DataIndex(Model, model => model.IsDefault).Flex(1)
+        //),
+
+        X.Column().Text("Period").Flex(2)
+        .Columns(
+             X.DateColumn().Text(ItemPriceUploadVM.Prop.ValidFrom.Desc).DataIndex(Model, model => model.ValidFrom).Flex(1).Format(global_asax.DefaultDateFormat),
+            X.DateColumn().Text(ItemPriceUploadVM.Prop.ValidTo.Desc).DataIndex(Model, model => model.ValidTo).Flex(1).Format(global_asax.DefaultDateFormat),
+            X.Column().Text(ItemPriceUploadVM.Prop.CurrencyID.Desc).DataIndex(Model, model => model.CurrencyID).Flex(1),
+            X.NumberColumn().Text(ItemPriceUploadVM.Prop.Amount.Desc).DataIndex(Model, model => model.Amount).Flex(1).Format(global_asax.IntegerNumberFormat)
+        )
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

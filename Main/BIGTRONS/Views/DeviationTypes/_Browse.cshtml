@@ -1,0 +1,151 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model DeviationTypesVM
+@{
+    
+    var X = Html.X();
+    string sPageName = "Deviation Types";
+    var iWindowWidth = 650;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectDeviationTypesBrowse('" + ViewData["Control" + DeviationTypesVM.Prop.DeviationTypeID.Name]
+        + "', '" + ViewData["Control" + DeviationTypesVM.Prop.Descriptions.Name]
+        + "', App.grdDeviationTypesBrowse.getRowsValues({selectedOnly:true})[0]['" + DeviationTypesVM.Prop.DeviationTypeID.Name + "']"
+        + ", App.grdDeviationTypesBrowse.getRowsValues({selectedOnly:true})[0]['" + DeviationTypesVM.Prop.Descriptions.Name + "']"
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, "", true, false, false, Buttons.ButtonList);
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizeGrdDeviationTypesBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeGrdDeviationTypesBrowse();
+        });
+
+        resizeGrdDeviationTypesBrowse = function () {
+            if (App.grdDeviationTypesBrowse != null)
+                App.grdDeviationTypesBrowse.setHeight($(window).height() - App.grdDeviationTypesBrowse.getY() - (App.grdDeviationTypesBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionDeviationTypesChange = function (length) {
+            App.ButtonSelectDeviationTypes.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, DeviationTypeID, Descriptions) {
+            filter.fields[0].items.items[0].setValue(DeviationTypeID);
+            filter.fields[1].items.items[0].setValue(Descriptions);
+        };
+
+        selectDeviationTypesBrowse = function (ControlDeviationTypesID, ControlDeviationTypesDesc, DeviationTypeID, Descriptions) {
+            if (Ext.getCmp(ControlDeviationTypesID) != undefined) {
+                Ext.getCmp(ControlDeviationTypesID).setValue(DeviationTypeID);
+                Ext.getCmp(ControlDeviationTypesID).originalValue = DeviationTypeID;
+            }
+            if (Ext.getCmp(ControlDeviationTypesDesc) != undefined) {
+                Ext.getCmp(ControlDeviationTypesDesc).setValue(Descriptions);
+                Ext.getCmp(ControlDeviationTypesDesc).originalValue = Descriptions;
+            }
+            App.WinBrowseDeviationTypes.close();
+        };
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseDeviationTypes")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .Items(
+        X.GridPanel()
+        .ID("grdDeviationTypesBrowse")
+        .Padding(iBodyPadding)
+        .MinHeight(iGridMinHeight)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Multi)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionDeviationTypesChange(selected.length)";
+            oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[DeviationTypesVM.Prop.DeviationTypeID.Name].ToString() + "', '" + ViewData[DeviationTypesVM.Prop.Descriptions.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1;oListener.RowDblClick.Handler = sHandler;
+        })
+        .Store(
+            X.StoreForModel()
+            .Proxy(
+                X.AjaxProxy()
+                .Url(Url.Action("ReadBrowse", "DeviationTypes"))
+                .Reader(X.JsonReader().RootProperty("data"))
+            )
+            .AutoLoad(ViewData[DeviationTypesVM.Prop.DeviationTypeID.Name].ToString() == "" && ViewData[DeviationTypesVM.Prop.Descriptions.Name].ToString() == "")
+            .RemoteSort(true)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .SorterFor(Model, model => model.DeviationTypeID, Ext.Net.SortDirection.ASC)
+        )
+        .ColumnModel(
+            X.Column()
+            .Text(DeviationTypesVM.Prop.DeviationTypeID.Desc)
+            .DataIndex(Model, model => model.DeviationTypeID)
+            .Flex(1)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            ),
+            X.Column()
+            .Text(DeviationTypesVM.Prop.Descriptions.Desc)
+            .DataIndex(Model, model => model.Descriptions)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                )
+            )
+        )
+        .Plugins(
+            X.FilterHeader()
+            .Remote(true)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+                btnSelect.Disabled(true).Handler(sHandler)
+            )
+        )
+        .BottomBar(
+            X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+        )
+    )
+)

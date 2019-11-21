@@ -1,0 +1,12 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Additional";
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    
+    oParamList = new List<Parameter>();
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, General.EnumDesc(Buttons.ButtonDetail) + sPageName, true, false, false, null, oParamList);
+}

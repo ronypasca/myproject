@@ -1,0 +1,146 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<FPTNegotiationRoundVM>
+@{
+    ViewBag.Title = "Negotiation Round";
+    var X = Html.X();
+    string sPageName = "_SubItemGroup";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdNegotiationRound.getRowsValues({selectedOnly:true})", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    /*Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, "Parameter", "Delete", "DeleteParameter", false, false,false,null,oParamList,null,"deleteRow()");
+
+    */
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, null, null, "", true);
+
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlgrdNegotiationRound", "grdNegotiationRound", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, "Parameter", "Add", "../Parameter/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizegrdNegotiationRound()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizegrdNegotiationRound();
+        });
+
+        resizegrdNegotiationRound = function () {
+            if (App.grdNegotiationRound != null)
+                App.grdNegotiationRound.setHeight($(window).height() - App.grdNegotiationRound.getY() - (App.grdNegotiationRound.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChangeRound = function (length) {
+        };
+
+        deleteSuccess = function () {
+            App.grdNegotiationRound.getStore().reload();
+        };
+
+        reloadGrid = function(){
+            Ext.net.DirectMethod.request({
+                url: '@(Url.Action("GetListRound", "RoundMonitoring"))',
+                params: {
+                    FPTID: App.FPTID.getValue()
+                },
+                success: getListRoundSuccess,
+                failure: getListRoundFailed
+            });
+        };
+
+        getListRoundSuccess = function(result){
+            debugger;
+            App.grdNegotiationRound.store.loadData(result);
+        };
+
+        getListRoundFailed  = function(result){
+            showInfoAlert(sTitle, result);
+        };
+
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdNegotiationRound")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChangeRound(selected.length)";
+    })
+    .Store(
+            X.Store()
+            .RemoteSort(false)
+            .RemotePaging(false)
+            .RemoteFilter(false)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelNegotiationRound")
+                .Fields(
+                     X.ModelField().Name(Model, model => model.RoundID),
+                     X.ModelField().Name(Model, model => model.StartDateTimeStamp),
+                     X.ModelField().Name(Model, model => model.EndDateTimeStamp),
+                     X.ModelField().Name(Model, model => model.Status),
+                     X.ModelField().Name(Model, model => model.Remarks)
+                )
+            )
+        )
+    .ColumnModel(
+         X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.RoundID.Desc)
+        .DataIndex(Model, model => model.RoundID)
+        .Flex(2)
+        .Hidden(true)
+        ,
+        X.DateColumn()
+        .Text("Start")
+        .DataIndex(Model, model => model.StartDateTimeStamp)
+        .Format(global_asax.DefaultDateTimeFormat)
+        .Flex(2)
+        ,
+        X.DateColumn()
+        .Text("End")
+        .DataIndex(Model, model => model.EndDateTimeStamp)
+        .Format(global_asax.DefaultDateTimeFormat)
+        .Flex(2),
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.Remarks.Desc)
+        .DataIndex(Model, model => model.Remarks)
+        .Flex(2)
+        ,
+        X.Column()
+        .Text(FPTNegotiationRoundVM.Prop.Status.Desc)
+        .DataIndex(Model, model => model.Status)
+        .Flex(2)
+    )
+    .Plugins(
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

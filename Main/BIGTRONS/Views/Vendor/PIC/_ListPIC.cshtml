@@ -1,0 +1,347 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<VendorPICsVM>
+@{
+    ViewBag.Title = "Vendor PIC";
+    var X = Html.X();
+    string sPageName = "VendorPIC";
+    int iGridMinHeight = 350;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+    bool isDetailButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    List<Parameter> oParamList;
+    Parameter oParam;
+    oParamList = new List<Parameter>();
+    oParam = new Parameter("ControlGrdVendorPIC", "grdVendorPIC", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ControlGrid", "grdVendorPIC", ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseVendor = global_asax.Button(Buttons.ButtonBrowse, "BrowsePIC", "Add", "../Vendor/BrowsePIC", true, false, false, null, oParamList, null, null);
+    Button.Builder btnEraseVendor = global_asax.Button(Buttons.ButtonErase, "Vendor", "", "", true);
+
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, string.Empty, true);
+
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+
+    var hdnTextFieldVendorPICID = X.Hidden().ID(VendorPICsVM.Prop.VendorPICID.Name);
+    var hdnTextFieldPICName = X.Hidden().ID(VendorPICsVM.Prop.PICName.Name);
+    var hdnTextFieldListPICVendor = X.Hidden().ID(VendorVM.Prop.ListPICVendor.Name);
+    <script>
+        var sTitleVendorPIC = @Html.Raw(Json.Encode(ViewBag.Title));
+
+        $(document).ready(function ()
+        {
+            setTimeout("resizeGrdVendorPIC()", 1);
+        });
+
+        $(window).resize(function ()
+        {
+            resizeContainer();
+            resizeGrdVendorPIC();
+        });
+
+        var resizeGrdVendorPIC = function ()
+        {
+            if (App.grdVendorPIC != null)
+                App.grdVendorPIC.setHeight($(window).height() - App.grdVendorPIC.getY() - (App.grdVendorPIC.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        var selectionChange = function (length)
+        {
+            App.ButtonAddBrowseCommType.setDisabled(length != 1);
+            App.ButtonDeleteVendorPIC.setDisabled(length < 1);
+        };
+
+        deleteSuccess = function ()
+        {
+            App.grdVendorPIC.getStore().reload();
+        };
+
+        deleteRowItemPIC = function()
+        {
+            showMsgDeleteConfirm();
+        };
+
+        showMsgDeleteConfirm= function()
+        {
+            Ext.Msg.show({
+                message: "Are you sure want to delete selected record(s)?",
+                buttons:Ext.MessageBox.YESNO,
+                fn: "deleteConfirm"
+            });
+            return;
+        };
+
+        deleteConfirm= function(btn)
+        {
+            if (btn == "yes") {
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("DeleteVendorPIC", "Vendor"))',
+                    params: {
+                        Selected: App.grdVendorPIC.getRowsValues({ selectedOnly: true })
+                    },
+                    callback:function(){
+                        App.grdPICComm.store.clearFilter();
+                        var records = App.grdVendorPIC.getSelectionModel().getSelection()[0];
+                        var recordPeriods =App.grdPICComm.store.data.items;
+                        for (var i = 0; i < recordPeriods.length; i++) {
+                            if(records.data.VendorPICID==recordPeriods[0].data.VendorPICID)
+                                App.grdPICComm.getStore().remove(recordPeriods[i]);
+                        }
+                        App.grdVendorPIC.getStore().remove(records);
+                        viewReady(App.grdPICComm);
+                    }
+                });
+            }
+        };
+
+        isDefaultVendorExist = function (vendorID)
+        {
+            allRecordVendors = App.grdVendorPIC.store.data.items;
+            var rowIdx=0;
+            for (var rowKey in allRecordVendors) {
+                if (allRecordVendors.hasOwnProperty(rowKey)) {
+                    var row = allRecordVendors[rowKey];
+                    if (row.get('VendorPICID') == vendorID) {
+                        return true;
+                    }
+                }
+                rowIdx++;
+            }
+            return false;
+        };
+        
+        function S4() 
+        {
+            return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
+        }
+
+        addPIC = function()
+        {
+            App.ButtonDeleteVendorPIC.setDisabled(false);
+            guid = (S4() + S4() + S4() + S4().substr(0,3) + S4() + S4() + S4()).toLowerCase();
+           
+            VendorID_ = (isDefaultVendorExist("@(ViewData[VendorPICsVM.Prop.VendorID.Name])")? "" : "@(ViewData[VendorPICsVM.Prop.VendorID.Name])");
+            PICName_ = (VendorID_==""?"":"@(ViewData[VendorPICsVM.Prop.PICName.Name])");
+            App.grdVendorPIC.store.add(new ModelVendorPIC({
+                VendorPICID:guid,
+                PICName:PICName_
+            }));
+            
+            App.grdVendorPIC.editingPlugin.startEditByPosition({ row: App.grdVendorPIC.getStore().data.length-1, column: 0 });
+        };
+
+        editVendorPIC = function (editor, e)
+        {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue))))
+            {
+                e.record.commit();
+            }
+        };
+
+        beforeEditVendorPIC = function (editor, e)
+        {
+            if("@isDetailButton" == "True")
+                return false;
+
+            App.grdVendorPIC.getSelectionModel().select(e.record);
+            loadGridVendorPIC(e.record.get('VendorPICID'));
+        };
+
+        setVendorPICID = function (rowIndex)
+        {
+            var value = App.VendorPICID.getValue();
+            if (value != null && value != "") {
+
+                var record = App.grdVendorPIC.store.getAt(rowIndex);
+                record.set('VendorPICID', value);
+
+                record.commit();
+                App.VendorPICID.clear();
+            }
+        };
+
+        setPICName = function (rowIndex)
+        {
+            var value = App.PICName.getValue();
+            if (value != null && value != "") {
+                if (isDuplicatedPIC(App.grdVendorPIC.getStore(), 'PICName', value, rowIndex)) {
+                    showWarningAlert(sTitleVendorPIC, Ext.String.format("{0} has been exist on the list, cannot duplicate PIC!",value) );
+                    var record = App.grdVendorPIC.store.getAt(rowIndex);
+                    record.set("VendorPICID", "");
+                    record.set("PICName", "");
+                } else {
+                    var record = App.grdVendorPIC.store.getAt(rowIndex);
+                    record.set('PICName', value);
+                }
+                record.commit();
+                App.PICName.clear();
+            }
+        };
+
+        isDuplicatedPIC = function (store, colName, value, rowIndex)
+        {
+            var found = false;
+            store.each(function (record, idx) {
+                if ((idx != rowIndex) && record.data.hasOwnProperty(colName))
+                    if (found = (record.data[colName].trim().toLowerCase() == value.trim().toLowerCase()) ? true : false) { return false };
+            });
+            return found;
+        };
+
+        var eraseVendor = function (rowIndex)
+        {
+            var record = App.grdItemPriceVendor.store.getAt(rowIndex);
+            record.set("VendorPICID", "");
+            record.set("PICName", "");
+            record.commit();
+        };
+
+        var erasePIC = function (rowIndex)
+        {
+            var record = App.grdVendorPIC.store.getAt(rowIndex);
+            record.set("VendorPICID", "");
+            record.set("PICName", "");
+            record.commit();
+        };
+        
+        var loadGridVendorPIC = function (VendorPICID_)
+        {
+            var store = App.grdPICComm.store;
+            store.clearFilter();
+            App.ButtonDeleteVendorPIC.setDisabled(false);
+            if(VendorPICID_!=null){
+                store.filterBy(function(row, id){
+                    return row.get('VendorPICID') === VendorPICID_;
+                });
+            }else
+            {
+                store.filterBy(function(row, id){
+                    return row.get('VendorPICID') === "";
+                });
+            }
+        };
+
+    </script>
+    var grdVendorPIC = X.GridPanel()
+    .ID("grdVendorPIC")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Single)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = (!isDetailButton ? "selectionChange(selected.length)" : "");
+        oListener.Select.Handler = "loadGridVendorPIC(App.grdVendorPIC.getSelection()[0].data.VendorPICID)";
+    })
+
+    .Store(
+            X.Store()
+            .AutoLoad(true)
+            .RemoteSort(false)
+            .RemotePaging(true)
+            .RemoteFilter(true)
+            .PageSize(iPageSize)
+            .DataSource(Model)
+            .Model(
+                X.Model()
+                .Name("ModelVendorPIC")
+                .Fields(
+                            X.ModelField().Name(Model, model => model.VendorPICID),
+                            X.ModelField().Name(Model, model => model.PICName),
+                            X.ModelField().Name(Model, model => model.VendorID),
+                            X.ModelField().Name(Model, model => model.ListVendorCommunication)
+                        )
+                  )
+           )
+         .ColumnModel(
+             X.Column().DataIndex(Model, model => model.ListVendorCommunication).Hidden(true),
+             X.Column().DataIndex(Model, model => model.VendorID).Hidden(true),
+             X.Column()
+             .Text(VendorPICsVM.Prop.VendorPICID.Desc)
+             .DataIndex(Model, model => model.VendorPICID)
+             .Flex(3)
+             .Hidden(true)
+             .Items(
+                 X.Container()
+                 .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                 .Layout(LayoutType.HBox)
+                 .Items(
+                     X.TextField()
+                     .Flex(1)
+                     .Listeners(oListener =>
+                     {
+                         oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                     })
+                 ))
+
+            .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    )
+
+            ,
+            X.Column()
+            .Text(VendorPICsVM.Prop.PICName.Desc)
+            .DataIndex(Model, model => model.PICName)
+            .Flex(3)
+            .Items(
+                X.Container()
+                .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+                .Layout(LayoutType.HBox)
+                .Items(
+                    X.TextField()
+                    .Flex(1)
+                    .Listeners(oListener =>
+                    {
+                        oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                    })
+                ))
+            .Editor(
+                X.TextField()
+                .SubmitValue(true)
+                .HideTrigger(true)
+                )
+         )
+    .Plugins(
+                    X.FilterHeader()
+                    .Remote(false),
+                     X.CellEditing()
+                         .ClicksToEdit(1)
+                            .Listeners(ls => ls.Edit.Fn = "editVendorPIC")
+                            .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditVendorPIC")
+                            .ID("rowEditorVendorPIC")
+           )
+           .TopBar(
+               X.Toolbar()
+               .PaddingSpec(sToolbarPaddingSpec)
+               .Items(
+                    btnAdd.Handler("addPIC()").Disabled(isDetailButton)
+                    ,
+                    btnDelete.Disabled(true).Handler("deleteRowItemPIC()")
+               )
+           )
+       .BottomBar(
+           X.PagingToolbar()
+           .DisplayInfo(true)
+           .BaseCls("paging")
+           .DisplayMsg("Displaying {0} - {1} of {2}")
+           .EmptyMsg("No records to display")
+       );
+
+}
+@(
+    X.Panel()
+    .ID("pnlGridVendorPIC")
+    .Items(
+            grdVendorPIC
+        )
+)

@@ -1,0 +1,162 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemTypeVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    oParam = new Parameter("Control" + ItemTypeVM.Prop.ItemTypeID.Name, ItemTypeVM.Prop.ItemTypeParentID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + ItemTypeVM.Prop.ItemTypeDesc.Name, ItemTypeVM.Prop.ItemTypeParentDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    Button.Builder btnBrowseItemType = global_asax.Button(Buttons.ButtonBrowse, "ItemType", "", "../ItemType/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+    Button.Builder btnEraseItemType = global_asax.Button(Buttons.ButtonErase, "ItemType", "", "", true);
+
+    <script>
+        var bPreventGetItemType = false;
+
+        getItemType = function (itemtypeParentID, itemtypeParentDesc, exact) {
+            if (App.ItemTypeParentID.isDirty() || App.ItemTypeParentDesc.isDirty()) {
+                App.ItemTypeParentID.originalValue = App.ItemTypeParentID.getValue();
+                App.ItemTypeParentDesc.originalValue = App.ItemTypeParentDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetItemType", "ItemType"))',
+                    params: {
+                        ControlItemTypeParentID: App.ItemTypeParentID.id,
+                        ControlItemTypeParentDesc: App.ItemTypeParentDesc.id,
+                        FilterItemTypeParentID: itemtypeParentID,
+                        FilterItemTypeParentDesc: itemtypeParentDesc,
+                        Exact: exact
+                    },
+                    success: getItemTypeSuccess,
+                    failure: getItemTypeFailed
+                });
+            }
+        };
+
+        getItemTypeSuccess = function () {
+            if (!App.ItemTypeParentID.isDirty() && !App.ItemTypeParentDesc.isDirty()) {
+                App.ItemTypeParentID.originalValue = "";
+                App.ItemTypeParentDesc.originalValue = "";
+            }
+            bPreventGetItemType = false;
+        };
+
+        getItemTypeFailed = function () {
+            eraseItemType();
+        };
+
+        itemtypeParentIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemType = true;
+                getItemType(field.getValue(), "", false);
+            }
+        };
+
+        itemtypeParentDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetItemType = true;
+                getItemType("", field.getValue(), false);
+            }
+        };
+
+        itemtypeParentIDBlur = function (itemtypeParentID) {
+            console.log(bPreventGetItemType);
+            if (!bPreventGetItemType) {
+                bPreventGetItemType = true;
+                if (itemtypeParentID.trim() == "")
+                    getItemTypeFailed();
+                else
+                    getItemType(itemtypeParentID, "", true);
+            }
+            bPreventGetItemType = false;
+        };
+
+        itemtypeParentDescBlur = function (itemtypeParentDesc) {
+            if (!bPreventGetItemType) {
+                bPreventGetItemType = true;
+                if (itemtypeParentDesc.trim() == "")
+                    getItemTypeFailed();
+                else
+                    getItemType("", itemtypeParentDesc, true);
+            }
+            bPreventGetItemType = false;
+        };
+
+        eraseItemType = function () {
+            App.ItemTypeParentID.clear();
+            App.ItemTypeParentDesc.clear();
+            App.ItemTypeParentID.originalValue = "";
+            App.ItemTypeParentDesc.originalValue = "";
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PItemTypeForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItemType")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.ItemTypeID)
+                .FieldLabel(ItemTypeVM.Prop.ItemTypeID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.ItemTypeDesc)
+                .FieldLabel(ItemTypeVM.Prop.ItemTypeDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.FieldContainer()
+                .FieldLabel("")
+                .LabelWidth(0)
+                .Width(iFieldWidth)
+                .Layout(LayoutType.Column)
+                .Items(
+                    X.TextFieldFor(model => model.ItemTypeParentID)
+                        .FieldLabel(ItemTypeVM.Prop.ItemTypeParentID.Desc)
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "itemtypeParentIDSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "itemtypeParentIDBlur(this.getValue());";
+                        })
+                        .LabelWidth(iLabelWidth)
+                        .Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+                    X.TextFieldFor(model => model.ItemTypeParentDesc)
+                        .FieldLabel("")
+                        .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        .Listeners(oListeners =>
+                        {
+                            oListeners.SpecialKey.Handler = "itemtypeParentDescSpecialKey(item, e);";
+                            oListeners.Blur.Handler = "itemtypeParentDescBlur(this.getValue());";
+                        })
+                        .LabelWidth(0)
+                        .Width((iFieldWidth - iLabelWidth) / 2)
+                        .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                        .RightButtons(
+                            btnBrowseItemType
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+                            btnEraseItemType.Handler("eraseItemType")
+                            .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                        )
+                )
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

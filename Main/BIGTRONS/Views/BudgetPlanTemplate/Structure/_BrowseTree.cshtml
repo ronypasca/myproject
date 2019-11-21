@@ -1,0 +1,604 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<BudgetPlanTemplateStructureVM>
+@{
+    ViewBag.Title = "Budget Plan Template Structure";
+    var X = Html.X();
+    string sPageName = "BudgetPlanTemplateStructure";
+    var iWindowWidth = 900;
+
+    int iTreeMinHeight = 300;
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+
+    string sHandler = "selectBudgetPlanTemplateStructureBrowse('" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.Version.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.Sequence.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.ItemVersionChildID.Name]
+        + "', '" + ViewData["Control" + BudgetPlanTemplateStructureVM.Prop.IsDefault.Name]
+        + "', App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ItemID.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.Version.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.Sequence.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.ItemVersionChildID.Name.ToLower()
+        + ", App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes." + BudgetPlanTemplateStructureVM.Prop.IsDefault.Name.ToLower()
+        + ");";
+
+    Button.Builder btnSelect = global_asax.Button(Buttons.ButtonSelect, sPageName, null, null, true, false, false, Buttons.ButtonList);
+
+    Button.Builder btnCollapse = global_asax.Button(Buttons.ButtonCollapse, sPageName, null, string.Empty, true);
+    Button.Builder btnExpand = global_asax.Button(Buttons.ButtonExpand, sPageName, null, string.Empty, true);
+
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizetreeBudgetPlanTemplateStructureBrowse()", 1);
+        });
+
+        $(window).resize(function () {
+            resizetreeBudgetPlanTemplateStructureBrowse();
+        });
+
+        resizetreeBudgetPlanTemplateStructureBrowse = function () {
+            if (App.treeBudgetPlanTemplateStructureBrowse != null)
+                App.treeBudgetPlanTemplateStructureBrowse.setHeight($(window).height() - App.treeBudgetPlanTemplateStructureBrowse.getY() - (App.treeBudgetPlanTemplateStructureBrowse.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionBudgetPlanTemplateStructureChange = function (length) {
+            App.ButtonSelectBudgetPlanTemplateStructure.setDisabled(length < 1);
+        };
+
+        doFilter = function (filter, ItemDesc, Version) {
+            filter.fields[0].items.items[0].setValue(ItemDesc);
+            filter.fields[1].items.items[0].setValue(Version);
+        };
+
+        updateNodeSuccess = function (response) {
+
+            nodeID = App.treePanelBudgetVersionStructure.getSelectedNodes()[0].nodeID;
+            node = App.treePanelBudgetVersionStructure.store.getNodeById(nodeID);
+            nodeParent  = node.parentNode;
+            for (var i = 0; i < nodeParent.childNodes.length; i++) {
+
+                if (nodeParent.data.itemid == response.data.itemid && nodeParent.data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Update Structure", "Cirular detected!");
+                    return;
+                }
+                if (nodeParent.childNodes[i].data.isboi && response.data.isahs) {
+                    Ext.Msg.alert("Budget Plan - Update Structure", "Cannot add structure inside selected item!");
+                    return;
+                }
+            }
+            nodeParent.replaceChild(response.data, node);
+            App.treePanelBudgetVersionStructure.store.commitChanges();
+            App.treePanelBudgetVersionStructure.getView().refresh();
+
+            parent.recalculatePrice(nodeParent);
+
+            parent.sequence = 0;
+            parent.reSequence(App.treePanelBudgetVersionStructure.store.getRootNode());
+        };
+
+        updateNodeFailure = function (response) {
+            Ext.Msg.alert("Budget Plan - Load Child", response);
+        };
+
+        addNodeSuccess = function (response) {
+
+            nodeID = App.treePanelBudgetVersionStructure.getSelectedNodes()[0].nodeID;
+            node = App.treePanelBudgetVersionStructure.getSelection()[0];
+            for (var i = 0; i < node.childNodes.length; i++) {
+                if (node.childNodes[i].data.itemid == response.data.itemid && node.childNodes[i].data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", response.data.itemdesc + " " + '@General.EnumDesc(MessageLib.exist)');
+                    return;
+                }
+                if (node.data.itemid == response.data.itemid && node.data.version == response.data.version) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", "Cirular detected!");
+                    return;
+                }
+                if (node.childNodes[i].data.isboi && response.data.isahs) {
+                    Ext.Msg.alert("Budget Plan - Add Structure", "Cannot add structure inside selected item!");
+                    return;
+                }
+            }
+            var index = getIndexSelected(node,nodeSelected);
+            
+
+            response.data.parentsequence = node.data.sequence;
+            response.data.parentitemid = node.data.itemid;
+            response.data.parentversion = node.data.version;
+            
+
+            node.insertChild(index, response.data);
+
+            parent.recalculatePrice(node);
+            parent.sequence = 0;
+            parent.reSequence(App.treePanelBudgetVersionStructure.store.getRootNode());
+        };
+
+        addNodeFailure = function (response) {
+            Ext.Msg.alert("Budget Plan - Load Child", response);
+        };
+
+        getIndexSelected = function (parentNode, selectedNode) {
+            var newIdx = 0;
+            var found = false;
+            for (var i = 0; i < parentNode.childNodes.length - 1; i++) {
+                if (!Ext.isEmpty(selectedNode)) {
+                    if (parentNode.childNodes[i].data.itemid == selectedNode.data.itemid) {
+                        newIdx = i + 1;
+                        found = true;
+                        break;
+                    } 
+                } 
+            }
+            if (!found) newIdx = parentNode.childNodes.length;
+            return newIdx;
+        };
+
+        var getBeforeNode = function (node) {
+            nParent = node.parentNode;
+            for (var i = 0; i < nParent.childNodes.length - 1; i++) {
+                if (!Ext.isEmpty(node)) {
+                    if (nParent.childNodes[i].data.itemid == node.data.itemid) {
+                        return nParent.childNodes[i - 1];
+                        break;
+                    }
+                }
+            }
+        };
+
+        var nodeSelected;
+        selectBudgetPlanTemplateStructureBrowse = function (ControlItemID, ControlItemDesc, ControlVersion, ControlSequence,
+            ControlItemTypeID, ControlParentItemID, ControlParentVersion, ControlParentSequence, ControlParentTypeID, ControlItemVersionChildID,ControlIsDefault,
+            ItemID, ItemDesc, Version, Sequence, ItemTypeID, ParentItemID, ParentVersion, ParentSequence, ParentTypeID, ItemVersionChildID, IsDefault) {
+            nodeSelected = getBeforeNode(App.treePanelBudgetTemplate.getSelection()[0]);
+
+            if ("@ViewData[General.EnumDesc(Params.Caller)]" == "Update") {
+                objItemPrice = { RegionID: App.RegionID.getValue(), ProjectID: App.ProjectID.getValue(), ClusterID: App.ClusterID.getValue(), UnitTypeID: App.UnitTypeID.getValue() };
+
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("UpdateNodeTemplateStructure", "BudgetPlan"))',
+                    params: {
+                        Selected: App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes,
+                        jsonItemPrice: JSON.stringify(objItemPrice)
+                    },
+                    success: updateNodeSuccess,
+                    failure: updateNodeFailure
+                });
+            }
+
+            if ("@ViewData[General.EnumDesc(Params.Caller)]" == "Add") {
+                objItemPrice = { RegionID: App.RegionID.getValue(), ProjectID: App.ProjectID.getValue(), ClusterID: App.ClusterID.getValue(), UnitTypeID: App.UnitTypeID.getValue() };
+
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("AddNodeTemplateStructure", "BudgetPlan"))',
+                    params: {
+                        Selected: App.treePanelBudgetTemplate.getSelectedNodes()[0].attributes,
+                        jsonItemPrice: JSON.stringify(objItemPrice)
+                    },
+                    success: addNodeSuccess,
+                    failure: addNodeFailure
+                });
+            }
+
+            App.WinBrowseBudgetPlanTemplateStructure.close();
+        };
+
+        var renderingCheckBox = function (value, metaData, record, rowIndex, colIndex, store, view) {
+            var cssPrefix = Ext.baseCSSPrefix,
+                cls = cssPrefix + 'grid-checkcolumn';
+            var ret = "";
+            if (value) {
+                cls += ' ' + cssPrefix + 'grid-checkcolumn-checked';
+            }
+            if (record.data.enabledefault) {
+                ret = '<span class="' + cls + '" role="button" ></span>';
+            }
+            return ret;
+        };
+        var bindBefore = function (checkcolumn, rowIndex, checked, eOpts) {
+            var row = this.getView().getRow(rowIndex),
+                record = this.getView().getRecord(row);
+
+            return (record.get('enabledefault'));
+        };
+
+        var bindingCell = function (a, b, c, d) {
+            if (c.data.enabledefault) {
+                if (d) {
+                    for (var x = 0; x < c.parentNode.childNodes.length; x++) {
+                        if (c.parentNode.childNodes[x].id !== c.data.id) {
+                            c.parentNode.childNodes[x].data.isdefault = !d;
+                            c.parentNode.childNodes[x].commit();
+                        } else {
+                            c.data.isdefault = d;
+                            c.commit();
+                        }
+                    }
+                } else {
+                    c.data.isdefault = !d;
+                    c.commit();
+                }
+            }
+        };
+
+        var iTreeInitHeight = -1;
+
+        $(document).ready(function () {
+            setTimeout("resizeTreeGrid()", 1);
+            
+        });
+
+        $(window).resize(function () {
+            resizeTreeGrid();
+            resizeContainer();
+        });
+
+        var viewReady = function (grid, eOpts) {
+            handleSequence(grid.getRootNode());
+            setTimeout("afterFirstLoadTree()", 1);
+        };
+        var afterFirstLoadTree = function () {
+            if (iTreeInitHeight = -1)
+                iTreeInitHeight = App.treePanelBudgetTemplate.getHeight();
+            resizeTreeBudgetPlanTemplate();
+            resizeContainer();
+        };
+
+        var resizeTreeBudgetPlanTemplate = function () {
+            if (App.treePanelBudgetTemplate != null) {
+                var iHeight = $(window).height() - (App.treePanelBudgetTemplate.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height();
+                if (iHeight > iTreeInitHeight)
+                    iHeight = iTreeInitHeight;
+                App.treePanelBudgetTemplate.setHeight(iHeight);
+            }
+        };
+
+        resizeTreeGrid = function () {
+            if (App.treePanelBudgetTemplate != null)
+                App.treePanelBudgetTemplate.setHeight($(window).height() - App.treePanelBudgetTemplate.getY() - (App.treePanelBudgetTemplate.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        var handleCollapseExpandAll = function(btn){
+            btn.setHidden(true);
+            if(btn.id=='@General.EnumName(Buttons.ButtonCollapse)@sPageName'){
+                App.treePanelBudgetTemplate.collapseAll();
+                /*handleSequence(App.treePanelBudgetTemplate.getRootNode());*/
+                App.ButtonExpandBudgetPlanTemplateStructure.setHidden(false);
+            }else{
+                App.treePanelBudgetTemplate.expandAll();
+                /*handleSequence(App.treePanelBudgetTemplate.getRootNode());*/
+                App.ButtonCollapseBudgetPlanTemplateStructure.setHidden(false);
+
+            }
+
+        };
+
+        var handleSequence = function (NodeTree) {
+            if (NodeTree.childNodes.length == 0) {
+                var oldSequenceDesc = String(NodeTree.data.sequencedesc);
+                NodeTree.data.sequencedesc = NodeTree.data.sequencedesc + '.' + (i + 1).toString();
+                NodeTree.data.sequencedesc = NodeTree.data.sequencedesc.replace('.NaN', '');
+
+                NodeTree.commit();
+            } else
+
+                for (var i = 0; i < NodeTree.childNodes.length; i++) {
+                    if (!NodeTree.childNodes[i].data.hasOwnProperty('isGrandTotal')) {
+                        var oldSequenceDesc = String(NodeTree.childNodes[i].data.sequencedesc);
+                        NodeTree.childNodes[i].data.sequencedesc = NodeTree.data.sequencedesc + '.' + (i + 1).toString();
+                        NodeTree.childNodes[i].data.sequencedesc = NodeTree.childNodes[i].data.sequencedesc.replace('undefined.', '');
+
+
+                        handleSequence(NodeTree.childNodes[i]);
+                        NodeTree.commit();
+                    }
+                }
+
+
+        };
+
+        var lastFilterValue = "";
+
+        var filterTree = function (field, event, eOpts) {
+            var value = field.getValue();
+
+            if (value == '') {
+                filterStore(value);
+                lastFilterValue = value;
+            } else if (value && value !== lastFilterValue) {
+                filterStore(value);
+                lastFilterValue = value;
+            }
+
+            App.treePanelBudgetTemplate.getRootNode().expand(true);
+        };
+
+        var clearFilter = function () {
+            var field = this,
+                tree = App.treePanelBudgetTemplate,
+                store = tree.store;
+
+            field.setValue("");
+            filterStore(field.getValue());
+            tree.getView().focus();
+        };
+
+        var filterStore = function (value) {
+            var me = App.treePanelBudgetTemplate,
+                store = me.store,
+                searchString = value.toLowerCase(),
+                filterFn = function(node) {
+                    var children = node.childNodes,
+                        len = children && children.length,
+                        visible = v.test(node.get('text')),
+                        i;
+                    if (!visible) {
+                        for (i = 0; i < len; i++) {
+                            if (children[i].isLeaf()) {
+                                visible = children[i].get('visible');
+                            } else {
+                                visible = filterFn(children[i]);
+                            }
+                            if (visible) {
+                                break;
+                            }
+                        }
+                    } else {
+                        for (i = 0; i < len; i++) {
+                            children[i].set('visible', true);
+                        }
+                    }
+                    return visible;
+                },
+                v;
+
+            if (searchString.length < 1) {
+                store.clearFilter();
+            } else {
+                v = new RegExp(searchString, 'i');
+                store.getFilters().replaceAll({
+                    filterFn: filterFn
+                });
+            }
+        };
+
+        var strMarkRedPlus= function(search, subject) {
+            return subject.replace(
+            new RegExp('(' + search + ')', "gi"), "<span style='color: red;'><b>$1</b></span>");
+        };
+
+        var markSearch = function (value) {
+            var searchString = App.SearchField.getValue();
+
+            if (searchString.length > 0) {
+                return this.strMarkRedPlus(searchString, value);
+            }
+            return value;
+        };
+
+    </script>
+}
+@(
+    X.Window()
+    .CloseAction(CloseAction.Destroy)
+    .ID("WinBrowseBudgetPlanTemplateStructure")
+    .Modal(true)
+    .Title(ViewBag.Title)
+    .Width(iWindowWidth)
+    .ConstrainHeader(true)
+    .Layout(LayoutType.Fit)
+    .Items(
+        X.TreePanel()
+        .ID("treePanelBudgetTemplate")
+        .Expand(true)
+        .MultiSelect(false)
+        .MinHeight(iTreeMinHeight)
+        .WidthSpec("100%")
+        .RootVisible(false)
+        .Border(false)
+        .UseArrows(true).RowLines(true)
+        .Animate(true)
+        .SelectionModel(
+            X.RowSelectionModel()
+            .Mode(SelectionMode.Single)
+            .AllowDeselect(true)
+        )
+        .Listeners(oListener =>
+        {
+            oListener.SelectionChange.Handler = "selectionBudgetPlanTemplateStructureChange(selected.length)";
+            //oListener.ViewReady.Handler = "doFilter(this.filterHeader, '" + ViewData[BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name].ToString() + "', '" + ViewData[BudgetPlanTemplateStructureVM.Prop.Version.Name].ToString() + "');";
+            oListener.ViewReady.Delay = 1; oListener.RowDblClick.Handler = sHandler;
+
+            oListener.ViewReady.Fn = "viewReady";
+        })
+        .Store(
+            X.TreeStore()
+                .Group(BudgetPlanVersionStructureVM.Prop.ItemDesc.Name)
+                .Model(Html.X().Model()
+                    .Fields(X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemID.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.Version.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.Sequence.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.AllowDelete.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.HasChild.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemGroupDesc.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.IsDefault.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.EnableDefault.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.UoMDesc.Name.ToLower()),
+                       X.ModelField().Name(BudgetPlanTemplateStructureVM.Prop.UoMID.Name.ToLower()),
+                       X.ModelField().Name("number")
+                 )
+                )
+                .Proxy(Html.X().AjaxProxy()
+                   .Url(Url.Action("ReadBrowseStructureTree", "BudgetPlanTemplate"))
+                   .ExtraParams(exParam =>
+                        exParam.AddRange(new Parameter[]{
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name,
+                                Value = ViewData["BudgetPlanTemplateID"] == null ? string.Empty : ViewData["BudgetPlanTemplateID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name,
+                                Value = ViewData["ParentItemID"] == null ? string.Empty : ViewData["ParentItemID"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name = BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name,
+                                Value = ViewData["ParentVersion"] == null ? string.Empty : ViewData["ParentVersion"].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                            new Parameter()
+                            {
+                                Name =  General.EnumDesc(Params.Caller),
+                                Value = ViewData[General.EnumDesc(Params.Caller)] == null ? string.Empty : ViewData[General.EnumDesc(Params.Caller)].ToString(),
+                                Mode = ParameterMode.Value,
+                                Encode = false
+                            },
+                        })
+                    )
+                   )
+
+
+        )
+        .ColumnModel(
+                X.Column().Text("No.")
+                   .Flex(1).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.SequenceDesc.Name.ToLower())
+                   .Draggable(false).Hidden(false),
+               X.TreeColumn().Draggable(true).Text("Item")
+               .Flex(4).Sortable(false).DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemDesc.Name.ToLower()).Renderer("markSearch"),
+               X.Column()
+                   .Text("BudgetTemplate ID")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.BudgetPlanTemplateID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.Column()
+                   .Text("Item Group")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemGroupDesc.Name.ToLower())
+                   .Draggable(true).Hidden(false),
+               X.Column()
+                   .Text("Item ID")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Version")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.Version.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Sequence")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.Sequence.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.Column()
+                   .Text("ParentItemID")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentItemID.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Parent Version")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentVersion.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+               X.NumberColumn()
+                   .Text("Parent Sequence")
+                   .Flex(2).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentSequence.Name.ToLower())
+                   .Draggable(true).Hidden(true),
+                X.CheckColumn()
+                .Text("AllowDelete")
+                .DataIndex(BudgetPlanTemplateStructureVM.Prop.AllowDelete.Name.ToLower())
+                .Editable(true)
+                .StopSelection(false).Sortable(false)
+                .Hidden(true),
+               X.CheckColumn()
+                .Text("HasChild")
+                .DataIndex(BudgetPlanTemplateStructureVM.Prop.HasChild.Name.ToLower())
+                .Editable(false)
+                .Hidden(true)
+                .StopSelection(false).Sortable(false),
+               X.Column()
+                   .Text("ItemTypeID")
+                   .Flex(0).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ItemTypeID.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(true),
+               X.Column()
+                   .Text("ParentItemTypeID")
+                   .Flex(0).Sortable(false)
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.ParentItemTypeID.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(true),
+               X.CheckColumn()
+                   .Text("Default")
+                   .Flex(1).Editable(true)
+                   .Listeners(l =>
+                   {
+                       l.BeforeCheckChange.Fn = "bindBefore";
+                       l.CheckChange.Fn = "bindingCell";
+                   })
+                   .Renderer("renderingCheckBox")
+                   .DataIndex(BudgetPlanTemplateStructureVM.Prop.IsDefault.Name.ToLower())
+                   .Draggable(true)
+                   .Hidden(false)
+                   .Disabled(false)
+
+        )
+        .MultiSelect(true)
+        //.Root(new com.SML.BIGTRONS.Controllers.BudgetPlanTemplateController().GetNodeBudgetPlanTemplate(Model))
+        .Root(X.Node().NodeID("0").Text("Root"))
+        .TopBarItem(
+            btnSelect.Disabled(true).Handler(sHandler),
+            //btnCollapse.Handler("handleCollapseExpandAll"),
+            //btnExpand.Handler("handleCollapseExpandAll").Hidden(true),
+            X.ToolbarTextItem(),
+            X.ToolbarSpacer(),
+            X.TextField()
+                .ID("SearchField")
+                .EnableKeyEvents(true)
+                .Triggers(
+                    X.FieldTrigger().Icon(TriggerIcon.Clear)
+                )
+                .Listeners(l =>
+                {
+                    l.KeyUp.Fn = "filterTree";
+                    l.KeyUp.Buffer = 300;
+
+                    l.TriggerClick.Fn = "clearFilter";
+                })
+        )
+        //.ViewConfig(X.TreeView().LoadMask(true))
+        .View(X.TreeView().LoadMask(true))
+    )
+)

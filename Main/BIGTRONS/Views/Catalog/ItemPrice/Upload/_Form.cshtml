@@ -1,0 +1,78 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ItemVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    var isHasUnitPriceAnalysis = Model.HasUnitPriceAnalysis;
+    List<Parameter> oParamList;
+    Parameter oParam;
+    
+    <script>
+        changeFile = function () {
+            debugger;
+            Ext.getCmp(App.btnGetData.id).fireEvent('click');
+        };
+
+        successGetFileUpload = function (grid,data) {
+            App.grdItemPriceFromFileUpload.getStore().loadData(data);
+        };
+
+        failedGetFileUpload = function (errorMessage) {
+            App.grdItemPriceFromFileUpload.getStore().removeAll();
+            Ext.Msg.notify("Error", errorMessage);
+        }
+    </script>
+}
+
+<form id="formFileUpload" enctype="multipart/form-data">
+    @(
+    X.Panel()
+    .ID("PItemPriceUploadForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FItemPriceUploadForm")
+        .Padding(iBodyPadding)
+        .Items(
+             X.FileUploadField()
+                .ID(ItemPriceVM.Prop.FileUpload.Name)
+                .FieldLabel(ItemPriceVM.Prop.FileUpload.Desc)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+                .Listeners(d=>d.Change.Fn ="changeFile")
+                .Accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"),
+             X.Button()
+                .ID("btnGetData")
+                .Text("Get Data")
+                .Width(iLabelWidth)
+                .DirectEvents(events =>
+                {
+                    events.Click.Action = "ReadFileUpload";
+                    events.Click.EventMask.ShowMask = true;
+                    events.Click.Success = "successGetFileUpload(App.grdItemPriceFromFileUpload, result.data)";
+                    events.Click.Failure = "failedGetFileUpload(result.errorMessage);";
+                }).Hidden(true)
+        ).TopBar(
+                X.Toolbar()
+                .PaddingSpec(sToolbarPaddingSpec)
+                .ItemsFromPartial("ItemPrice/Upload/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+                )
+        ,
+        X.Panel()
+              .ID("pnlItemPriceUploadList")
+              .Title("")
+              .Collapsible(true)
+                .ItemsFromPartial("ItemPrice/Upload/_List", Model.ListItemPriceVM, ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+    )
+        )
+    )
+
+</form>

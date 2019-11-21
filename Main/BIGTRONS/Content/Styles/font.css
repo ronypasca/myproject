@@ -1,0 +1,29 @@
+﻿@font-face {
+    font-family: 'Oswald';
+    font-weight: 400;
+    font-style: normal;
+    src: url('/Content/Fonts/Oswald-regular.eot');
+    src: url('/Content/Fonts/Oswald-regular.eot?#iefix') format('embedded-opentype'), local('Oswald Regular'), local('Oswald-regular'), url('/Content/Fonts/Oswald-regular.woff') format('woff'), url('/Content/Fonts/Oswald-regular.ttf') format('truetype'), url('/Content/Fonts/Oswald-regular.svg#Oswald') format('svg');
+}
+
+@font-face {
+    font-family: 'Maven Pro';
+    font-weight: 400;
+    font-style: normal;
+    src: url('/Content/Fonts/Maven-Pro-regular.eot');
+    src: url('/Content/Fonts/Maven-Pro-regular.eot?#iefix') format('embedded-opentype'), local('Maven Pro Regular'), local('Maven-Pro-regular'), url('/Content/Fonts/Maven-Pro-regular.woff') format('woff'), url('/Content/Fonts/Maven-Pro-regular.ttf') format('truetype'), url('/Content/Fonts/Maven-Pro-regular.svg#MavenPro') format('svg');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Montserrat Regular'), local('Montserrat-Regular'), url('/Content/Fonts/Montserrat-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Montserrat Regular'), local('Montserrat-Regular'), url('/Content/Fonts/Montserrat-Bold.woff2') format('woff2');
+}

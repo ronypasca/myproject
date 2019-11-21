@@ -1,0 +1,283 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanPeriodVM
+@{
+    var X = Html.X();
+    string sPageName = "Home";
+    int iGridMinHeight = 250;
+    int iBodyPadding = 10;
+    string sToolbarPaddingSpec = "0 10 10 0";
+    int iPageSize = 30;
+    /*bool IsDetailPage = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    */
+    List<Parameter> oParamList;
+    Parameter oParam;
+    /*
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+    */
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "getSelectedRow()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnDetail = global_asax.Button(Buttons.ButtonDetail, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "getSelectedRow()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnUpdate = global_asax.Button(Buttons.ButtonUpdate, sPageName, null, null, true, false, false, Buttons.ButtonList, oParamList);
+    
+
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdBudgetPlan()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdBudgetPlan();
+        });
+
+        resizeGrdBudgetPlan = function () {
+            if (App.grdBudgetPlanPeriod != null)
+                App.grdBudgetPlanPeriod.setHeight($(window).height() - App.grdBudgetPlanPeriod.getY() - (App.grdBudgetPlanPeriod.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());
+        };
+
+        selectionChange = function (selected) {
+            App.ButtonUpdateHome.setDisabled(true);
+            App.ButtonDetailHome.setDisabled(selected.length !== 1);
+            if(selected.length > 0){
+                if(selected[0].data.StatusID=="2") /*Approved*/
+                    App.ButtonUpdateHome.setDisabled(false);
+            }
+            
+
+        };
+
+        deleteFinish = function (success, msg) {
+            if (success)
+                App.grdBudgetPlanPeriod.getStore().reload();
+            else
+                showError(sTitle, msg);
+        };
+
+        getSelectedRow = function(){
+            var selected = App.grdBudgetPlanPeriod.getRowsValues({selectedOnly:true})[0];
+            selected.Vendor = null;
+            return selected;
+
+        };
+
+        RendererBR = function (records) {
+            var newchar = '<br>';
+            arr = records.split(',');
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] == "True") arr[i] = "<span class='x-grid-checkcolumn x-grid-checkcolumn-checked' role='button'></span>";
+                if (arr[i] == "False") arr[i] = "<span class='x-grid-checkcolumn' role='button'></span>";
+            }
+
+            retval = arr.join(newchar);
+            return retval;
+        };
+
+       
+    </script>
+}
+@(
+    X.GridPanel()
+    .ID("grdBudgetPlanPeriod")
+    .Padding(iBodyPadding)
+    .MinHeight(iGridMinHeight)
+    .SelectionModel(
+        X.RowSelectionModel()
+        .Mode(SelectionMode.Multi)
+        .AllowDeselect(true)
+    )
+    .Listeners(oListener =>
+    {
+        oListener.SelectionChange.Handler = "selectionChange(selected)";
+    })
+    .Store(
+        X.StoreForModel()
+        .Proxy(
+            X.AjaxProxy()
+            .Url(Url.Action("Read"))
+            .Reader(X.JsonReader().RootProperty("data"))
+        )
+        .AutoLoad(true)
+        .RemoteSort(true)
+        .RemotePaging(true)
+        .RemoteFilter(true)
+        .PageSize(iPageSize)
+        .SorterFor(Model, model => model.BudgetPlanID, Ext.Net.SortDirection.ASC)
+    )
+    .ColumnModel(
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.BudgetPlanID.Desc)
+        .DataIndex(Model, model => model.BudgetPlanID)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.Description.Desc)
+        .DataIndex(Model, model => model.Description)
+        .Flex(2)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.BudgetPlanTemplateDesc.Desc)
+        .DataIndex(Model, model => model.BudgetPlanTemplateDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.ProjectDesc.Desc)
+        .DataIndex(Model, model => model.ProjectDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.ClusterDesc.Desc)
+        .DataIndex(Model, model => model.ClusterDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.UnitTypeDesc.Desc)
+        .DataIndex(Model, model => model.UnitTypeDesc)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        ),
+        X.Column()
+        .Text(BudgetPlanPeriodVM.Prop.Vendor.Desc)
+        .DataIndex(Model, model => model.VendorSubmitted)
+        .Flex(3)
+        .Items(
+            X.Container()
+            .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+            .Layout(LayoutType.HBox)
+            .Items(
+                X.TextField()
+                .Flex(1)
+                .Listeners(oListener =>
+                {
+                    oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+                })
+            )
+        )//,
+        //X.Column()
+        //.Text("Submitted")
+        //.Renderer("RendererBR")
+        //.DataIndex(Model, model => model.IsSubmitted)
+        //.Flex(2)
+        //.Items(
+        //    X.Container()
+        //    .CustomConfig(config => config.Add(new ConfigItem("getValue", "getValueText", ParameterMode.Raw)))
+        //    .Layout(LayoutType.HBox)
+        //    .Items(
+        //        X.TextField()
+        //        .Flex(1)
+        //        .Listeners(oListener =>
+        //        {
+        //            oListener.Change.Handler = "this.up('grid').filterHeader.onFieldChange(this.up('container'));";
+        //        })
+        //    )
+        //)
+        //X.Column()
+        //.Text(BudgetPlanPeriodVM.Prop.StatusDesc.Desc)
+        //.DataIndex(Model, model => model.StatusDesc)
+        //.Flex(2)
+
+    //.Items(
+    //        X.ComboBox()
+    //            .DisplayField(StatusVM.Prop.StatusDesc.Name)
+    //            .ValueField(StatusVM.Prop.StatusDesc.Name)
+    //            .Store(
+    //                X.StoreForModel()
+    //                .Proxy(X.AjaxProxy()
+    //                    .Url(Url.Action("/GetStatusList"))
+    //                    .Reader(X.JsonReader().RootProperty("data"))
+    //                )
+    //                .AutoLoad(true)
+    //            ).Plugins(Html.X().ClearButton())
+
+    //)
+    )
+    .Plugins(
+        X.FilterHeader()
+        .Remote(true)
+    )
+    .BottomBar(
+        X.PagingToolbar()
+        .DisplayInfo(true)
+        .BaseCls("paging")
+        .DisplayMsg("Displaying {0} - {1} of {2}")
+        .EmptyMsg("No records to display")
+    )
+)

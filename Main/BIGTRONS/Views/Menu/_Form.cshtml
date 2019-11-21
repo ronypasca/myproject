@@ -1,0 +1,212 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MenuVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+    <script>
+
+        renderMenuVisible = function (value) {
+            App.MenuVisible.setBoxLabel(value == true ? "Yes" : "No");
+        };
+
+
+        var setVisibleItemPrice = function () {
+            App.pnlItemPrice.setVisible(false);
+            if (HasPrice())
+                App.pnlItemPrice.setVisible(true);
+        };
+        var setVisibleItemParameter = function () {
+            App.pnlItemParameter.setVisible(false);
+            if (HasParameter())
+                App.pnlItemParameter.setVisible(true);
+        };
+
+        cmbMenuParentSelected = function () {
+            /*App.MenuHierarchy.setValue(App.MenuParentHierarchy.value);*/
+            console.log(App.MenuLeftHierarchy.getValue());
+            App.MenuLeftHierarchy.setValue('-');
+            App.MenuLeftHierarchy.getStore().load()
+        };
+
+        cmbMenuLeftSelected = function () {
+            console.log(App.MenuLeftHierarchy.getValue());
+        };
+
+        addDefaultEmptyItem = function (store, records) {
+            var model = new ModelMenuParent({
+                MenuDesc: '-',
+                MenuHierarchy: '-'
+            });
+            store.autoSync = false;
+            store.insert(0, model);
+        };
+
+    </script>
+    var cmbMenuParent = X.ComboBoxFor(model => model.MenuParentHierarchy)
+        .FieldLabel(MenuVM.Prop.MenuParentHierarchy.Desc)
+        .Editable(false)
+        .ReadOnly(isDisableButton)
+        .LabelWidth(iLabelWidth)
+        .Width(iFieldWidth)
+        .DisplayField(MenuVM.Prop.MenuDesc.Name)
+        .ValueField(MenuVM.Prop.MenuHierarchy.Name)
+        .EmptyValue("")
+        .Store(
+            X.Store()
+            .AutoLoad(true)
+            .Proxy(X.AjaxProxy()
+                .Url(Url.Action("../Menu/GetListDropDownMenu"))
+                .Reader(X.JsonReader()
+                .RootProperty("data"))
+            )
+            .SorterFor(Model, model => model.MenuHierarchy, Ext.Net.SortDirection.ASC)
+            .Listeners(ls => ls.Load.Fn = "addDefaultEmptyItem")
+            .Parameters(ps =>
+            {
+
+                ps.Add(new StoreParameter(MenuVM.Prop.MenuHierarchy.Name, "App.MenuHierarchy.getValue()", ParameterMode.Raw));
+                ps.Add(new StoreParameter(General.EnumDesc(Params.Caller), ViewData[General.EnumDesc(Params.Action)].ToString(), ParameterMode.Value));
+            }
+            )
+            .Model(Html.X().Model()
+                .Name("ModelMenuParent")
+                .Fields(
+                    X.ModelField(Model, model => model.MenuHierarchy).Mapping(Model.MenuHierarchy),
+                    X.ModelField(Model, model => model.MenuDesc).Mapping(Model.MenuDesc)
+                    )
+                )
+        )
+        .Listeners(ls =>
+        {
+            ls.Select.Handler = "cmbMenuParentSelected()";
+        }
+
+            );
+
+    var cmbMenuLeft = X.ComboBoxFor(model => model.MenuLeftHierarchy)
+        .FieldLabel(MenuVM.Prop.MenuLeftHierarchy.Desc)
+        .Editable(false)
+        .ReadOnly(isDisableButton)
+        .LabelWidth(iLabelWidth)
+        .Width(iFieldWidth)
+        .DisplayField(MenuVM.Prop.MenuDesc.Name)
+        .ValueField(MenuVM.Prop.MenuHierarchy.Name)
+        .TypeAhead(true)
+        .ForceSelection(true)
+        .TriggerAction(TriggerAction.All)
+        .EmptyValue("")
+        .Store(
+            X.Store()
+            .AutoLoad(true)
+            .Proxy(X.AjaxProxy()
+                .Url(Url.Action("../Menu/GetListDropDownMenu"))
+                .Reader(X.JsonReader()
+                .RootProperty("data"))
+            )
+            .SorterFor(Model, model => model.MenuHierarchy, Ext.Net.SortDirection.ASC)
+            .Listeners(ls => ls.Load.Fn = "addDefaultEmptyItem")
+            .Parameters(ps =>
+            {
+                ps.Add(new StoreParameter(MenuVM.Prop.MenuParentHierarchy.Name, "App.MenuParentHierarchy.getValue()", ParameterMode.Raw));
+                ps.Add(new StoreParameter(MenuVM.Prop.MenuHierarchy.Name, "App.MenuHierarchy.getValue()", ParameterMode.Raw));
+                ps.Add(new StoreParameter(General.EnumDesc(Params.Caller), ViewData[General.EnumDesc(Params.Action)].ToString(), ParameterMode.Value));
+            }
+        )
+        .Model(Html.X().Model()
+            .Name("ModelMenuLeft")
+            .Fields(
+                X.ModelField(Model, model => model.MenuHierarchy).Mapping(Model.MenuHierarchy),
+                X.ModelField(Model, model => model.MenuDesc).Mapping(Model.MenuDesc)
+                )
+            )
+    )
+    .Listeners(ls =>
+        ls.Select.Handler = "cmbMenuLeftSelected()"
+    );
+}
+@(
+    X.Panel()
+    .ID("PMenuForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FMenu")
+        .Padding(iBodyPadding)
+        .Items(
+          X.Container()
+            .Layout(LayoutType.Column)
+            .Items(
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlMenu")
+                  .Items(
+                      X.HiddenFor(model => model.MenuHierarchy),
+                      X.TextFieldFor(model => model.MenuID)
+                       .FieldLabel(MenuVM.Prop.MenuID.Desc)
+                       .LabelWidth(iLabelWidth)
+                       .Width(iFieldWidth)
+                       .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd)),
+                      X.TextFieldFor(model => model.MenuDesc)
+                       .FieldLabel(MenuVM.Prop.MenuDesc.Desc)
+                       .ReadOnly(isDisableButton)
+                       .LabelWidth(iLabelWidth)
+                       .Width(iFieldWidth),
+                      cmbMenuParent,
+                      cmbMenuLeft,
+                      X.TextFieldFor(model => model.MenuIcon)
+                       .FieldLabel(MenuVM.Prop.MenuIcon.Desc)
+                       .LabelWidth(iLabelWidth)
+                       .Width(iFieldWidth)
+                       .ReadOnly(isDisableButton),
+                      X.TextFieldFor(model => model.MenuUrl)
+                       .FieldLabel(MenuVM.Prop.MenuUrl.Desc)
+                       .LabelWidth(iLabelWidth)
+                       .Width(iFieldWidth)
+                       .ReadOnly(isDisableButton),
+                      X.CheckboxFor(model => model.MenuVisible)
+                       .FieldLabel(MenuVM.Prop.MenuVisible.Desc)
+                       .ReadOnly(isDisableButton)
+                       .LabelWidth(iLabelWidth)
+                       .Width(iFieldWidth)
+                       .Listeners(oListener =>
+                       {
+                           oListener.Render.Handler = "renderMenuVisible(App.MenuVisible.getValue());";
+                           oListener.Change.Handler = "renderMenuVisible(App.MenuVisible.getValue());";
+                       })
+                        )
+                          ,
+                  X.Panel()
+                  .Cls("fullOnSmall")
+                  .ColumnWidth(0.5)
+                  .ID("pnlMenuAction")
+                    .Title("Action")
+                    .Collapsible(true)
+                    .ItemsFromPartial("Action/_List", Model.ListMenuActionVM, ViewData)
+                    .PaddingSpec(sPanelPaddingSpec)
+              ),
+
+              X.Panel()
+                .ID("pnlMenuObject")
+                .Title("Object")
+                .Collapsible(true)
+                .ItemsFromPartial("Object/_List", Model.ListMenuObjectVM, ViewData)
+                .PaddingSpec(sPanelPaddingSpec)
+             )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+     )
+
+)
+

@@ -1,0 +1,394 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MinutesTemplateVM
+@{
+	var X = Html.X();
+	var iBodyPadding = 10;
+	var sToolbarPaddingSpec = "0 10 10 0";
+	var iLabelWidth = 175;
+	var iFieldWidth = 420;
+	var iFieldWidthEditor = 1000;
+	var iFieldHeightEditor = 300;
+	var sPanelPaddingSpec = "10 0 0 0";
+	List<Parameter> oParamList;
+	Parameter oParam;
+
+	//Button Function
+	oParamList = new List<Parameter>();
+	oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionID.Name, FunctionsVM.Prop.FunctionID.Name, ParameterMode.Value, false);
+	oParamList.Add(oParam);
+	oParam = new Parameter("Control" + FunctionsVM.Prop.FunctionDesc.Name, FunctionsVM.Prop.FunctionDesc.Name, ParameterMode.Value, false);
+	oParamList.Add(oParam);
+	//oParam = new Parameter("Filter" + FPTVM.Prop.FPTID.Name, "App.FPTID.value", ParameterMode.Raw, false);
+	//oParamList.Add(oParam);
+	Button.Builder btnBrowseFunctions = global_asax.Button(Buttons.ButtonBrowse, "Function", "", "../Function/" + General.EnumDesc(Buttons.ButtonBrowse), true, false, false, null, oParamList);
+	Button.Builder btnEraseFunctions = global_asax.Button(Buttons.ButtonErase, "Functions", "", "", true);
+
+	<style>
+	
+		
+
+	</style>
+
+	<script>
+
+		var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+		afterRenderTagField=function(el){
+			el.setValue(@Html.Raw(Json.Encode(Model.Tags)));
+		};
+
+		Array.prototype.remove = function(value) {
+			var idx = this.indexOf(value);
+			if (idx != -1) {
+				return this.splice(idx, 1);
+			}
+			return false;
+		};
+
+
+		afterRender = function(){
+			for(name in CKEDITOR.instances)
+			{
+				CKEDITOR.instances[name].destroy(true);
+			}
+
+			CKEDITOR.addCss( 'span > .cke_placeholder { background-color: #ffeec2; }' );
+			CKEDITOR.config.enterMode = 2; /* disabled <p> completely */
+			CKEDITOR.config.enterMode = CKEDITOR.ENTER_BR; /* pressing the ENTER KEY input <br/>*/
+			CKEDITOR.config.shiftEnterMode = CKEDITOR.ENTER_P; /*pressing the SHIFT + ENTER KEYS input <p>*/
+			CKEDITOR.config.autoParagraph = false; /* stops automatic insertion of <p> on focus*/
+			CKEDITOR.replace( '@MinutesTemplateVM.Prop.Contents.Name', {
+				toolbar : [
+						
+						{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat' ] },
+						{ name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock' ] },
+						{ name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] },
+						{ name: 'insert', items: [ 'Image', 'Table', 'HorizontalRule', 'PageBreak' ] },
+						'/',
+						{ name: 'styles', items: [ 'Styles', 'Format', 'Font', 'FontSize' ] },
+						{ name: 'colors', items: [ 'TextColor', 'BGColor' ] },
+						{ name: 'tools', items: [ 'Maximize'] },
+						{ name: 'document', items: [ 'Source', 'Preview'] },
+						{ name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] }
+		
+						
+				],
+				fullPage: true,
+				allowedContent: true,
+				height: 400,
+				extraPlugins: 'colordialog,tableresize,autocomplete,textmatch,link,placeholder,font',
+				removeDialogTabs: 'image:advanced;link:advanced;link:target',
+				on: {
+					instanceReady: function( evt ) {
+						var iframe = $('.cke_wysiwyg_frame').contents();
+						
+						iframe.find('body').css({
+							'width': '800px'
+						});
+
+						var editor = evt.editor;
+
+						editor.on( 'doubleclick', function( ev ) {
+							var element = ev.data.element;
+							debugger;
+							if (!Ext.isEmpty(element))
+							if ( element.hasClass( 'cke_placeholder' ) ) {
+								evt.cancel();
+							}
+						}, null, null, -1 );
+
+
+						editor.on('key', function(event) {
+							var kc = event.data.keyCode,
+									csa = ~(CKEDITOR.CTRL | CKEDITOR.SHIFT | CKEDITOR.ALT),
+									classname;
+
+		
+							var element = editor.getSelection().getStartElement();
+
+							if ( (kc==13 && (kc & csa)==13)){
+								if(!Ext.isEmpty(element))
+								if ( element.hasClass( 'cke_widget_placeholder' ) ) {
+									evt.cancel();
+								}
+							}
+
+							if ( kc==8 || kc==46 ){ /*del,backspace*/
+								
+								if(!Ext.isEmpty(element))
+								if ( element.hasClass( 'cke_widget_placeholder' ) ) {
+									arrTags = App.ListFieldTagReferenceVM.getValue();
+									console.log(element.getText().replace("[[","").replace("]]",""));
+									arrTags.remove(element.getText().replace("[[","").replace("]]",""));
+									App.ListFieldTagReferenceVM.setValue(arrTags);
+								}  
+			
+							}
+						}, null, null, -1 );
+
+						var itemTemplate = '<li data-id="{id}">' +
+								'<div><strong class="item-title">{name}</strong></div>' +
+								'<div><i>{description}</i></div>' +
+							'</li>',
+							outputTemplate = '[[{name}]]<span>&nbsp;</span>';
+
+						var autocomplete = new CKEDITOR.plugins.autocomplete( evt.editor, {
+							textTestCallback: textTestCallback,
+							dataCallback: dataCallback,
+							itemTemplate: itemTemplate,
+							outputTemplate: outputTemplate
+						} );
+
+						/* Override default getHtmlToInsert to enable rich content output.*/
+						autocomplete.getHtmlToInsert = function( item ) {
+							arrTags = App.ListFieldTagReferenceVM.getValue();
+							arrTags.push(item.name);
+							App.ListFieldTagReferenceVM.setValue(arrTags);
+							return this.outputTemplate.output( item );
+						};
+
+					},
+
+					loaded:function(evt){
+						resizeContainer();
+
+					}
+				}
+			} );
+		};
+
+
+		function textTestCallback( range ) {
+			if ( !range.collapsed ) {
+				return null;
+			}
+
+			return CKEDITOR.plugins.textMatch.match( range, matchCallback );
+		}
+
+		function matchCallback( text, offset ) {
+			var pattern = /\[{2}([A-z]|\])*$/,
+				match = text.slice( 0, offset )
+				.match( pattern );
+
+			if ( !match ) {
+				return null;
+			}
+
+			return {
+				start: match.index,
+				end: offset
+			};
+		}
+
+		function dataCallback( matchInfo, callback ) {
+			tags = new Array();
+			$.getJSON('/MinutesTemplate/GetFieldTags', function (data) {
+				result=data.data;
+				
+				$.each(result,function(i,v){
+					tags.push({id:i ,name : v.FieldTagID, description: v.TagDesc});
+				});
+
+				var data = tags.filter( function( item ) {
+					var itemName = '[[' + item.name.toLowerCase() + ']]';
+					return itemName.indexOf( matchInfo.query.toLowerCase() ) == 0;
+				} );
+
+				callback( data );
+			});
+			
+		}
+
+		/*Function*/
+		var bPreventGetFunctions = false;
+
+		getFunctions = function (FunctionID, FunctionDesc, exact) {
+			if (App.FunctionID.isDirty() || App.FunctionDesc.isDirty()) {
+				App.FunctionID.originalValue = App.FunctionID.getValue();
+				App.FunctionDesc.originalValue = App.FunctionDesc.getValue();
+				Ext.net.DirectMethod.request({
+					url: '@(Url.Action("GetFunctions", "Functions"))',
+					params: {
+						ControlFunctionID: App.FunctionID.id,
+						ControlFunctionDesc: App.FunctionDesc.id,
+						FilterFunctionID: FunctionID,
+						FilterFunctionDesc: FunctionDesc,
+						Exact: exact
+					},
+					success: getFunctionsSuccess,
+					failure: getFunctionsFailed
+				});
+			}
+			else
+				console.log("not dirty");
+		};
+
+		getFunctionsSuccess = function () {
+			if (!App.FunctionID.isDirty() && !App.FunctionDesc.isDirty()) {
+				App.FunctionID.originalValue = "";
+				App.FunctionDesc.originalValue = "";
+			}
+			bPreventGetFunctions = false;
+
+		};
+
+		getFunctionsFailed = function () {
+			App.FunctionID.clear();
+			App.FunctionDesc.clear();
+			App.FunctionID.originalValue = "";
+			App.FunctionDesc.originalValue = "";
+		};
+
+		FunctionIDSpecialKey = function (field, event) {
+			debugger;
+			if (event.getKey() == event.ENTER) {
+				bPreventGetFunctions = true;
+				getFunctions(field.getValue(), "", false);
+			}
+		};
+
+		FunctionDescSpecialKey = function (field, event) {
+			if (event.getKey() == event.ENTER) {
+				bPreventGetFunctions = true;
+				getFunctions("", field.getValue(), false);
+			}
+		};
+
+		FunctionIDBlur = function (FunctionID) {
+			console.log(bPreventGetFunctions);
+			if (!bPreventGetFunctions) {
+				bPreventGetFunctions = true;
+				if (FunctionID.trim() == "")
+					getFunctionsFailed();
+				else
+					getFunctions(FunctionID, "", true);
+			}
+			bPreventGetFunctions = false;
+		};
+
+		FunctionDescBlur = function (FunctionDesc) {
+			if (!bPreventGetFunctions) {
+				bPreventGetFunctions = true;
+				if (FunctionDesc.trim() == "")
+					getFunctionsFailed();
+				else
+					getFunctions("", FunctionDesc, true);
+			}
+			bPreventGetFunctions = false;
+		};
+
+		eraseFunctions = function () {
+			App.FunctionID.clear();
+			App.FunctionDesc.clear();
+			App.FunctionID.originalValue = "";
+			App.FunctionDesc.originalValue = "";
+		};
+	</script>
+
+}
+@(
+	X.Panel()
+	.ID("PMinutesTemplateForm")
+	.Frame(true)
+	.Items(
+		X.FormPanel()
+		.ID("FMinutesTemplate")
+		.Padding(iBodyPadding)
+		.Items(
+			X.TextFieldFor(model => model.MinuteTemplateID)
+				.FieldLabel(MinutesTemplateVM.Prop.MinuteTemplateID.Desc)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+				.LabelWidth(iLabelWidth)
+				.Width(iFieldWidth),
+			X.TextFieldFor(model => model.MinuteTemplateDescriptions)
+				.FieldLabel(MinutesTemplateVM.Prop.MinuteTemplateDescriptions.Desc)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+				.LabelWidth(iLabelWidth)
+				.Width(iFieldWidth),
+					//Start FieldContainer 2
+					X.FieldContainer()
+					.FieldLabel("")
+					.LabelWidth(0)
+					.Width(iFieldWidth)
+					.Layout(LayoutType.Column)
+					//Start FieldContainer 2 items
+					.Items(
+						X.TextFieldFor(model => model.FunctionID)
+						.FieldLabel("Functions")
+						//.ReadOnly(true)
+						.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+						.Listeners(oListeners =>
+						{
+							oListeners.SpecialKey.Handler = "FunctionIDSpecialKey(item, e);";
+							oListeners.Blur.Handler = "FunctionIDBlur(this.getValue());";
+						})
+							.LabelWidth(iLabelWidth)
+							.Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+						X.TextFieldFor(model => model.FunctionDesc)
+							.FieldLabel("")
+							.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+							//.ReadOnly(true)
+							.Listeners(oListeners =>
+							{
+								oListeners.SpecialKey.Handler = "FunctionDescSpecialKey(item, e);";
+								oListeners.Blur.Handler = "FunctionDescBlur(this.getValue());";
+							})
+							.LabelWidth(0)
+							.Width((iFieldWidth - iLabelWidth) / 2)
+							.RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+							.RightButtons(
+								btnBrowseFunctions
+								//.Disabled(true),
+								.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail)),
+								btnEraseFunctions.Handler("eraseFunctions")
+								//.Disabled(true)
+								.Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+							)
+					)
+				//End FieldContainer 2 items
+				//End FieldContainer 2
+				,
+			X.TagField()
+			 .FieldLabel(MinutesTemplateVM.Prop.ListFieldTagReferenceVM.Desc)
+			 .Name(MinutesTemplateVM.Prop.ListFieldTagReferenceVM.Name)
+			 .ID(MinutesTemplateVM.Prop.ListFieldTagReferenceVM.Name)
+			 .Width(iFieldWidth)
+			 .LabelWidth(iLabelWidth)
+			 .HideSelected(true)
+			 .QueryMode(DataLoadMode.Local)
+			 .DisplayField(FieldTagReferenceVM.Prop.FieldTagID.Name)
+			 .ValueField(FieldTagReferenceVM.Prop.FieldTagID.Name)
+			 .Listeners(d=>d.AfterRender.Fn="afterRenderTagField")
+			 .Store(X.StoreForModel()
+					.Proxy(
+						X.AjaxProxy()
+						.Url(Url.Action("GetFieldTags"))
+						.Reader(X.JsonReader().RootProperty("data"))
+					)
+					)
+					.Hidden(true),
+			  X.TextArea()
+			  .Name(MinutesTemplateVM.Prop.Contents.Name)
+			  .Value(Model.Contents)
+				.FieldLabel(MinutesTemplateVM.Prop.Contents.Desc)
+				.ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+					.LabelWidth(iLabelWidth)
+					.Width(iFieldWidthEditor)
+					.Listeners(d => d.AfterRender.Fn = "afterRender")
+		//   ,
+		//X.Panel()
+		//   .ID("pnlFunction")
+		//   .Title("Functions")
+		//   .Collapsible(true)
+		//   .ItemsFromPartial("Functions/_List", new List<FunctionsVM>(), ViewData)
+		//   .PaddingSpec(sPanelPaddingSpec)
+		)
+		.TopBar(
+			X.Toolbar()
+			.PaddingSpec(sToolbarPaddingSpec)
+			.ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+		)
+	)
+)

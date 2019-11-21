@@ -1,0 +1,182 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTNegotiationRoundVM
+@{
+    var X = Html.X();
+
+    var FPTID = ViewData["FPTIDData"].ToString();
+    var RoundID = ViewData["RoundIDData"].ToString();
+    var FPTName = ViewData["FPTNameData"].ToString();
+    //decimal pricemargintop = (decimal)ViewData["PriceMarginTopData"];
+    //decimal pricemarginbottom = (decimal)ViewData["PriceMarginBottomData"];
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+
+}
+<style>
+    .x-grid-checkcolumn:after {
+        vertical-align: top;
+    } 
+</style>
+<script>
+    
+    var addatt = function () {
+        var grid = App.gridPanelAttstructure;
+        var store = grid.getStore();
+
+        grid.editingPlugin.cancelEdit();
+
+        store.getSorters().removeAll();
+        grid.getView().headerCt.setSortState();
+
+        store.insert(0, {
+            FPTAttendanceID: '',
+            FPTID: '',
+            AttendeeType: '',
+            IDAttendee: '',
+            IsAttend: false,
+            AttendanceDesc: '',
+            AttendanceName: ''
+        });
+
+        grid.editingPlugin.startEdit(0, 0);
+    };
+
+    var deleteatt = function () {
+        var grid = App.gridPanelAttstructure,
+                sm = grid.getSelectionModel(),
+                store = grid.getStore();
+
+        grid.editingPlugin.cancelEdit();
+        store.remove(sm.getSelection());
+
+        if (store.getCount() > 0) {
+            sm.select(0);
+        }
+    };
+
+    var getGridListAtt = function (GridlID) {
+        var WinGrid = Ext.getCmp(GridlID);
+        return WinGrid.getRowsValues();
+    };
+
+
+    var getGridList = function (GridlID) {
+        var BPGrid = Ext.getCmp(GridlID);
+        return BPGrid.getRowsValues();
+    };
+
+    var renderGridColumn = function (a, b, c, d, e, f, g) {
+        var prop = g.grid.tag;
+        var valuetop = b.record.data.BudgetPlanDefaultValue + (b.record.data.BudgetPlanDefaultValue * (prop.tVal / 100));
+        var valuebottom = b.record.data.BudgetPlanDefaultValue - (b.record.data.BudgetPlanDefaultValue * (prop.bVal / 100));
+        if (a > valuetop) {
+            b.style = "color:red;";
+        }
+        else if (a < valuebottom) {
+            b.style = "color:blue;";
+        }
+        else {
+            b.style = "color:green;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+    var renderGridColumnAfterFee = function (a, b, c, d, e, f, g) {
+        var prop = g.grid.tag;
+        var valuetop = b.record.data.BudgetPlanDefaultValueAfterFee + (b.record.data.BudgetPlanDefaultValueAfterFee * (prop.tVal / 100));
+        var valuebottom = b.record.data.BudgetPlanDefaultValueAfterFee - (b.record.data.BudgetPlanDefaultValueAfterFee * (prop.bVal / 100));
+        if (a > valuetop) {
+            b.style = "color:red;";
+        }
+        else if (a < valuebottom) {
+            b.style = "color:blue;";
+        }
+        else {
+            b.style = "color:green;";
+        }
+        return Ext.util.Format.number(a, integerNumberFormat);
+    };
+    RendererBR = function (value,record) {
+        var newchar = '<br>';
+        arr = value.split('$');
+        debugger;
+        for (var i = 0; i < arr.length; i++) {
+            if (record.column.dataIndex == "IsProposedWinner") {
+                if (arr[i] == "True") arr[i] = "<span style='vertical-allign:top;' class='x-grid-checkcolumn x-grid-checkcolumn-checked' role='button'></span> Proposed";
+                if (arr[i] == "False") arr[i] = "<span style='vertical-allign:top;' class='x-grid-checkcolumn' role='button'></span>";
+            }
+            if (record.column.dataIndex == "IsAttend") {
+                if (arr[i] == "True") arr[i] = "<span style='vertical-allign:top;' class='x-grid-checkcolumn x-grid-checkcolumn-checked' role='button'></span>";
+                if (arr[i] == "False") arr[i] = "<span style='vertical-allign:top;' class='x-grid-checkcolumn' role='button'></span>";
+            }
+        }
+
+        retval = arr.join(newchar);
+        return retval;
+    };
+
+    getAllGridData = function () {
+        var retVal = [];
+
+        var gridarr = Ext.ComponentQuery.query('grid');
+        for (var i = 0; i < gridarr.length; i++) {
+            if (gridarr[i].id != 'grdFPTNegotiationRound' && gridarr[i].id != 'gridPanelAttstructure') {
+                if (retVal.length > 0) {
+                    retVal = retVal.concat(gridarr[i].getRowsValues());
+                }
+                else {
+                    retVal = gridarr[i].getRowsValues();
+                }
+            }
+        }
+        return retVal;
+    };
+
+</script>
+
+
+@(
+        X.Panel().ID("MMainPanelwin").Frame(true).Items(
+            X.TabPanel().ActiveIndex(0).Border(false).Items(
+                X.Panel()
+    .ID("PBidForm")
+    .Title("Winner")
+    .Frame(true)
+    .Items(
+
+               X.FormPanel()
+                .ID("FPBid")
+                .Loader(
+                    X.ComponentLoader()
+                    .AutoLoad(true)
+                    .Url(Url.Action("GetPanel"))
+                    .Params(new { FPTID = FPTID })
+                    .Mode(LoadMode.Component)
+                )
+
+    )
+    .TopBar(X.Toolbar().ItemsFromPartial("_ButtonWinner" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)),
+                X.Panel().ID("MMainPanelatt").Title("Attendances").Items(
+                                   X.FormPanel()
+                .ID("FPWin")
+                .Loader(
+                    X.ComponentLoader()
+                    .AutoLoad(true)
+                    .Url(Url.Action("GetPanelAtt"))
+                    .Params(new { FPTID = FPTID })
+                    .Mode(LoadMode.Component)
+                )
+
+                    )
+                    .TopBar(X.Toolbar().ItemsFromPartial("_ButtonAttend" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData))
+                )
+            )
+            .TopBar(
+        X.Toolbar()
+        .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+
+
+)
+
+

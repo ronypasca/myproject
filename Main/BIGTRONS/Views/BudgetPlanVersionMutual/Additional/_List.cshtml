@@ -1,0 +1,149 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.Controllers
+@using com.SML.BIGTRONS.ViewModels
+@model BudgetPlanVersionEntryVM
+@{
+    ViewBag.Title = "Budget Plan Version Mutual - Additional Work Items";
+    var X = Html.X();
+    string sToolbarPaddingSpec = "10 10 10 0";
+    int iTreeMinHeight = 300;
+    int iBodyPadding = 10;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    <script>
+        $(document).ready(function () {
+            setTimeout("resizetreePanelAdditional()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+        });
+
+        var resizetreePanelAdditional = function () {
+            if (App.treePanelAdditional != null)
+                App.treePanelAdditional.updateLayout();
+        };
+
+        var selectionChangeAdditionalWorkItems = function (view, record, eOpts) {
+            App.ButtonAddAdditional.setDisabled(false);
+            App.ButtonDeleteAdditional.setDisabled(!(view.getSelection().length >=1));
+        };
+
+        var beforeEditAdditional = function (editor, e) {
+
+            if ("@isDisableButton".toLowerCase()=="true") {
+                return false;
+            }
+
+            return e.record.data.leaf;
+        };
+
+        var deleteAdditionalConfirm = function () {
+            Ext.Msg.confirm("Confirmation", "Are you sure want to delete selected record?", "deleteAdditional");
+        };
+
+        var deleteAdditional = function (title, message, fn, scope) {
+
+            if (title == "yes") {
+                for (var i = 0; i < App.treePanelAdditional.getSelection().length; i++) {
+                    App.treePanelAdditional.getSelection()[i].remove(true);
+                }
+            }
+
+        };
+
+        var AdditionalWorkItemsNodeDragOver = function (targetNode, position, dragData) {
+            return targetNode.parentNode.id == dragData.records[0].parentNode.id && @(ViewData[General.EnumDesc(Params.Action)].ToString()!=General.EnumDesc(Buttons.ButtonDetail)?"true":"false");
+        };
+    </script>
+}
+@(
+    X.TreePanel()
+        .ID("treePanelAdditional")
+        .Padding(iBodyPadding)
+        .MinHeight(iTreeMinHeight)
+        .UseArrows(true)
+        .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+        )
+        .RootVisible(false)
+        .MultiSelect(false)
+        .Expand(true)
+        .FolderSort(false)
+        .RowLines(true)
+        .Fields(
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.ItemID.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.ItemDesc.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Version.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.UoMDesc.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Info.Name.ToLower()),
+            X.ModelField().Name(BudgetPlanVersionEntryVM.Prop.Volume.Name.ToLower())
+        )
+        .ColumnModel(
+            X.TreeColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.ItemDesc.Desc)
+                .Flex(3)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.ItemDesc.Name.ToLower()),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.UoMDesc.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.UoMDesc.Name.ToLower())
+                .Flex(2),
+            X.Column()
+                .Text(BudgetPlanVersionEntryVM.Prop.Info.Desc)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Info.Name.ToLower())
+                .Flex(2)
+                .Editor(
+                    X.TextField()
+                    .SubmitValue(true)
+                    .HideTrigger(true)
+                    .ID("ColAdditionalInfo")
+                    .AllowBlank(false)
+                ),
+            X.NumberColumn()
+                .Text(BudgetPlanVersionEntryVM.Prop.Volume.Desc)
+                .Align(ColumnAlign.End)
+                .DataIndex(BudgetPlanVersionEntryVM.Prop.Volume.Name.ToLower())
+                .Format(global_asax.DefaultNumberFormat)
+                .Editor(
+                    X.NumberField()
+                        .ID("ColAdditionalVolume")
+                        .SubmitValue(true)
+                        .HideTrigger(true)
+                        .EnforceMaxLength(true)
+                        .MinValue(1)
+                        .MaxLength(4)
+                        .DecimalPrecision(4)
+                    )
+                .Flex(1)
+        )
+     .Listeners(listener =>
+     {
+         listener.SelectionChange.Fn = "selectionChangeAdditionalWorkItems";
+         listener.NodeDragOver.Fn = "AdditionalWorkItemsNodeDragOver";
+     })
+    .Root(
+         (Node)Model.ListAdditionalWorkItems
+         )
+     .Plugins(
+         X.CellEditing()
+             .ClicksToEdit(1)
+                .Listeners(ls => ls.BeforeEdit.Fn = "beforeEditAdditional")
+                .ID("rowEditorAdditional")
+    )
+    .View(
+        X.TreeView()
+            .Plugins(
+                X.TreeViewDragDrop().AllowLeafDrop(true).ContainerScroll(true)
+            )
+    )
+    .TopBar(
+        X.Toolbar()
+        .PaddingSpec(sToolbarPaddingSpec)
+        .ItemsFromPartial("Additional/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+    )
+)

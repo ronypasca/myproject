@@ -1,0 +1,31 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@using com.SML.BIGTRONS.ViewModels;
+@{
+    var X = Html.X();
+    string sPageName = "AddItemPrice";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonAdd), ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter(ItemVM.Prop.ListItemPriceVM.Name, "App.grdItemPriceFromFileUpload.getRowsValues()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, "SaveUpload", true, false, false, Buttons.ButtonSave, oParamList);
+
+    //Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, "SaveUpload", true, false, false, Buttons.ButtonSave);
+
+    //Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, General.EnumName(Buttons.ButtonSave) + "UploadItemPrice", null,string.Empty );
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdItem.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonCancel,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? null : "App.grdItem.getStore().reload()", null);
+}
+@(btnSave)
+@(btnCancel)

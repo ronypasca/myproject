@@ -1,0 +1,103 @@
+﻿@using com.SML.BIGTRONS.Enum;
+@using com.SML.Lib.Common;
+@{
+    var X = Html.X();
+    string sPageName = "Update";
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonUpdate), ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyApproval", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("ListItemPriceUpload", "!Ext.isEmpty(App.grdPnlItemPriceUpload)?App.grdPnlItemPriceUpload.getRowsValues():null", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("ListItemUpload", "!Ext.isEmpty(App.grdPnlItemUpload)?App.grdPnlItemUpload.getRowsValues():null", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+
+    oParam = new Parameter("ListItemDetailUpload", "getAllDataItemDetail()", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+
+    Button.Builder btnSave = global_asax.Button(Buttons.ButtonSave, sPageName, null, null, true, false, false, Buttons.ButtonSave, oParamList);
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Action), General.EnumDesc(Buttons.ButtonUpdate), ParameterMode.Value);
+    oParamList.Add(oParam);
+    oParam = new Parameter("FromBtn", "MyApproval", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    oParam = new Parameter("isApproved", "true", ParameterMode.Value, true);
+    oParamList.Add(oParam);
+    Button.Builder btnReturnPrevious = global_asax.Button(Buttons.ButtonPrevious, "ReturnPrevious", "", "../MyTask/ReturnPrevious", true, false, false, null, oParamList);
+
+    //Button.Builder btnReturnPrevious2 = global_asax.Button(Buttons.ButtonPrevious, sPageName+"ss", "wola", string.Empty, true);
+    
+    oParamList = new List<Parameter>();
+    oParam = new Parameter(General.EnumDesc(Params.Selected), "App.grdMyApprvl.getRowsValues({selectedOnly:true})[0]", ParameterMode.Raw, true);
+    oParamList.Add(oParam);
+    Button.Builder btnCancel = global_asax.Button(Buttons.ButtonCancel, sPageName, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? ViewData[General.EnumDesc(Params.Caller)].ToString() : General.EnumDesc(Params.Home),
+        true, false, false, Buttons.ButtonCancel,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? oParamList : null, null,
+        ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonDetail) ? null : "App.grdMyApprvl.getStore().reload()", null);
+
+    Button.Builder btnList = global_asax.Button(Buttons.ButtonList, sPageName, null, General.EnumDesc(Params.Home), true, false, false, null, null, null, "App.grdMyApprvl.getStore().reload()");
+
+    <script>
+        getAllDataItemDetail = function () {
+            result = [];
+            if (!Ext.isEmpty(App.grdPnlItemDetailUpload))
+            Ext.Array.each(App.grdPnlItemDetailUpload.store.getAllRange(), function (rec) {
+                result.push(rec.data);
+            });
+            return result;
+        };
+        showMsgConfirmVerify = function () {
+            Ext.Msg.show({
+                message: "You're going to make this Task Return to last Approval.</br>Do you want to continue?",
+                buttons: Ext.MessageBox.YESNO,
+                fn: "verifyConfirm"
+            });
+            return;
+        };
+        verifyConfirm = function (btn) {
+            if (btn == "yes") {
+                /* */
+                debugger;
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("Save", "MyTask"))',
+                    params: {
+                        Action: "Update",
+                        FromBtn: JSON.stringify("MyApproval"),
+                        isApproved: "false",
+                        selected: getDataTask()
+                    },
+                    callback: function () {
+                        App.grdMyApprvl.getStore().reload();
+                    }
+                });
+            }
+        };
+       
+        var getDataTask = function () {
+            var obj = [{
+                TaskID: App.TaskID.value,
+                TaskOwnerID: App.TaskOwnerID.value,
+                ApprovalStatusID: App.ApprovalStatusID.value,
+                ApprovalStatusDesc: App.ApprovalStatusDesc.value,
+                ApprovalRemarks: App.ApprovalRemarks.value,
+                RoleID: App.RoleID.value,
+                RoleParentID: App.RoleParentID.value,
+                RoleChildID: App.RoleChildID.value,
+                TaskDateTimeStamp: App.TaskDateTimeStamp.value
+            }];
+            return JSON.stringify(obj);
+        };
+    </script>
+}
+@(btnSave)
+@(btnCancel)
+@*@(btnReturnPrevious)*@
+@*@(btnReturnPrevious2.Handler("showMsgConfirmVerify"))*@
+@(btnList.Hidden(ViewData[General.EnumDesc(Params.Caller)].ToString() == General.EnumDesc(Buttons.ButtonList)))

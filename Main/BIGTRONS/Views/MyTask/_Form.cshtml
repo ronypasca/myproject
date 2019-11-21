@@ -1,0 +1,506 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model MyTaskVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var sPanelPaddingSpec = "10 0 0 0";
+    int iGridMinHeight = 250;
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    int iPageSize = 30;
+    List<Parameter> oParamList;
+    Parameter oParam;
+
+    oParamList = new List<Parameter>();
+    oParam = new Parameter();
+    //oParam = new Parameter("Control" + MyTaskVM.Prop.TaskID.Name, MyTaskVM.Prop.TaskID.Name, ParameterMode.Value, false);
+    //oParamList.Add(oParam);
+    oParam = new Parameter("Control" + MyTaskVM.Prop.StatusID.Name, MyTaskVM.Prop.ApprovalStatusID.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("Control" + MyTaskVM.Prop.StatusDesc.Name, MyTaskVM.Prop.ApprovalStatusDesc.Name, ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    oParam = new Parameter("isTaskCreator", ViewData["isTaskCreator"].ToString(), ParameterMode.Value, false);
+    oParamList.Add(oParam);
+    //isTaskCreator
+    Button.Builder btnBrowseStatus = global_asax.Button(Buttons.ButtonBrowse, "Status", "", "../MyTask/BrowseStatus", true, false, false, null, oParamList);
+
+
+    Button.Builder btnEraseStatus = global_asax.Button(Buttons.ButtonErase, "Status", "", "", true);
+    //oParamList = new List<Parameter>();
+    //oParam = new Parameter("TaskID", "App.TaskID.value", ParameterMode.Raw, true);
+    //oParamList.Add(oParam);
+    //Button.Builder btnPreview = global_asax.Button(Buttons.ButtonAssign, "Task", "Preview Mail", "../MyTask/Preview", true, false, false, null, oParamList);
+
+    Button.Builder btnPreview = global_asax.Button(Buttons.ButtonPreview, null, "Preview Mail", string.Empty, true);
+
+    bool isFromInvitation = Convert.ToBoolean((ViewData["isFromInvitation"].ToString()));
+    var buttonTop = ViewData["FromBtn"].ToString() == "MyApproval" ? "Approval" : "";
+
+
+    <script>
+
+        var bPreventGetStatus = false;
+
+        getStatus = function (statusID, statusDesc, exact) {
+            if (App.ApprovalStatusID.isDirty() || App.ApprovalStatusDesc.isDirty()) {
+                App.ApprovalStatusID.originalValue = App.ApprovalStatusID.getValue();
+                App.ApprovalStatusDesc.originalValue = App.ApprovalStatusDesc.getValue();
+                Ext.net.DirectMethod.request({
+                    url: '@(Url.Action("GetStatus", "Status"))',
+                    params: {
+                        ControlStatusID: App.ApprovalStatusID.id,
+                        ControlStatusDesc: App.ApprovalStatusDesc.id,
+                        FilterStatusID: statusID,
+                        FilterStatusDesc: statusDesc,
+                        Exact: exact
+                    },
+                    success: getStatusSuccess,
+                    failure: getStatusFailed
+                });
+            }
+            else
+                console.log("not dirty");
+        };
+
+        getStatusSuccess = function () {
+            if (!App.ApprovalStatusID.isDirty() && !App.ApprovalStatusDesc.isDirty()) {
+                App.ApprovalStatusID.originalValue = "";
+                App.ApprovalStatusDesc.originalValue = "";
+            }
+            bPreventGetStatus = false;
+        };
+
+        getStatusFailed = function () {
+            eraseStatus();
+        };
+
+        statusIDSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetStatus = true;
+                getStatus(field.getValue(), "", false);
+            }
+        };
+
+        statusDescSpecialKey = function (field, event) {
+            if (event.getKey() == event.ENTER) {
+                bPreventGetStatus = true;
+                getStatus("", field.getValue(), false);
+            }
+        };
+
+        statusIDBlur = function (statusID) {
+            console.log(bPreventGetStatus);
+            if (!bPreventGetStatus) {
+                bPreventGetStatus = true;
+                if (statusID.trim() == "")
+                    getStatusFailed();
+                else
+                    getStatus(statusID, "", true);
+            }
+            bPreventGetStatus = false;
+        };
+
+        statusDescBlur = function (statusDesc) {
+            if (!bPreventGetStatus) {
+                bPreventGetStatus = true;
+                if (statusDesc.trim() == "")
+                    getStatusFailed();
+                else
+                    getStatus("", statusDesc, true);
+            }
+            bPreventGetStatus = false;
+        };
+        eraseStatus = function () {
+            App.ApprovalStatusID.clear();
+            App.ApprovalStatusDesc.clear();
+            App.ApprovalStatusID.originalValue = "";
+            App.ApprovalStatusDesc.originalValue = "";
+            setDisableClarify();
+        };
+        isDisableSave = function(item) {
+            if(item.value==1 && App.ButtonSaveUpdate!=undefined)
+                App.ButtonSaveUpdate.setDisabled(true);
+
+        };
+
+        setDisableClarify = function () {
+            var StatusTask = App.StatusID.value;
+            var TaskOwner = App.TaskOwnerID.value;
+            var CreatedRole = App.CreatedRoleID.value;
+            if (StatusTask == "0" && TaskOwner == CreatedRole) {/*if in progress/Clarify*/
+                App.ButtonBrowseStatus.setDisabled(TaskOwner == CreatedRole);
+                App.ButtonEraseStatus.setDisabled(TaskOwner == CreatedRole);
+                App.ApprovalStatusDesc.setValue("Approve");
+                App.ApprovalStatusID.setValue("2");
+            }
+            else if (StatusTask == "1" && TaskOwner == CreatedRole) {/*if Revise*/
+                App.ApprovalStatusDesc.setValue("Revise");
+                App.ButtonBrowseStatus.setDisabled(true);
+                App.ButtonEraseStatus.setDisabled(true);
+
+            }
+
+        };
+
+        spreviewNotif = function () {
+            var mailNotificationID = '@(ViewData["MailNotificationID"].ToString())';
+        debugger;
+        var w = new Ext.window.Window({
+            loader: {
+                url: '/MailNotifications/Preview?MailNotificationID=' + mailNotificationID,
+                text: "Loading...",
+                autoLoad: true,
+                timeout: 60,
+                scripts: true,
+                renderer: 'html'
+            },
+            title: 'Preview',
+            frame: true,
+            modal: true,
+            width: 800,
+            height: 500,
+            autoScroll: true,
+            maximizable: true
+        }).show();
+
+    };
+
+        var approvalStatusChanged = function (el) {
+            debugger;
+            App.ApprovalStatusID.setValue(el.getActiveItem().itemIndex);
+            App.ApprovalStatusDesc.setValue(el.getActiveItem().text);
+        };
+
+        var afterRenderApprovalStatus = function (el) {
+            el.getMenu().setActiveItem(parseInt(App.ApprovalStatusID.value));
+        };
+
+        var beforeRenderStatus = function (el) {
+            
+            var isTaskCreator = '@(ViewData["isTaskCreator"])' == 'TRUE';
+            menus = el.getMenu();
+            if (isTaskCreator) {
+
+                approve = menus.items.items[2];
+                itemmnu = menus.items.items.filter(item => item === approve);
+                menus.items.removeAll();
+                menus.items.add(approve);
+
+                el.setActiveItem(approve);
+            } else {
+                defaultmenu = menus.items.items[0];
+                el.setActiveItem(defaultmenu);
+            }
+        };
+    </script>
+   
+}
+@(
+        X.Panel()
+        .ID("PMTasksForm")
+        .Frame(true)
+        .Items(
+            X.FormPanel()
+            .ID("FMTasks")
+            .Padding(iBodyPadding)
+            .Items(
+            X.Panel()
+            .ID("pnlMTasksMain")
+            .ColumnWidth(1)
+            .Title(ViewData["FromBtn"].ToString() == "MyTasks" ? "My Tasks" : "My Approval")
+            .Collapsible(true)
+            .Items(
+                X.Container()
+                //.PaddingSpec(sPanelPaddingSpec)
+                .Layout(LayoutType.Column).Padding(iBodyPadding)
+                .Items(
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlMTasksLeft")
+                    .Items(
+
+                        X.TextFieldFor(model => model.TaskID)
+                            .FieldLabel(MyTaskVM.Prop.TaskID.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.TaskDesciption)
+                            .FieldLabel(MyTaskVM.Prop.TaskDescription.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.TaskOwnerID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.RoleID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.RoleChildID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.RoleParentID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.CurrentApprovalLvl)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.ConfigApprovalInterval)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.CreatedRoleID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.CreatedBy)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.TaskTypeID)
+                            .Hidden(true),
+                        //X.TextFieldFor(model => model.MailNotificationID)
+                        //    .Hidden(true),
+                        X.TextFieldFor(model => model.ScheduleID)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.TaskOwnerDesc)
+                            .FieldLabel(MyTaskVM.Prop.TaskOwnerDesc.Desc)
+                            .Hidden(ViewData["FromBtn"].ToString() != "MyTasks")
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.CreatorFullName)
+                            .FieldLabel(MyTaskVM.Prop.CreatorFullName.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.StatusID)
+                        .Listeners(oListeners => { oListeners.AfterRender.Handler = "isDisableSave(item);"; })
+                            .FieldLabel(MyTaskVM.Prop.StatusID.Desc)
+                            .Hidden(true),
+                        X.TextFieldFor(model => model.StatusDesc)
+                            .FieldLabel(MyTaskVM.Prop.StatusDesc.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.TaskDateTimeStamp)
+                            .FieldLabel(MyTaskVM.Prop.TaskDateTimeStamp.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.Remarks)
+                            .FieldLabel(MyTaskVM.Prop.Remarks.Desc)
+                            .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth)
+                    ),
+                    X.Panel()
+                    .Cls("fullOnSmall")
+                    .ColumnWidth(0.5)
+                    .ID("pnlMTasksRight")
+                    .Items(
+                     X.FieldContainer()
+                         .FieldLabel("")
+                         .LabelWidth(0)
+                         .Width(iFieldWidth)
+                         .Layout(LayoutType.Column)
+                         .Hidden(ViewData["FromBtn"].ToString() == "MyTasks")
+                         .Items(
+                         X.TextFieldFor(model => model.ApprovalStatusID)
+                             .FieldLabel(MyTaskVM.Prop.ApprovalStatusDesc.Desc)
+                             .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                             .Listeners(oListeners =>
+                             {
+                                 oListeners.SpecialKey.Handler = "statusIDSpecialKey(item, e);";
+                                 oListeners.Blur.Handler = "statusIDBlur(this.getValue());";
+                             })
+                             .LabelWidth(iLabelWidth)
+                             .Hidden(true)
+                             .Width(iFieldWidth),
+                         //.Width(iLabelWidth + (iFieldWidth - iLabelWidth) / 2),
+
+                         X.FieldContainer()
+                          .Layout(LayoutType.HBox).Items(
+                            X.Label().Cls("x-form-item-label-default")
+                            .Width(iLabelWidth)
+                            .Text(MyTaskVM.Prop.ApprovalStatusDesc.Desc+":"),
+                            X.CycleButton()
+                                .ShowText(true)
+                                .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonUpdate))
+                                .Menu(X.Menu()
+                                    .Items(
+                                        X.CheckMenuItem()
+                                            .Text("Revise")
+                                            .Icon(Icon.UserAlert)
+                                            .Checked(Model.ApprovalStatusID == 0),
+                                        X.CheckMenuItem()
+                                            .Text("Clarify")
+                                            .Icon(Icon.UserComment)
+                                            .Checked(Model.ApprovalStatusID == 1),
+                                        X.CheckMenuItem()
+                                            .Text("Approve")
+                                            .Icon(Icon.UserTick)
+                                            .Checked(Model.ApprovalStatusID==2),
+                                         X.CheckMenuItem()
+                                            .Text("Reject")
+                                            .Icon(Icon.UserCross)
+                                            .Checked(Model.ApprovalStatusID == 3)
+                                    )
+                                )
+                                .Listeners(ls=> { ls.Change.Fn = "approvalStatusChanged";ls.BeforeRender.Fn = "beforeRenderStatus"; })
+                            ),
+                         X.TextFieldFor(model => model.ApprovalStatusDesc)
+                             //.FieldLabel("")
+                             .Hidden(true)
+                             .FieldLabel(MyTaskVM.Prop.ApprovalStatusDesc.Desc)
+                             .LabelWidth(iLabelWidth)
+                             .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                             .Listeners(oListeners =>
+                             {
+                                 oListeners.SpecialKey.Handler = "statusDescSpecialKey(item, e);";
+                                 oListeners.Blur.Handler = "statusDescBlur(this.getValue());";
+                                 oListeners.AfterRender.Handler = "setDisableClarify()";
+                             })
+                             //.LabelWidth(0)
+                             .Width(iFieldWidth).ReadOnly(true)
+                             //.Width((iFieldWidth - iLabelWidth) / 2)
+                             .RightButtonsShowMode(ButtonsShowMode.MouseOverOrFocus)
+                             .RightButtons(
+                                 btnBrowseStatus
+                                 .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData["DisableForClarify"].ToString() == "TRUE"),
+                                 btnEraseStatus.Handler("eraseStatus")
+                                 .Disabled(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail) || ViewData["DisableForClarify"].ToString() == "TRUE")
+                             )
+                         ),
+                     X.TextAreaFor(model => model.ApprovalRemarks)
+                         .FieldLabel(MyTaskVM.Prop.ApprovalRemarks.Desc)
+                         .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                         .LabelWidth(iLabelWidth)
+                         .Width(iFieldWidth)
+                         .Hidden(ViewData["FromBtn"].ToString() == "MyTasks")
+                )
+            )
+        )
+          .TopBar(
+            X.Toolbar().Padding(iBodyPadding)
+            //.PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString() + buttonTop, ViewData)
+           ),
+
+            X.TabPanel()
+             .ID("TabPanel1")
+            .ActiveTabIndex(1)
+            .Items(
+                X.Panel()
+                    .ID("pnlMTasksSummary")
+                    .ColumnWidth(1)
+                    .MarginSpec("30 0 0 0")
+                    .Title("Summary")
+                    .Collapsible(true)
+                    .Items(
+                            X.Container()
+                            //.PaddingSpec(sPanelPaddingSpec)
+                            .Layout(LayoutType.Fit)
+                            .Items(
+                                X.Panel()
+                                //.Cls("fullOnSmall")
+                                .ColumnWidth(1).Padding(iBodyPadding)
+                                .ID("pnlMTasksSummaryBttm")
+                                .Items(
+                                    X.Panel()
+                                        //.Cls("fullOnSmall")
+                                        .ColumnWidth(1)
+                                        .ID("pnlMTasksBottomSummary")
+                                        .Items(
+                                         X.TextAreaFor(model => model.Summary)
+                                                 .FieldLabel(MyTaskVM.Prop.Summary.Desc)
+                                                 .ReadOnly(true)
+                                                 .LabelWidth(iLabelWidth)
+                                                 .WidthSpec("100%")
+                                                 .Height(300)
+                                    )
+                                )
+                            )
+                    ),
+                    X.Panel()
+                    .ID("Preview")
+                    .Title("Preview")
+                    .BodyPadding(6)
+                    .AutoScroll(true)
+                    .Loader(X.ComponentLoader()
+                        .Url(Url.Action("Preview"))
+                        .LoadMask(m => m.ShowMask = true)
+                        .Params(new Parameter(MyTaskVM.Prop.TaskID.Name, Model.TaskID,ParameterMode.Value,false))
+                        .Params(new Parameter(MyTaskVM.Prop.TaskTypeID.Name, Model.TaskTypeID, ParameterMode.Value, false))
+                        .Mode(LoadMode.Component)
+                    ),
+                        X.Panel()
+                    .ID("pnlTaskHistory")
+                    .ColumnWidth(1)
+                    .MarginSpec("30 0 0 0")
+                    .Title("Task History")
+                    .Collapsible(true)
+                    .Items(
+                        X.Container()
+                        .Layout(LayoutType.Fit)
+                        .Items(
+                            X.GridPanel()
+                            .ID("grdTaskHistory")
+                            .Padding(iBodyPadding)
+                            .MinHeight(iGridMinHeight)
+                            .SelectionModel(
+                                X.RowSelectionModel()
+                                .Mode(SelectionMode.Multi)
+                                .AllowDeselect(true)
+                            )
+                            //.Listeners(oListener =>
+                            //{
+                            //    oListener.SelectionChange.Handler = "selectionChangea(selected.length)";
+                            //})
+                            .Store(
+                                X.StoreForModel()
+                                .Proxy(
+                                    X.AjaxProxy()
+                                    .Url(Url.Action("LoadTaskHistory"))
+                                    .Reader(X.JsonReader().RootProperty("data"))
+                                    .ExtraParams(ep =>
+                                                ep.AddRange(new Parameter[]{
+                                                    new Parameter()
+                                                    {
+                                                        Name = "TaskID_",
+                                                        Value = ViewData[MyTaskVM.Prop.TaskID.Name] == null ? string.Empty : ViewData[MyTaskVM.Prop.TaskID.Name].ToString(),
+                                                        Mode = ParameterMode.Value,
+                                                        Encode = false
+                                                    }
+                                                })
+                                            )
+                                )
+                                .AutoLoad(true)
+                                .RemoteSort(true)
+                                .RemotePaging(true)
+                                .RemoteFilter(true)
+                                .PageSize(iPageSize)
+                            //.SorterFor(Model, model => model.NegotiationConfigID, Ext.Net.SortDirection.ASC)
+                            )
+                            .ColumnModel(
+                                X.Column()
+                                    .Text(TaskDetailsVM.Prop.CreatedDate.Desc)
+                                    .DataIndex(TaskDetailsVM.Prop.CreatedDate.Name)
+                                    .Flex(1),
+                                X.Column()
+                                .Text(TaskDetailsVM.Prop.Remarks.Desc)
+                                .DataIndex(TaskDetailsVM.Prop.Remarks.Name)
+                                .Flex(2)
+                                ,
+                                X.Column()
+                                    .Text(TaskDetailsVM.Prop.CreatorFullName.Desc)
+                                    .DataIndex(TaskDetailsVM.Prop.CreatorFullName.Name)
+                                    .Flex(2)
+                                    ,
+                                X.Column()
+                                    .Text(TaskDetailsVM.Prop.StatusDesc.Desc)
+                                    .DataIndex(TaskDetailsVM.Prop.StatusDesc.Name)
+                                    .Flex(2)
+
+                            )
+
+                        )
+                )
+                )
+
+
+        )
+    )
+)

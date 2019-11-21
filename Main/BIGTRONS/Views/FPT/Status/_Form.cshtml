@@ -1,0 +1,95 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model FPTVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "10 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    
+
+    <script>
+        var CBChange = function () {
+            if (App.DocumentComplete.checked) {
+                App.PNLDeviation.hide();
+            }
+            else {
+                App.PNLDeviation.show();
+            }
+        }
+    </script>
+
+}
+@(
+    X.Panel()
+    .ID("PFPTForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FFPT")
+        .Padding(iBodyPadding)
+        .Items(
+                        X.TextFieldFor(model => model.FPTID)
+                            .FieldLabel(FPTVM.Prop.FPTID.Desc)
+                            .ReadOnly(true)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.Descriptions)
+                            .FieldLabel(FPTVM.Prop.Descriptions.Desc)
+                            .ReadOnly(isDisableButton)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.Label("FPT Availability"),
+                        X.CheckboxFor(model => model.DocumentComplete)
+                            .ID(FPTVM.Prop.DocumentComplete.Name)
+                            .FieldLabel(FPTVM.Prop.DocumentComplete.Desc)
+                            .ReadOnly(isDisableButton)
+                            .LabelWidth(iLabelWidth)
+                            .Listeners(oListeners =>
+                            {
+                                oListeners.Change.Handler = "CBChange();";
+                            })
+                            .Width(iFieldWidth),
+                        X.Panel()
+                        .ID("PNLDeviation")
+                        //.Hidden(true)
+                        .Items(
+                            X.Label("Deviation Memo"),
+                        X.TextFieldFor(model => model.FPTDeviationsVM.RefNumber)
+                            .FieldLabel(FPTDeviationsVM.Prop.RefNumber.Desc)
+                            .ReadOnly(isDisableButton)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.DateFieldFor(model => model.FPTDeviationsVM.RefDate)
+                            .ReadOnly(isDisableButton)
+                            .FieldLabel(FPTDeviationsVM.Prop.RefDate.Desc)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.TextFieldFor(model => model.FPTDeviationsVM.RefTitle)
+                            .FieldLabel(FPTDeviationsVM.Prop.RefTitle.Desc)
+                            .ReadOnly(isDisableButton)
+                            .LabelWidth(iLabelWidth)
+                            .Width(iFieldWidth),
+                        X.HiddenFor(model => model.FPTDeviationsVM.FPTDeviationID)
+
+                            )
+
+
+                ).TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("Status/_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        ),
+        X.Panel()
+            .ID("FptHistory")
+            .Frame(true)
+            .Title("Status Histories")
+            .Collapsible(true)
+            .ItemsFromPartial("Status/_List", Model.ListFPTStatusVM, ViewData)
+            .MarginSpec("0 10 10 10")
+        )
+)
+)

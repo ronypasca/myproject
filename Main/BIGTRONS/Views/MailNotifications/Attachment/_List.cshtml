@@ -1,0 +1,120 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<NotificationAttachmentVM>
+@{
+    string sPageName = "HomeNotificationAttachment";
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    int iGridMinHeight = 250;
+    Button.Builder btnAdd = global_asax.Button(Buttons.ButtonAdd, sPageName, null, null, true, false, false, Buttons.ButtonList);
+    Button.Builder btnDelete = global_asax.Button(Buttons.ButtonDelete, sPageName, null, string.Empty, true);
+    Button.Builder btnPreBuild = global_asax.Button(Buttons.ButtonList, sPageName, "Pre-Build Recipients", null, true, false, false, Buttons.ButtonList);
+}
+
+<script>
+    GetListNotificationAttachmentVM = function () {
+        var data = [];
+        for (var x in App.grdNotificationAttachmentVM.store.data.items) {
+            data.push(App.grdNotificationAttachmentVM.store.data.items[x].data);
+        }
+        return data;
+    };
+
+    selectionChangebs = function (length) {
+        var FromDetail = '@ViewData[General.EnumDesc(Params.Action)].ToString()';
+        if (FromDetail !== 'Detail') {
+            App.ButtonDeleteHomeNotificationAttachment.setDisabled(length == 0);
+
+        }
+    };
+    deleteAttachment = function(){
+        App.grdNotificationAttachmentVM.getStore().remove(App.grdNotificationAttachmentVM.getSelectionModel().getSelection());
+    };
+
+
+
+    changesucc = function (a) {
+        debugger;
+        var _data = { AttachmentValueID: "", ContentType: a.ContentType, Filename: a.Filename, MailNotificationID: "", RawData: a.RawData };
+        App.grdNotificationAttachmentVM.store.add(_data);
+    };
+
+
+    
+
+
+</script>
+<form id="myForm">
+
+    @(
+            X.GridPanel()
+            .ID("grdNotificationAttachmentVM")
+            .View(
+            Html.X()
+            .GridView()
+            )
+            .Padding(iBodyPadding)
+            .MinHeight(iGridMinHeight)
+            .SelectionModel(
+                X.RowSelectionModel()
+                .Mode(SelectionMode.Multi)
+                .AllowDeselect(true)
+            )
+            .Listeners(oListener =>
+            {
+                oListener.SelectionChange.Handler = "selectionChangebs(selected.length)";
+            })
+            .Store(
+                X.StoreForModel()
+                .AutoLoad(true)
+                .RemoteSort(false)
+                .RemotePaging(true)
+                .RemoteFilter(false)
+                //.PageSize(iPageSize)
+                .SorterFor(Model, model => model.AttachmentValueID, Ext.Net.SortDirection.ASC)
+            )
+            .ColumnModel(
+            X.Column()
+            .Text("ID")
+            .Hidden(true)
+            .DataIndex(Model, model => model.AttachmentValueID)
+            .Flex(4),
+            X.Column()
+            .Text("File Name")
+            .DataIndex(Model, model => model.Filename)
+            .Flex(4),
+            X.Column()
+            .Text("Content Type")
+            .DataIndex(Model, model => model.ContentType)
+            .Flex(4)
+            )
+            .BottomBar(
+                X.PagingToolbar()
+                .DisplayInfo(true)
+                .BaseCls("paging")
+                .DisplayMsg("Displaying {0} - {1} of {2}")
+                .EmptyMsg("No records to display")
+            )
+            .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .Items(
+            X.FileUploadField().Icon(Icon.Attach).DirectEvents(
+                ev =>
+                {
+                    ev.Change.Action = "ReadAttachment";
+                    ev.Change.EventMask.ShowMask = true;
+                    ev.Change.Success = "changesucc(result.data)";
+                    ev.Change.Failure = "failedGetFileUpload(result.errorMessage);";
+                }
+                ),
+            btnDelete.Handler("deleteAttachment()").Disabled(true)
+        )
+        )
+    )
+    
+</form>
+
+)

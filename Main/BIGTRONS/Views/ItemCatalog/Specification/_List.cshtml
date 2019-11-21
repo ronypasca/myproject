@@ -1,0 +1,82 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model List<ItemParameterVM>
+@{
+    ViewBag.Title = "Specification";
+    var X = Html.X();
+    int iGridMinHeight = 150;
+    int iBodyPadding = 10;
+    int iPageSize = 30;
+    bool isDisableButton = ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail);
+    
+    <script>
+        var sTitle = @Html.Raw(Json.Encode(ViewBag.Title));
+        $(document).ready(function () {
+            setTimeout("resizeGrdItemParameter()", 1);
+        });
+
+        $(window).resize(function () {
+            resizeContainer();
+            resizeGrdItemParameter();
+        });
+
+        resizeGrdItemParameter = function () {
+            if (App.grdItemParameter != null)
+                App.grdItemParameter.updateLayout();
+                /*App.grdItemParameter.setHeight($(window).height() - App.grdItemParameter.getY() - (App.grdItemParameter.getBorderPadding().beforeY * 2 - 5 + 2) - $("footer").height());*/
+        };
+
+        selectionChangeItemParameter = function (length) {
+        };
+
+        var editItemParameter = function (editor, e) {
+            if (!(e.value === e.originalValue || (Ext.isDate(e.value) && Ext.Date.isEqual(e.value, e.originalValue)))) {
+                e.record.commit();
+            }
+        };
+
+        var beforeEditItemParameter = function (editor, e) {
+            if("@isDisableButton" == "True")
+                return false;
+
+            App.grdItemParameter.setSelection(e.rowIndex);
+        };
+    </script>
+}
+@(
+    X.PropertyGrid()
+        .ID("propGrid")
+        .Width(300)
+        .Source((props) =>
+        {
+            var proplist = new PropertyGridParameter[]
+            {
+                new PropertyGridParameter("Brand", ""),
+                new PropertyGridParameter("Min. Purchase", "1"),
+                new PropertyGridParameter("Dimension", ""),
+                new PropertyGridParameter("Weight", ""),
+                //new PropertyGridParameter("grouping", "false"),
+                //new PropertyGridParameter("autoFitColumns", "true"),
+                //new PropertyGridParameter("productionQuality", "false"),
+                //new PropertyGridParameter("created", "Ext.Date.parse('10/15/2006', 'm/d/Y')")
+                //{
+                //    Mode = ParameterMode.Raw
+                //},
+                //new PropertyGridParameter("tested", "false")
+                //{
+                //    DisplayName = "QA"
+                //},
+                //new PropertyGridParameter("version", "0.01"),
+                //new PropertyGridParameter("borderWidth", "5")
+                //{
+                //    DisplayName = "Border Width"
+                //}
+            };
+
+            foreach (var prop in proplist)
+            {
+                props.Add(prop);
+            }
+        })
+)

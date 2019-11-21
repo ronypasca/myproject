@@ -1,0 +1,60 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model RoleVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    int iGridMinHeight = 250;
+    int iPageSize = 30;
+
+    <script>
+        var GetAllAction = function () {
+            App.filterMenuDesc.setValue("");
+            return App.grdMenuAction.getRowsValues();
+        };
+    </script>
+}
+@(
+    X.Panel()
+    .ID("PRoleForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FRole")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.RoleID)
+                .FieldLabel(RoleVM.Prop.RoleID.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.RoleDesc)
+                .FieldLabel(RoleVM.Prop.RoleDesc.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+        X.Panel()
+                .Padding(iBodyPadding),
+            X.Panel()
+            .Padding(iBodyPadding)
+                .ItemsFromPartial("MenuAction/_List", ViewData),
+        X.Panel()
+        .Padding(iBodyPadding),
+        X.Panel()
+        .Padding(iBodyPadding)
+        .ItemsFromPartial("MenuObject/_List", Model.ListMenuObjectVM, ViewData),
+        
+        X.Panel().Padding(iBodyPadding),
+        X.Panel().Padding(iBodyPadding).ItemsFromPartial("Function/_List", Model.RoleFunctions, ViewData)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)

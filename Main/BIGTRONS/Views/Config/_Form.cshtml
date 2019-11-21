@@ -1,0 +1,70 @@
+﻿@using com.SML.Lib.Common
+@using com.SML.BIGTRONS.Enum
+@using com.SML.BIGTRONS.ViewModels
+@model ConfigVM
+@{
+    var X = Html.X();
+    var iBodyPadding = 10;
+    var sToolbarPaddingSpec = "0 10 10 0";
+    var iLabelWidth = 175;
+    var iFieldWidth = 420;
+    var bDisabled = ViewData[General.EnumDesc(Params.Action)].ToString() != General.EnumDesc(Buttons.ButtonAdd);
+
+}
+@(
+    X.Panel()
+    .ID("PConfigForm")
+    .Frame(true)
+    .Items(
+        X.FormPanel()
+        .ID("FConfig")
+        .Padding(iBodyPadding)
+        .Items(
+            X.TextFieldFor(model => model.Key1)
+                .FieldLabel(ConfigVM.Prop.Key1.Desc)
+                .ReadOnly(bDisabled)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Key2)
+                .FieldLabel(ConfigVM.Prop.Key2.Desc)
+                .ReadOnly(bDisabled)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Key3)
+                .FieldLabel(ConfigVM.Prop.Key3.Desc)
+                .ReadOnly(bDisabled)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Key4)
+                .FieldLabel(ConfigVM.Prop.Key4.Desc)
+                .ReadOnly(bDisabled)
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Desc1)
+                .FieldLabel(ConfigVM.Prop.Desc1.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Desc2)
+                .FieldLabel(ConfigVM.Prop.Desc2.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Desc3)
+                .FieldLabel(ConfigVM.Prop.Desc3.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth),
+            X.TextFieldFor(model => model.Desc4)
+                .FieldLabel(ConfigVM.Prop.Desc4.Desc)
+                .ReadOnly(ViewData[General.EnumDesc(Params.Action)].ToString() == General.EnumDesc(Buttons.ButtonDetail))
+                .LabelWidth(iLabelWidth)
+                .Width(iFieldWidth)
+        )
+        .TopBar(
+            X.Toolbar()
+            .PaddingSpec(sToolbarPaddingSpec)
+            .ItemsFromPartial("_Button" + ViewData[General.EnumDesc(Params.Action)].ToString(), ViewData)
+        )
+    )
+)
